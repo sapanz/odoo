@@ -98,7 +98,7 @@ class TestCRMPLS(TransactionCase):
 
         # Set the PLS config
         self.env['ir.config_parameter'].sudo().set_param("crm.pls_start_date", "2000-01-01")
-        self.env['ir.config_parameter'].sudo().set_param("crm.pls_fields", "country_id,state_id,email_state,phone_state,source_id")
+        self.env['ir.config_parameter'].sudo().set_param("crm.pls_fields", "country_id,state_id,email_state,phone_state,source_id,tag_ids")
 
         # set leads as won and lost
         # for Team 1
@@ -351,3 +351,20 @@ class TestCRMPLS(TransactionCase):
         self.assertEqual(tools.float_compare(lead_tag_1.automated_probability, 33.69, 2), 0)
         self.assertEqual(tools.float_compare(lead_tag_2.automated_probability, 23.51, 2), 0)
         self.assertEqual(tools.float_compare(lead_tag_1_2.automated_probability, 28.05, 2), 0)
+
+        # remove tag_ids from the calculation
+        self.env['ir.config_parameter'].sudo().set_param("crm.pls_fields", "country_id,state_id,email_state,phone_state,source_id")
+        Lead._cron_update_automated_probabilities()
+        leads_with_tags.invalidate_cache()
+
+        self.assertEqual(tools.float_compare(lead_tag_1.automated_probability, 28.6, 2), 0)
+        self.assertEqual(tools.float_compare(lead_tag_2.automated_probability, 28.6, 2), 0)
+        self.assertEqual(tools.float_compare(lead_tag_1_2.automated_probability, 28.6, 2), 0)
+
+        lead_tag_1.tag_ids = [(5, 0, 0)]  # remove all tags
+        lead_tag_2.tag_ids = [(4, tag_ids[0])]  # add tag 1
+        lead_tag_1_2.tag_ids = [(3, tag_ids[1], 0)]  # remove tag 2
+
+        self.assertEqual(tools.float_compare(lead_tag_1.automated_probability, 28.6, 2), 0)
+        self.assertEqual(tools.float_compare(lead_tag_2.automated_probability, 28.6, 2), 0)
+        self.assertEqual(tools.float_compare(lead_tag_1_2.automated_probability, 28.6, 2), 0)

@@ -21,3 +21,11 @@ class IrConfigParameter(models.Model):
             self.flush()
             self.env.registry.setup_models(self.env.cr)
         return records
+
+    def unlink(self):
+        empty = any(record.key == "crm.pls_fields" for record in self)
+        result = super(IrConfigParameter, self).unlink()
+        if empty:
+            self.flush()
+            self.env.registry.setup_models(self.env.cr)
+        return result
