@@ -15,7 +15,7 @@ from dateutil.relativedelta import relativedelta
 from werkzeug.urls import url_join
 
 from odoo import api, fields, models, tools, _
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.osv import expression
 
 _logger = logging.getLogger(__name__)
@@ -49,6 +49,14 @@ class MassMailing(models.Model):
     @api.model
     def default_get(self, fields):
         vals = super(MassMailing, self).default_get(fields)
+
+        default_calendar_date = self.env.context.get('default_calendar_date')
+        if default_calendar_date and ('schedule_type' in fields and 'schedule_date' in fields):
+            vals.update({
+                'schedule_type': 'scheduled',
+                'schedule_date': default_calendar_date
+            })
+
         if 'contact_list_ids' in fields and not vals.get('contact_list_ids') and vals.get('mailing_model_id'):
             if vals.get('mailing_model_id') == self.env['ir.model']._get('mailing.list').id:
                 mailing_list = self.env['mailing.list'].search([], limit=2)
@@ -75,7 +83,13 @@ class MassMailing(models.Model):
     email_from = fields.Char(string='Send From', required=True,
         default=lambda self: self.env.user.email_formatted)
     sent_date = fields.Datetime(string='Sent Date', copy=False)
-    schedule_date = fields.Datetime(string='Scheduled for', tracking=True)
+
+    schedule_type = fields.Selection([('now', 'Send now'), ('scheduled', 'Send on')], string='Schedule',
+        default='now', required=True, readonly=True, states={'draft': [('readonly', False)]})
+    schedule_date = fields.Datetime(string='Scheduled for', tracking=True, readonly=True, states={'draft': [('readonly', False)]},
+        compute='_compute_schedule_date', store=True)
+    calendar_date = fields.Datetime('Calendar Date', compute='_compute_calendar_date', store=True, copy=False, readonly=False,
+        help="Technical field for the calendar view.")
     # don't translate 'body_arch', the translations are only on 'body_html'
     body_arch = fields.Html(string='Body', translate=False)
     body_html = fields.Html(string='Body converted to be send by mail', sanitize_attributes=False)
@@ -254,6 +268,29 @@ class MassMailing(models.Model):
             else:
                 mailing.mailing_domain = repr(mailing._get_default_mailing_domain())
 
+    @api.depends('schedule_type')
+    def _compute_schedule_date(self):
+        for mailing in self:
+            if mailing.schedule_type == 'now' or not mailing.schedule_date:
+                mailing.schedule_date = False
+
+    @api.depends('state', 'schedule_date', 'sent_date')
+    def _compute_calendar_date(self):
+        for mailing in self:
+            mailing.calendar_date = mailing.sent_date if mailing.state == 'done' else mailing.schedule_date
+
+    # ------------------------------------------------------
+    # CONSTRAINS
+    # ------------------------------------------------------
+
+    @api.constrains('schedule_date', 'schedule_type', 'state')
+    def _check_schedule_date(self):
+        for mailing in self:
+            if mailing.schedule_type == 'scheduled' \
+               and mailing.state not in ('sending', 'sent') \
+               and (not mailing.schedule_date or mailing.schedule_date < fields.Datetime.now()):
+                raise ValidationError(_('Please select a date equal/or greater than the current date.'))
+
     # ------------------------------------------------------
     # ORM
     # ------------------------------------------------------
@@ -269,6 +306,11 @@ class MassMailing(models.Model):
     def write(self, values):
         if values.get('body_html'):
             values['body_html'] = self._convert_inline_images_to_urls(values['body_html'])
+        if values.get('calendar_date'):
+            if any(mailing.schedule_type != 'scheduled' for mailing in self):
+                raise UserError(_("You can only move mailings that are scheduled."))
+
+            values['schedule_date'] = values['calendar_date']
         return super(MassMailing, self).write(values)
 
     @api.returns('self', lambda value: value.id)
@@ -313,17 +355,11 @@ class MassMailing(models.Model):
             'context': ctx,
         }
 
-    def action_schedule(self):
-        self.ensure_one()
-        action = self.env["ir.actions.actions"]._for_xml_id("mass_mailing.mailing_mailing_schedule_date_action")
-        action['context'] = dict(self.env.context, default_mass_mailing_id=self.id)
-        return action
-
     def action_put_in_queue(self):
         self.write({'state': 'in_queue'})
 
     def action_cancel(self):
-        self.write({'state': 'draft', 'schedule_date': False, 'next_departure': False})
+        self.write({'state': 'draft', 'schedule_date': False, 'schedule_type': 'now', 'next_departure': False})
 
     def action_retry_failed(self):
         failed_mails = self.env['mail.mail'].sudo().search([
