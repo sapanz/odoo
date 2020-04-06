@@ -136,6 +136,14 @@
                         string="Accept Emails From"
                         attrs="{'invisible': [('use_leads', '=', False), ('use_opportunities', '=', False)]}"/>
                 </xpath>
+                <xpath expr="//group[@name='right']" position="inside">
+                    <field name="assignment_domain" widget="domain" options="{'model': 'crm.lead', 'in_dialog': True}"/>
+                    <label for="lead_all_assigned_month_count" string="Assigned Leads Count"/>
+                    <div>
+                        <field name="lead_all_assigned_month_count" class="oe_inline"/> /
+                        <field name="assignment_max" class="oe_inline"/>
+                    </div>
+                </xpath>
             </field>
         </record>
 

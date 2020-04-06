@@ -52,6 +52,8 @@ class TestCrmCommon(TestSalesCommon, MailCase):
             'use_leads': True,
             'use_opportunities': True,
         })
+        cls.sales_team_1_m1.write({'assignment_max': 45})
+        cls.sales_team_1_m2.write({'assignment_max': 15})
 
         (cls.user_sales_manager | cls.user_sales_leads | cls.user_sales_salesman).write({
             'groups_id': [(4, cls.env.ref('crm.group_use_lead').id)]
@@ -272,6 +274,7 @@ class TestLeadConvertCommon(TestCrmCommon):
         cls.sales_team_convert_m1 = cls.env['crm.team.member'].create({
             'user_id': cls.user_sales_salesman.id,
             'crm_team_id': cls.sales_team_convert.id,
+            'assignment_max': 30,
         })
         cls.stage_team_convert_1 = cls.env['crm.stage'].create({
             'name': 'New',
