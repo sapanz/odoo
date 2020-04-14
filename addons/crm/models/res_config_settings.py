@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import api, fields, models
+from odoo import api, exceptions, fields, models, _
 
 
 class ResConfigSettings(models.TransientModel):
@@ -15,7 +15,13 @@ class ResConfigSettings(models.TransientModel):
         compute="_compute_generate_lead_from_alias", readonly=False, store=True)
     group_use_lead = fields.Boolean(string="Leads", implied_group='crm.group_use_lead')
     group_use_recurring_revenues = fields.Boolean(string="Recurring Revenues", implied_group='crm.group_use_recurring_revenues')
+    # Membership
     is_membership_multi = fields.Boolean(string='Multi-sales', config_parameter='sales_team.membership_multi')
+    # Lead assignment
+    use_auto_assignment = fields.Boolean(string='Automatic Assignment', config_parameter='crm.auto_assignment')
+    crm_auto_assignment_interval = fields.Selection(related="company_id.crm_auto_assignment_interval", readonly=False)
+    crm_auto_assignment_run_date = fields.Date(related="company_id.crm_auto_assignment_run_date", readonly=False)
+    # IAP
     module_crm_iap_lead = fields.Boolean("Generate new leads based on their country, industries, size, etc.")
     module_crm_iap_lead_website = fields.Boolean("Create Leads/Opportunities from your website's traffic")
     module_crm_iap_lead_enrich = fields.Boolean("Enrich your leads automatically with company data based on their email address.")
@@ -41,6 +47,10 @@ class ResConfigSettings(models.TransientModel):
                 ('alias_defaults', '=', '{}')
             ], limit=1)
         return alias
+
+    @api.onchange('crm_auto_assignment_interval')
+    def _onchange_crm_auto_assignment_interval(self):
+        self.company_id._compute_crm_auto_assignment_run_date()
 
     @api.depends('predictive_lead_scoring_fields_str')
     def _compute_pls_fields(self):
@@ -110,8 +120,19 @@ class ResConfigSettings(models.TransientModel):
             })
         for team in self.env['crm.team'].search([]):
             team.alias_id.write(team._alias_get_creation_values())
+        print('set_values', self, self.use_auto_assignment)
+        self.env.ref('crm.ir_cron_crm_lead_assign').active = self.use_auto_assignment
 
     # ACTIONS
     def action_reset_lead_probabilities(self):
         if self.env.user._is_admin():
             self.env['crm.lead'].sudo()._cron_update_automated_probabilities()
+
+
+    def action_crm_assign_leads(self):
+        self.ensure_one()
+
+        if not self.use_auto_assignment:
+            raise exceptions.UserError(_('Unable to connect to the online exchange rate platform. The web service may be temporary down. Please try again in a moment.'))
+
+        return self.prout()
