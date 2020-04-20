@@ -18,3 +18,4 @@ from . import test_proc_rule
 from . import test_wise_operator
 from . import test_report
 from . import test_report_tours
+from . import test_stock_barcode
