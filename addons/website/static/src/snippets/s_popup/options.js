@@ -3,7 +3,7 @@ odoo.define('website.s_popup_options', function (require) {
 
 const options = require('web_editor.snippets.options');
 
-options.registry.SnippetPopup = options.Class.extend({
+options.registry.SnippetPopup = options.CopyAnchorToClipboardAndNotifyWidget.extend({
     /**
      * @override
      */
@@ -21,6 +21,7 @@ options.registry.SnippetPopup = options.Class.extend({
         this.$target.on('hidden.bs.modal.SnippetPopup', () => {
             this.trigger_up('snippet_option_visibility_update', {show: false});
         });
+        this.$trigger = this.$el.find('we-select[data-attribute-name="display"] we-button[data-select-data-attribute="onClick"]');
         return this._super(...arguments);
     },
     /**
