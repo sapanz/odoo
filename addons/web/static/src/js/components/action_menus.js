@@ -147,6 +147,7 @@ odoo.define('web.ActionMenus', function (require) {
                 action: result,
                 options: {
                     on_close: () => this.trigger('reload'),
+                    fullscreen: this.env.device.isMobile
                 },
             });
         }
