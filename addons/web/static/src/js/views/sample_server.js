@@ -147,7 +147,7 @@ odoo.define('web.SampleServer', function (require) {
                         for (const record of records) {
                             value += record[fieldName];
                         }
-                        values[fieldName] = value;
+                        values[fieldName] = parseFloat(parseFloat(value).toFixed(2));
                     } else {
                         values[fieldName] = null;
                     }
@@ -301,7 +301,8 @@ odoo.define('web.SampleServer', function (require) {
          * @returns {number} float in [O, max[
          */
         _getRandomFloat(max) {
-            return Math.random() * max;
+            // Note: toFixed will return string so here convert back to float
+            return parseFloat(parseFloat(Math.random() * max).toFixed(2));
         }
 
         /**
