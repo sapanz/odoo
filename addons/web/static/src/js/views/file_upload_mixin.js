@@ -22,6 +22,7 @@ const ProgressBarMixin = {
          * e.g: {'fileUploadId45': {progressBar, progressCard, ...params}}
          */
         this._fileUploads = {};
+        this.max_file_upload = this.model.loadParams.context.max_fileupload_size;
     },
 
     //--------------------------------------------------------------------------
@@ -151,6 +152,20 @@ const ProgressBarMixin = {
      */
     async _uploadFiles(files, params={}) {
         if (!files || !files.length) { return; }
+        var file_size = null;
+        for (let file = 0; file < files.length; file++) {
+            file_size += files[file].size;
+        }
+        if (file_size > this.max_file_upload) {
+            this.displayNotification({
+                type: 'warning',
+                title: _t('Error'),
+                message: _.str.sprintf(
+                    _t('File Size is too Large.It cannot Upload'),
+                ),
+            });
+            return;
+        }
 
         await new Promise(resolve => {
             const xhr = this._createXhr();

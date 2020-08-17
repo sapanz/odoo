@@ -41,5 +41,9 @@
             <field name="url">/web/static/src/scss/asset_styles_company_report.scss</field>
         </record>
 
+        <record id="file_upload_key" model="ir.config_parameter">
+            <field name="key">max_fileupload_size</field>
+            <field name="value">10000000</field>
+        </record>
     </data>
 </odoo>

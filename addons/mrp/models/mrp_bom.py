@@ -387,6 +387,7 @@ class MrpBomLine(models.Model):
             '&', ('res_model', '=', 'product.product'), ('res_id', '=', self.product_id.id),
             '&', ('res_model', '=', 'product.template'), ('res_id', '=', self.product_id.product_tmpl_id.id)]
         attachment_view = self.env.ref('mrp.view_document_file_kanban_mrp')
+        max_upload_size = self.env['ir.config_parameter'].sudo().get_param('max_fileupload_size', default=''),
         return {
             'name': _('Attachments'),
             'domain': domain,
@@ -401,7 +402,7 @@ class MrpBomLine(models.Model):
                         Use this feature to store any files, like drawings or specifications.
                     </p>'''),
             'limit': 80,
-            'context': "{'default_res_model': '%s','default_res_id': %d, 'default_company_id': %s}" % ('product.product', self.product_id.id, self.company_id.id)
+            'context': "{'default_res_model': '%s','default_res_id': %d, 'default_company_id': %s, 'max_fileupload_size': %s}" % ('product.product', self.product_id.id, self.company_id.id, max_upload_size)
         }
 
 
