@@ -620,6 +620,7 @@
             title="env._t('Print')"
             items="printItems"
             icon="'fa fa-print'"
+            closeOnSelected="env.device.isMobile"
         />
         <DropdownMenu t-if="actionItems.length"
             title="env._t('Action')"
