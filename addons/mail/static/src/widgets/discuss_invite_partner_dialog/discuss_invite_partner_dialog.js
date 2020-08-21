@@ -113,9 +113,10 @@ const PartnerInviteDialog = Dialog.extend({
             names
         );
         this.env.services['notification'].notify({
+            className: 'o_Notification_Discuss',
             message: notification,
             title: this.env._t("New people"),
-            type: 'warning',
+            type: 'info',
         });
     },
 });
