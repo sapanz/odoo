@@ -103,6 +103,12 @@ class MicrosoftSync(models.AbstractModel):
             record._microsoft_insert(microsoft_service, record._microsoft_values(self._get_microsoft_synced_fields()), timeout=3)
         return records
 
+    @api.ondelete(at_uninstall=False)
+    def _check_unsynced(self):
+        synced = self.filtered('microsoft_id')
+        if not (self.env.context.get('archive_on_error') and self._active_name) and synced:
+            raise UserError(_("You cannot delete a record synchronized with Microsoft Calendar, archive it instead."))
+
     def unlink(self):
         """We can't delete an event that is also in Microsoft Calendar. Otherwise we would
         have no clue that the event must must deleted from Microsoft Calendar at the next sync.
@@ -111,8 +117,6 @@ class MicrosoftSync(models.AbstractModel):
         if self.env.context.get('archive_on_error') and self._active_name:
             synced.write({self._active_name: False})
             self = self - synced
-        elif synced:
-            raise UserError(_("You cannot delete a record synchronized with Outlook Calendar, archive it instead."))
         return super().unlink()
 
     @api.model

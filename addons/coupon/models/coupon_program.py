@@ -108,9 +108,12 @@ class CouponProgram(models.Model):
             self.mapped('discount_line_product_id').write({'name': self[0].reward_id.display_name})
         return res
 
-    def unlink(self):
+    @api.ondelete(at_uninstall=False)
+    def _check_program_active(self):
         if self.filtered('active'):
             raise UserError(_('You can not delete a program in active state'))
+
+    def unlink(self):
         # get reference to rule and reward
         rule = self.rule_id
         reward = self.reward_id

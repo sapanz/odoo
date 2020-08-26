@@ -228,7 +228,8 @@ class Task(models.Model):
 
         return etree.tostring(doc, encoding='unicode')
 
-    def unlink(self):
+    @api.ondelete(at_uninstall=False)
+    def _check_timesheet_linked_tasks(self):
         """
         If some tasks to unlink have some timesheets entries, these
         timesheets entries must be unlinked first.
@@ -244,7 +245,6 @@ class Task(models.Model):
             raise RedirectWarning(
                 warning_msg, self.env.ref('hr_timesheet.timesheet_action_task').id,
                 _('See timesheet entries'), {'active_ids': tasks_with_timesheets.ids})
-        return super(Task, self).unlink()
 
     def _convert_hours_to_days(self, time):
         uom_hour = self.env.ref('uom.product_uom_hour')
