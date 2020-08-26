@@ -191,6 +191,7 @@ var Wysiwyg = Widget.extend({
                 saveOdoo: {handler: this.saveToServer.bind(this)},
                 cropImage: {handler: this.cropImage.bind(this)},
                 transformImage: {handler: this.transformImage.bind(this)},
+                describeImage: {handler: this.describeImage.bind(this)},
             }, this.options.customCommands),
             source: elementToParse,
             location: this.options.location || [this.el, 'replace'],
@@ -507,6 +508,17 @@ var Wysiwyg = Widget.extend({
             this._updateAttributes($image[0])
         };
         $(document).on('mousedown', mousedown);
+    },
+    describeImage: async function (params) {
+        const imageNodes = params.context.range.targetedNodes(JWEditorLib.ImageNode);
+        const imageNode = imageNodes.length === 1 && imageNodes[0];
+        if (imageNode) {
+            const domEngine = this.editor.plugins.get(JWEditorLib.Layout).engines.dom;
+            const node = domEngine.getDomNodes(imageNode)[0];
+            var altDialog = new weWidgets.AltDialog(this, {}, node);
+            altDialog.on('save', this, () => this._updateAttributes(node));
+            altDialog.open();
+        }
     },
 
     getFormatInfo: function() {
