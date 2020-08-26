@@ -3034,3 +3034,51 @@ class test_shared_cache(TransactionCaseWithUserDemo):
                 line.amount = 2
             # The new value for total_amount, should be 3, not 2.
             self.assertEqual(task_form.total_amount, 2)
+
+
+@common.tagged('unlink_constraints')
+class TestUnlinkConstraints(common.TransactionCase):
+
+    def setUp(self):
+        super().setUp()
+        MODEL1 = self.env['test_new_api.model_constrained_unlinks']
+        MODEL2 = self.env['test_new_api.model_constrained_unlinks_two']
+
+        self.deletable_record_model1 = MODEL1.create({
+            'foo': 'ravioli',
+            'bar': 5,
+        })
+
+        self.undeletable_record_model1 = MODEL1.create({
+            'foo': 'spaghetti',
+            'bar': 6,
+        })
+
+        from odoo.addons.base.models.ir_model import MODULE_UNINSTALL_FLAG
+        self.undeletable_record_model1_uninstall = self.undeletable_record_model1.with_context(
+            {**self.undeletable_record_model1._context, MODULE_UNINSTALL_FLAG: True}
+        )
+
+        self.deletable_record_model2 = MODEL2.create({
+            'foo': 'formaggio',
+            'bar': 6,
+        })
+
+        self.undeletable_record_model2 = MODEL2.create({
+            'foo': 'prosciutto',
+            'bar': 4,
+        })
+
+    def test_unlink_constraint_manual(self):
+        self.assertTrue(self.deletable_record_model1.unlink())
+        with self.assertRaises(ValueError):
+            self.undeletable_record_model1.unlink()
+
+    def test_unlink_constraint_uninstall(self):
+        self.assertTrue(self.deletable_record_model1.unlink())
+        self.assertTrue(self.undeletable_record_model1_uninstall.unlink())
+
+    def test_unlink_constraint_no_crosstalk(self):
+        self.assertTrue(self.deletable_record_model2.unlink())
+        with self.assertRaises(ValueError):
+            self.undeletable_record_model2.unlink()

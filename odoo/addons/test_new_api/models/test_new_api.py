@@ -1127,3 +1127,31 @@ class ShareCacheComputeLine(models.Model):
     parent_id = fields.Many2one('test_new_api.model_shared_cache_compute_parent')
     amount = fields.Integer()
     user_id = fields.Many2one('res.users', default= lambda self: self.env.user)  # Note: There is an ir.rule about this.
+
+
+class ConstrainedUnlinks(models.Model):
+    _name = 'test_new_api.model_constrained_unlinks'
+    _description = 'Model with unlink override that is constrained'
+
+    foo = fields.Char()
+    bar = fields.Integer()
+
+    @api.ondelete(at_uninstall=False)
+    def _bar_greater_than_five(self):
+        for rec in self:
+            if rec.bar and rec.bar > 5:
+                raise ValueError("Nooooooooo bar can't be greater than five!!")
+
+
+class ConstrainedUnlinksTwo(models.Model):
+    _name = 'test_new_api.model_constrained_unlinks_two'
+    _description = 'Model with unlink override that is constrained (two)'
+
+    foo = fields.Char()
+    bar = fields.Integer()
+
+    @api.ondelete(at_uninstall=False)
+    def _foo_equals_prosciutto(self):
+        for rec in self:
+            if rec.foo and rec.foo == 'prosciutto':
+                raise ValueError("You didn't say if you wanted it crudo or cotto...")

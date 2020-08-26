@@ -130,6 +130,11 @@ def constrains(*args):
     return attrsetter('_constrains', args)
 
 
+def ondelete(*, at_uninstall):
+    """ Mark a method to be executed right before data deletion in BaseModel.unlink()."""
+    return attrsetter('_ondelete', at_uninstall)
+
+
 def onchange(*args):
     """Return a decorator to decorate an onchange method for given fields.
 
