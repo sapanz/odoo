@@ -47,16 +47,7 @@ class TestEventSecurity(TestEventCommon):
         event.read(['name', 'user_id', 'kanban_state_label'])
 
         with self.assertRaises(AccessError):
-            self.env['event.event'].create({
-                'name': 'TestEvent',
-                'date_begin': datetime.now() + relativedelta(days=-1),
-                'date_end': datetime.now() + relativedelta(days=1),
-            })
-
-        with self.assertRaises(AccessError):
-            event.write({
-                'name': 'TestEvent Modified',
-            })
+            event.unlink()
 
     @users('user_eventmanager')
     @mute_logger('odoo.models.unlink', 'odoo.addons.base.models.ir_model')

@@ -57,7 +57,7 @@ class EventRegistration(models.Model):
         """
         to_update, event_lead_rule_skip = False, self.env.context.get('event_lead_rule_skip')
         if not event_lead_rule_skip:
-            to_update = self.filtered(lambda reg: reg.lead_ids)
+            to_update = self.filtered(lambda reg: reg.sudo().lead_ids)
         if to_update:
             lead_tracked_vals = to_update._get_lead_tracked_values()
 
@@ -105,7 +105,7 @@ class EventRegistration(models.Model):
           based on new_vals;
         """
         for registration in self:
-            leads_attendee = registration.lead_ids.filtered(
+            leads_attendee = registration.sudo().lead_ids.filtered(
                 lambda lead: lead.event_lead_rule_id.lead_creation_basis == 'attendee'
             )
             if not leads_attendee:
@@ -140,7 +140,7 @@ class EventRegistration(models.Model):
             elif lead_values:
                 leads_attendee.write(lead_values)
 
-        leads_order = self.lead_ids.filtered(lambda lead: lead.event_lead_rule_id.lead_creation_basis == 'order')
+        leads_order = self.sudo().lead_ids.filtered(lambda lead: lead.event_lead_rule_id.lead_creation_basis == 'order')
         for lead in leads_order:
             lead_values = {}
             if new_vals.get('partner_id'):

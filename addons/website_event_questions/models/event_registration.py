@@ -8,7 +8,9 @@ class EventRegistration(models.Model):
     """ Store answers on attendees. """
     _inherit = 'event.registration'
 
-    registration_answer_ids = fields.One2many('event.registration.answer', 'registration_id', string='Attendee Answers')
+    registration_answer_ids = fields.One2many(
+        'event.registration.answer', 'registration_id',
+        string='Attendee Answers', groups='event.group_event_manager')
 
 class EventRegistrationAnswer(models.Model):
     """ Represents the user input answer for a single event.question """

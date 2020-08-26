@@ -1,18 +1,39 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_event_track_manager,event.track manager,model_event_track,event.group_event_manager,1,1,1,1
-access_event_track_tag_public,event.track.tag public,model_event_track_tag,,1,0,0,0
-access_event_track_tag_user,event.track.tag public,model_event_track_tag,event.group_event_user,1,1,0,0
-access_event_track_tag_manager,event.track.tag manager,model_event_track_tag,event.group_event_manager,1,1,1,1
-access_event_track_location_public,event.track.location public,model_event_track_location,,1,0,0,0
-access_event_track_location_manager,event.track.location manager,model_event_track_location,event.group_event_manager,1,1,1,1
-access_event_track__public,event.track.public,model_event_track,,1,0,0,0
-access_event_track_sponsor_type_manager,event.track.sponsor.type.public,model_event_sponsor_type,event.group_event_manager,1,1,1,1
-access_event_track_sponsor_type_public,event.track.sponsor.type.public,model_event_sponsor_type,,1,0,0,0
-access_event_track_sponsor_manager,event.track.sponsor.type.public,model_event_sponsor,event.group_event_manager,1,1,1,1
-access_event_track_sponsor_public,event.track.sponsor.public,model_event_sponsor,,1,0,0,0
+
+access_event_track_all,event.track.all,model_event_track,,1,0,0,0
+access_event_track_registration_desk,event.track.registration,model_event_track,event.group_event_registration_desk,1,0,0,0
+access_event_track_user,event.track.user,model_event_track,event.group_event_user,1,1,1,0
+access_event_track_manager,event.track.manager,model_event_track,event.group_event_manager,1,1,1,1
+
+access_event_track_tag_all,event.track.tag.all,model_event_track_tag,,1,0,0,0
+access_event_track_tag_registration_desk,event.track.tag.registration,model_event_track_tag,event.group_event_registration_desk,1,0,0,0
+access_event_track_tag_user,event.track.tag.user,model_event_track_tag,event.group_event_user,1,1,1,0
+access_event_track_tag_manager,event.track.tag.manager,model_event_track_tag,event.group_event_manager,1,1,1,1
+
+access_event_track_location_all,event.track.location.all,model_event_track_location,,1,0,0,0
+access_event_track_location_registration_desk,event.track.location.registration,model_event_track_location,event.group_event_registration_desk,1,0,0,0
+access_event_track_location_user,event.track.location.user,model_event_track_location,event.group_event_user,1,1,1,0
+access_event_track_location_manager,event.track.location.manager,model_event_track_location,event.group_event_manager,1,1,1,1
+
+access_event_track_sponsor_type_all,event.track.sponsor.type.all,model_event_sponsor_type,,1,0,0,0
+access_event_track_sponsor_type_registration_desk,event.track.sponsor.type.registration,model_event_sponsor_type,event.group_event_registration_desk,1,0,0,0
+access_event_track_sponsor_type_user,event.track.sponsor.type.user,model_event_sponsor_type,event.group_event_user,1,0,0,0
+access_event_track_sponsor_type_manager,event.track.sponsor.type.manager,model_event_sponsor_type,event.group_event_manager,1,1,1,1
+
+access_event_track_sponsor_all,event.track.sponsor.all,model_event_sponsor,,1,0,0,0
+access_event_track_sponsor_registration_desk,event.track.sponsor.registration,model_event_sponsor,event.group_event_registration_desk,1,0,0,0
+access_event_track_sponsor_user,event.track.sponsor.user,model_event_sponsor,event.group_event_user,1,1,1,0
+access_event_track_sponsor_manager,event.track.sponsor.manager,model_event_sponsor,event.group_event_manager,1,1,1,1
+
 access_event_track_stage_all,event.track.stage.all,model_event_track_stage,,1,0,0,0
-access_event_track_stage_event_manager,event.track.stage.event.manager,model_event_track_stage,event.group_event_manager,1,1,1,1
-event_track_visitor_access_all,event.track.visitor.access.all,model_event_track_visitor,,0,0,0,0
-event_track_visitor_access_manager,event.track.visitor.access.manager,model_event_track_visitor,event.group_event_manager,1,1,1,1
-event_track_tag_category_access_public,event.track.tag.category.access,model_event_track_tag_category,,1,0,0,0
-event_track_tag_category_access_manager,event.track.tag.category.access.manager,model_event_track_tag_category,event.group_event_manager,1,1,1,1
+access_event_track_stage_registration_desk,event.track.stage.registration,model_event_track_stage,event.group_event_registration_desk,1,0,0,0
+access_event_track_stage_user,event.track.stage.user,model_event_track_stage,event.group_event_user,1,1,1,0
+access_event_track_stage_manager,event.track.stage.manager,model_event_track_stage,event.group_event_manager,1,1,1,1
+
+event_track_visitor_access_all,event.track.visitor.all,model_event_track_visitor,,0,0,0,0
+event_track_visitor_access_manager,event.track.visitor.manager,model_event_track_visitor,event.group_event_manager,1,1,1,1
+
+event_track_tag_category_access_all,event.track.tag.category.all,model_event_track_tag_category,,1,0,0,0
+event_track_tag_category_access_registration_desk,event.track.tag.category.registration,model_event_track_tag_category,event.group_event_registration_desk,1,0,0,0
+event_track_tag_category_access_user,event.track.tag.category.user,model_event_track_tag_category,event.group_event_user,1,0,0,0
+event_track_tag_category_access_manager,event.track.tag.category.manager,model_event_track_tag_category,event.group_event_manager,1,1,1,1
