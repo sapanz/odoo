@@ -308,12 +308,11 @@ var Wysiwyg = Widget.extend({
             await this.editor.execCommand(onSaveLinkDialog);
         });
     },
-    openMediaDialog() {
-        var mediaDialog = new weWidgets.MediaDialog(this,
-            {},
-        );
+    openMediaDialog(params) {
+        let mediaDialog = new weWidgets.MediaDialog(this, params);
         mediaDialog.open();
         mediaDialog.on('save', this, async (element) => {
+            if(params.htmlClass) element.className += " " + params.htmlClass
             await this.editorHelpers.insertHtml(this.editor, element.outerHTML);
         });
     },
