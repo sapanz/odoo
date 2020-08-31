@@ -327,6 +327,8 @@ GROUP BY fol.id%s""" % (
                         update[fol_id] = {'subtype_ids': [(4, sid) for sid in new_sids]}
                     if fol_id and old_sids and existing_policy == 'replace':
                         update[fol_id] = {'subtype_ids': [(3, sid) for sid in old_sids]}
+                        if new_sids:
+                            update[fol_id]['subtype_ids'] += [(4, sid) for sid in new_sids]
             for channel_id in set(channel_ids or []):
                 if channel_id not in doc_cids[res_id]:
                     new.setdefault(res_id, list()).append({
@@ -342,5 +344,7 @@ GROUP BY fol.id%s""" % (
                         update[fol_id] = {'subtype_ids': [(4, sid) for sid in new_sids]}
                     if fol_id and old_sids and existing_policy == 'replace':
                         update[fol_id] = {'subtype_ids': [(3, sid) for sid in old_sids]}
+                        if new_sids:
+                            update[fol_id]['subtype_ids'] += [(4, sid) for sid in new_sids]
 
         return new, update
