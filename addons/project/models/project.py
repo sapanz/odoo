@@ -1133,12 +1133,6 @@ class Task(models.Model):
             return {'date_end': fields.Datetime.now()}
         return {'date_end': False}
 
-    def unlink(self):
-        if any(self.mapped('recurrence_id')):
-            # TODO: show a dialog to stop the recurrence
-            raise UserError(_('You cannot delete recurring tasks. Please, disable the recurrence first.'))
-        return super().unlink()
-
     # ---------------------------------------------------
     # Subtasks
     # ---------------------------------------------------
@@ -1369,6 +1363,10 @@ class Task(models.Model):
 
         return action
 
+    # ------------
+    # Actions
+    # ------------
+
     def action_recurring_tasks(self):
         return {
             'name': 'Tasks in Recurrence',
@@ -1377,6 +1375,17 @@ class Task(models.Model):
             'view_mode': 'tree,form',
             'domain': [('recurrence_id', 'in', self.recurrence_id.ids)],
         }
+
+    def action_stop_recurrence(self):
+        self.ensure_one()
+        tasks = self.env['project.task'].with_context(active_test=False).search([('recurrence_id', 'in', self.recurrence_id.ids)])
+        tasks.write({'recurring_task': False})
+        self.recurrence_id.unlink()
+
+    def action_continue_recurrence(self):
+        self.ensure_one()
+        self.recurrence_id = False
+        self.recurring_task = False
 
     # ---------------------------------------------------
     # Rating business
