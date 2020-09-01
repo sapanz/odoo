@@ -1,16 +1,20 @@
 
 .oe_module_icon {
     width: 70px;
-    height: 70px;
+    max-height: 70px;
+    max-width: 23%;
     float: left;
 }
 
 .oe_module_desc {
     font-size: 13px;
+    padding-left: 10px;
+    width: 77%;
 }
 
-.oe_module_icon + .oe_module_desc {
-    padding-left: 80px;
+.o_modules_kanban.o_kanban_view .o_kanban_record {
+    align-items: center;
+    display: flex;
 }
 
 .o_modules_kanban.o_kanban_view .o_kanban_record .o_dropdown_kanban {
