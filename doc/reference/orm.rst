@@ -321,7 +321,7 @@ Add the attribute ``store=True`` to make it stored, just like computed
 fields. Related fields are automatically recomputed when their
 dependencies are modified.
 
-.. note:: The related fields are computed in sudo mode.
+.. note:: The related fields are computed in sudo mode by default.
 
 .. _reference/fields/automatic:
 
@@ -356,7 +356,7 @@ Automatic fields
 
     :class:`~odoo.fields.Many2one`
 
-.. _reference/orm/fields/reserved:
+.. _reference/fields/reserved:
 
 Reserved Field names
 --------------------
@@ -386,6 +386,8 @@ behavior is desired:
 ..   in list views.
 ..
 ..   :class:`~odoo.fields.Integer`
+
+.. todo:: display_name field (and name_get explanation)
 
 .. attribute:: state
 
