@@ -113,10 +113,13 @@ const MicrosoftCalendarRenderer = CalendarRenderer.include({
         this._super.apply(this, arguments);
         this.$microsoftButton = $();
         if (this.model === "calendar.event") {
-            this.$microsoftButton = $('<button/>', {type: 'button', html: _t("Sync with <b>Microsoft</b>")})
-                                .addClass('o_microsoft_sync_button oe_button btn btn-secondary')
+             this.$microsoftButton = $('<button/>', {
+                                    type: 'button', html: _t("Sync with <b>Microsoft</b>"),
+                                    class: 'o_microsoft_sync_button w-100 d-block m-auto btn btn-secondary',
+                                })
                                 .prepend($('<img/>', {
                                     src: "/microsoft_calendar/static/src/img/calendar_outlook_32.png",
+                                    class:"mr-3",
                                 }))
                                 .appendTo(self.$sidebar);
         }

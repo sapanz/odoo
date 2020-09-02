@@ -115,10 +115,13 @@ const GoogleCalendarRenderer = CalendarRenderer.include({
         this._super.apply(this, arguments);
         this.$googleButton = $();
         if (this.model === "calendar.event") {
-            this.$googleButton = $('<button/>', {type: 'button', html: _t("Sync with <b>Google</b>")})
-                                .addClass('o_google_sync_button oe_button btn btn-secondary')
+            this.$googleButton = $('<button/>', {
+                                    type: 'button', html: _t("Sync with <b>Google</b>"),
+                                    class: 'o_google_sync_button w-100 d-block m-auto btn btn-secondary',
+                                })
                                 .prepend($('<img/>', {
                                     src: "/google_calendar/static/src/img/calendar_32.png",
+                                    class: "mr-3",
                                 }))
                                 .appendTo(self.$sidebar);
         }
