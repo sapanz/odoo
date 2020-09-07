@@ -41,7 +41,7 @@ publicWidget.registry.SurveySessionManage = publicWidget.Widget.extend({
             self.showBarChart = self.$el.data('showBarChart');
             self.showTextAnswers = self.$el.data('showTextAnswers');
             // Question props
-            self.currentQuestionId = self.$el.data('currentQuestionId');
+            self.currentBackgroundUrl = self.$el.data('currentBackgroundUrl');
 
             var isRpcCall = self.$el.data('isRpcCall');
             if (!isRpcCall) {
@@ -301,18 +301,16 @@ publicWidget.registry.SurveySessionManage = publicWidget.Widget.extend({
 
         this._rpc({
             // Background management
-            route: "/survey/session/survey_get_next_section_id",
-            params: {
-                'survey_token': this.surveyAccessToken,
-                'current_question_id': this.currentQuestionId ? this.currentQuestionId : 0
-            }
-        }).then(function (nextSection) {
+            route: _.str.sprintf('/survey/session/next_question/%s', self.surveyAccessToken),
+        }).then(function (nextQuestion) {
             var refreshBackgroundPromise = Promise.resolve(false);
             // Do we need to fade out the background ? Needed here before switching questions to get fade in/out
             // effect at the same time.
-            if (nextSection.id >= 0) {
+            if (nextQuestion.background_url != self.options.currentBackgroundUrl) {
                 $('div#wrapwrap').css("box-shadow", "inset 0 0 0 10000px rgba(255,255,255,1)");
-                refreshBackgroundPromise = self._refreshBackground(nextSection.id)
+                if (nextQuestion.background_url) {
+                    refreshBackgroundPromise = self._refreshBackground(nextQuestion.background_url);
+                }
             }
 
             self.isStartScreen = false;
@@ -326,19 +324,15 @@ publicWidget.registry.SurveySessionManage = publicWidget.Widget.extend({
                 resolveFadeOut();
             });
 
-            var nextQuestionPromise = self._rpc({
-                route: _.str.sprintf('/survey/session/next_question/%s', self.surveyAccessToken)
-            });
-
             // avoid refreshing results while transitioning
             if (self.resultsRefreshInterval) {
                 clearInterval(self.resultsRefreshInterval);
                 delete self.resultsRefreshInterval;
             }
 
-            Promise.all([fadeOutPromise, nextQuestionPromise, refreshBackgroundPromise]).then(function (results) {
-                if (results[1]) {
-                    var $renderedTemplate = $(results[1]);
+            Promise.all([fadeOutPromise, refreshBackgroundPromise]).then(function (results) {
+                if (nextQuestion.question_html) {
+                    var $renderedTemplate = $(nextQuestion.question_html);
                     self.$el.replaceWith($renderedTemplate);
                     self.attachTo($renderedTemplate);
                     self.$el.fadeIn(self.fadeInOutTime, function () {
@@ -357,11 +351,9 @@ publicWidget.registry.SurveySessionManage = publicWidget.Widget.extend({
                     self.$('.o_survey_session_close').click();
                 }
 
-                if (results[2]) {
-                    $('div#wrapwrap').css("background-image", "url(" + results[2] + ")");
-                    if (nextSection.has_background) {
-                        $('div#wrapwrap').css("box-shadow", "inset 0 0 0 10000px rgba(255,255,255,0.7)");
-                    }
+                if (nextQuestion.background_url) {
+                    $('div#wrapwrap').css("background-image", "url(" + nextQuestion.background_url + ")");
+                    $('div#wrapwrap').css("box-shadow", "inset 0 0 0 10000px rgba(255,255,255,0.7)");
                 }
             });
         });
@@ -460,13 +452,9 @@ publicWidget.registry.SurveySessionManage = publicWidget.Widget.extend({
         });
     },
 
-    _refreshBackground: function (nextSectionId) {
+    _refreshBackground: function (imageUrl) {
         var resolveRefresh;
         var refreshPromise = new Promise(function (resolve, reject) {resolveRefresh = resolve;});
-
-        var targetModel = nextSectionId === 0 ? 'survey.survey' : 'survey.question';
-        var targetId = nextSectionId === 0 ? this.surveyId : nextSectionId;
-        var imageUrl = _.str.sprintf("/web/image/%s/%s/background_image", targetModel, targetId);
 
         // Wait until new background is loaded before changing the background
         var background = new Image();

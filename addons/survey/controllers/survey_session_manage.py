@@ -58,7 +58,8 @@ class UserInputSession(http.Controller):
 
         if survey.session_state == 'ready':
             return request.render('survey.user_input_session_open', {
-                'survey': survey
+                'survey': survey,
+                'background_url': survey.background_url
             })
         else:
             template_values = self._prepare_manage_session_values(survey)
@@ -87,7 +88,7 @@ class UserInputSession(http.Controller):
 
         if not survey or not survey.session_state:
             # no open session
-            return ''
+            return {}
 
         if survey.session_state == 'ready':
             survey._session_open()
@@ -108,42 +109,12 @@ class UserInputSession(http.Controller):
 
             template_values = self._prepare_manage_session_values(survey)
             template_values['is_rpc_call'] = True
-            return request.env.ref('survey.user_input_session_manage_content')._render(template_values)
+            return {
+                'background_url': next_question.background_url,
+                'question_html': request.env.ref('survey.user_input_session_manage_content')._render(template_values)
+            }
         else:
-            return False
-
-    @http.route('/survey/session/survey_get_next_section_id', type='json', auth="public", website=True, sitemap=False)
-    def survey_get_next_section_id(self, survey_token, current_question_id=0):
-        survey = self._fetch_from_token(survey_token)
-
-        if not survey or not survey.session_state:
-            # no open session
-            return -1
-
-        current_question = survey.question_and_page_ids.filtered(lambda question: question.id == current_question_id)
-        if current_question.is_page:
-            current_section = current_question
-        else:
-            current_section = survey.page_ids.filtered(lambda section: current_question in section.question_ids)
-
-        next_question = survey._get_session_next_question()
-        if next_question.is_page:
-            next_section = next_question
-        else:
-            next_section = survey.page_ids.filtered(lambda section: next_question in section.question_ids)
-
-        # If end of survey -> go back to survey background
-        if not next_section:
-            return {'id': 0, 'has_background': bool(survey.background_image)}
-        # if same section or different but current and next does not have background -> don't need to refresh
-        elif current_section == next_section or (not next_section.background_image and not current_section.background_image):
-            return {'id': -1, 'has_background': False}
-        # Show current section's background if any
-        elif next_section.background_image:
-            return {'id': next_section.id, 'has_background': bool(next_section.background_image)}
-        # Fallback to survey background
-        else:
-            return {'id': 0, 'has_background': bool(survey.background_image)}
+            return {}
 
     @http.route('/survey/session/results/<string:survey_token>', type='json', auth='user', website=True)
     def survey_session_results(self, survey_token, **kwargs):
@@ -270,4 +241,5 @@ class UserInputSession(http.Controller):
             'answers_validity': json.dumps(answers_validity),
             'answer_count': survey.session_question_answer_count,
             'attendees_count': survey.session_answer_count,
+            'background_url': survey.session_question_id.background_url
         }

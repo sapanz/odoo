@@ -43,9 +43,9 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
             }
 
             // Find current SectionID - If we are not on End Session Page
-            if (self.options.sectionInfoByQuestion) {
-                var currentQuestion = self.options.sectionInfoByQuestion[self._getCurrentQuestionId()];
-                self.options.currentSectionId = currentQuestion['section_id'];
+            if (self.options.questionsInfo) {
+                var currentQuestion = self.options.questionsInfo[self._getCurrentQuestionId()];
+                self.options.currentBackgroundUrl = currentQuestion['background_url'];
             }
             // Init fields
             if (!self.options.isStartScreen && !self.readonly) {
@@ -441,11 +441,11 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
         // Background management - Will the background change between current and next/previous questions ?
         var refreshBackgroundPromise = Promise.resolve(false);
         if (self.options.questionsLayout !== 'one_page' && (!self.options.sessionInProgress || options.isNotification)) {
-            var targetSectionId = this._getTargetBackgroundSectionId(options.previousPageId)
-            if (this.options.currentSectionId === undefined || targetSectionId != this.options.currentSectionId) {
-                this.options.currentSectionId = targetSectionId;
-                if (targetSectionId >= 0) {
-                    refreshBackgroundPromise = self._refreshBackground(targetSectionId)
+            var targetBackgroundUrl = this._getTargetBackgroundUrl(options.previousPageId)
+            if (this.options.currentBackgroundUrl === undefined || targetBackgroundUrl != this.options.currentBackgroundUrl) {
+                this.options.currentBackgroundUrl = targetBackgroundUrl;
+                if (targetBackgroundUrl) {
+                    refreshBackgroundPromise = self._refreshBackground(targetBackgroundUrl)
                 }
                 // If we make a transition, hide previous background by setting 'background overlay' opacity = 1
                 $('div#wrapwrap').css("box-shadow", "inset 0 0 0 10000px rgba(255,255,255,1)");
@@ -525,7 +525,7 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
                 this.preventEnterSubmit = true;
             }
             // Background management - reset background overlay opacity to 0.7 to discover next background.
-            if (this.options.currentSectionId >= 0) {
+            if (this.options.currentBackgroundUrl) {
                 $('div#wrapwrap').css("box-shadow", "inset 0 0 0 10000px rgba(255,255,255,0.7)");
             }
             this.$('.o_survey_form_content').fadeIn(this.fadeInOutDelay);
@@ -1045,11 +1045,9 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
     *
     * @private
     */
-    _refreshBackground: function (targetSectionId) {
+    _refreshBackground: function (imageUrl) {
         var resolveRefresh;
         var refreshPromise = new Promise(function (resolve, reject) {resolveRefresh = resolve;});
-
-        var imageUrl = _.str.sprintf("/survey/get_background_image/%s/%s/%s", this.options.surveyToken, this.options.answerToken, targetSectionId);
 
         // Wait until new background is loaded before changing the background
         var background = new Image();
@@ -1069,16 +1067,16 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
     * @private
     */
     _getNextQuestionId: function () {
-        var currentQuestion = this.options.sectionInfoByQuestion[this._getCurrentQuestionId()];
+        var currentQuestion = this.options.questionsInfo[this._getCurrentQuestionId()];
         var nextQuestionId = currentQuestion['next_question_id'];
-        var nextQuestion = this.options.sectionInfoByQuestion[nextQuestionId];
+        var nextQuestion = this.options.questionsInfo[nextQuestionId];
         var inactiveQuestionIds = this._getInactiveConditionalQuestionIds();
 
         var found = nextQuestionId === 0;
         while (!found) {
             var isPagePerSection = this.options.questionsLayout === 'page_per_section';
             var isPagePerQuestion = this.options.questionsLayout === 'page_per_question';
-            var isSection = nextQuestionId === nextQuestion['section_id'];
+            var isSection = nextQuestion['is_section'];
             var isSectionActive = isSection ? this._isSectionActive(inactiveQuestionIds, nextQuestionId, nextQuestion['has_description']) : false
 
             // If page per section, skip next question until an active section is found (that contains active questions or has description)
@@ -1088,7 +1086,7 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
                 found = true;
             } else {
                 nextQuestionId = nextQuestion['next_question_id'];
-                nextQuestion = this.options.sectionInfoByQuestion[nextQuestionId];
+                nextQuestion = this.options.questionsInfo[nextQuestionId];
                 found = nextQuestionId === 0;  // if no next question
             }
         }
@@ -1096,27 +1094,21 @@ publicWidget.registry.SurveyFormWidget = publicWidget.Widget.extend({
     },
 
     /**
-    * This method returns the id of the next section to display.
-    * If the next section to display has no background:
-    *   - If survey has background: returns 0 -> Back to survey background
-    *   - else: returns -1 -> The background will be removed
+    * This method returns the background of the next section to display.
+    *   - If survey has background: returns Background Url (section or survey background)
+    *   - else: returns False -> The background will be removed
     *
     * @private
     */
-    _getTargetBackgroundSectionId: function (previousPageId) {
+    _getTargetBackgroundUrl: function (previousPageId) {
         // Get next question to display
         if (previousPageId) {
-            var targetQuestion = this.options.sectionInfoByQuestion[previousPageId];
+            var targetQuestion = this.options.questionsInfo[previousPageId];
         } else {
-            var targetQuestion = this.options.sectionInfoByQuestion[this._getNextQuestionId()];
+            var targetQuestion = this.options.questionsInfo[this._getNextQuestionId()];
         }
 
-        if (targetQuestion['has_background']) {
-            return targetQuestion['section_id'];
-        } else if (this.options.sectionInfoByQuestion[0]['has_background']) {
-            return 0;
-        }
-        return -1;
+        return targetQuestion['background_url'];
     },
 
     _getCurrentQuestionId: function () {

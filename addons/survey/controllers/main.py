@@ -195,6 +195,8 @@ class Survey(http.Controller):
             values['token'] = token
         if survey.scoring_type != 'no_scoring' and survey.certification:
             values['graph_data'] = json.dumps(answer._prepare_statistics()[0])
+        if survey.background_image:
+            values['background_url'] = survey.background_url
         return values
 
     # ------------------------------------------------------------
@@ -242,7 +244,7 @@ class Survey(http.Controller):
             'is_html_empty': is_html_empty,
             'survey': survey_sudo,
             'answer': answer_sudo,
-            'section_info_by_question': survey_sudo._get_section_info_by_question(),
+            'questions_info': survey_sudo._get_questions_information(),
             'questions_by_section': {
                 section.id: section.question_ids.ids for section in survey_sudo.page_ids
             },
@@ -285,6 +287,7 @@ class Survey(http.Controller):
                 'previous_page_id': new_previous_id,
                 'has_answered': answer_sudo.user_input_line_ids.filtered(lambda line: line.question_id.id == new_previous_id),
                 'can_go_back': survey_sudo._can_go_back(answer_sudo, page_or_question),
+                'background_url': page_or_question.background_url
             })
             return data
 
@@ -311,6 +314,7 @@ class Survey(http.Controller):
                 page_or_question_key: next_page_or_question,
                 'has_answered': answer_sudo.user_input_line_ids.filtered(lambda line: line.question_id == next_page_or_question),
                 'can_go_back': survey_sudo._can_go_back(answer_sudo, next_page_or_question),
+                'background_url': next_page_or_question.background_url
             })
             if survey_sudo.questions_layout != 'one_page':
                 data.update({
@@ -319,6 +323,10 @@ class Survey(http.Controller):
         elif answer_sudo.state == 'done' or answer_sudo.survey_time_limit_reached:
             # Display success message
             return self._prepare_survey_finished_values(survey_sudo, answer_sudo)
+
+        # If survey start, add background if any
+        elif survey_sudo.background_image:
+            data['background_url'] = survey_sudo.background_url
 
         return data
 
@@ -365,28 +373,12 @@ class Survey(http.Controller):
         return request.render('survey.survey_page_fill',
             self._prepare_survey_data(access_data['survey_sudo'], access_data['answer_sudo'], **post))
 
-    @http.route('/survey/get_background_image/<string:survey_token>/<string:answer_token>/<int:question_id>', type='http', auth="public", website=True, sitemap=False)
-    def survey_get_background(self, survey_token, answer_token, question_id=0):
-        access_data = self._get_access_data(survey_token, answer_token, ensure_token=True)
-        if access_data['validity_code'] is not True:
-            return werkzeug.exceptions.Forbidden()
+    @http.route('/survey/get_background_image/<string:survey_token>/<int:question_id>', type='http', auth="public", website=True, sitemap=False)
+    def survey_get_background(self, survey_token, question_id=0):
+        survey_sudo, dummy = self._fetch_from_access_token(survey_token, False)
 
-        survey_sudo, answer_sudo = access_data['survey_sudo'], access_data['answer_sudo']
-
-        target_model = 'survey.survey'
-        target_id = survey_sudo.id
-
-        # Get section background_image
-        is_survey_start = answer_sudo.state == 'new' and question_id
-        if question_id and answer_sudo.state == 'in_progress' or is_survey_start:
-            target_question = survey_sudo.question_and_page_ids.filtered(lambda question: question.id == question_id)
-            if target_question.is_page:
-                target_section = target_question
-            else:
-                target_section = survey_sudo.page_ids.filtered(lambda section: target_question in section.question_ids)
-            if target_section.background_image:
-                target_model = 'survey.question'
-                target_id = target_section.id
+        target_model = 'survey.question' if question_id else 'survey.survey'
+        target_id = question_id or survey_sudo.id
 
         status, headers, image_base64 = request.env['ir.http'].sudo().binary_content(
             model=target_model, id=target_id, field='background_image',
