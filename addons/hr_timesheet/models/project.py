@@ -10,6 +10,13 @@ from odoo.exceptions import UserError, ValidationError, RedirectWarning
 class Project(models.Model):
     _inherit = "project.project"
 
+    @api.model
+    def default_get(self, field_list):
+        result = super().default_get(field_list)
+        if 'timesheet_encode_uom_id' in field_list:
+            result['timesheet_encode_uom_id'] = int(self.env['ir.config_parameter'].sudo().get_param('hr_timesheet.timesheet_encode_uom_id'))
+        return result
+
     allow_timesheets = fields.Boolean(
         "Timesheets", compute='_compute_allow_timesheets', store=True, readonly=False,
         default=True, help="Enable timesheeting on the project.")
@@ -22,14 +29,14 @@ class Project(models.Model):
     )
 
     timesheet_ids = fields.One2many('account.analytic.line', 'project_id', 'Associated Timesheets')
-    timesheet_encode_uom_id = fields.Many2one('uom.uom', related='company_id.timesheet_encode_uom_id')
+    timesheet_encode_uom_id = fields.Many2one('uom.uom', readonly=True)
     total_timesheet_time = fields.Integer(
         compute='_compute_total_timesheet_time',
         help="Total number of time (in the proper UoM) recorded in the project, rounded to the unit.")
     encode_uom_in_days = fields.Boolean(compute='_compute_encode_uom_in_days')
 
     def _compute_encode_uom_in_days(self):
-        self.encode_uom_in_days = self.env.company.timesheet_encode_uom_id == self.env.ref('uom.product_uom_day')
+        self.encode_uom_in_days = self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id') == self.env.ref('uom.product_uom_day')
 
     @api.depends('analytic_account_id')
     def _compute_allow_timesheets(self):
@@ -115,7 +122,7 @@ class Task(models.Model):
     encode_uom_in_days = fields.Boolean(compute='_compute_encode_uom_in_days', default=lambda self: self._uom_in_days())
 
     def _uom_in_days(self):
-        return self.env.company.timesheet_encode_uom_id == self.env.ref('uom.product_uom_day')
+        return self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id') == self.env.ref('uom.product_uom_day')
 
     def _compute_encode_uom_in_days(self):
         self.encode_uom_in_days = self._uom_in_days()
@@ -214,14 +221,14 @@ class Task(models.Model):
         result = super(Task, self)._fields_view_get(view_id=view_id, view_type=view_type, toolbar=toolbar, submenu=submenu)
         result['arch'] = self.env['account.analytic.line']._apply_timesheet_label(result['arch'])
 
-        if view_type == 'tree' and self.env.company.timesheet_encode_uom_id == self.env.ref('uom.product_uom_day'):
+        if view_type == 'tree' and self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id') == self.env.ref('uom.product_uom_day'):
             result['arch'] = self._apply_time_label(result['arch'])
         return result
 
     @api.model
     def _apply_time_label(self, view_arch):
         doc = etree.XML(view_arch)
-        encoding_uom = self.env.company.timesheet_encode_uom_id
+        encoding_uom = self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id')
         for node in doc.xpath("//field[@widget='timesheet_uom'][not(@string)] | //field[@widget='timesheet_uom_no_toggle'][not(@string)]"):
             name_with_uom = re.sub(_('Hours') + "|Hours", encoding_uom.name or '', self._fields[node.get('name')]._description_string(self.env), flags=re.IGNORECASE)
             node.set('string', name_with_uom)

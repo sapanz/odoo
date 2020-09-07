@@ -30,7 +30,7 @@ class Project(models.Model):
     def _plan_prepare_values(self):
         currency = self.env.company.currency_id
         uom_hour = self.env.ref('uom.product_uom_hour')
-        company_uom = self.env.company.timesheet_encode_uom_id
+        company_uom = self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id')
         is_uom_day = company_uom == self.env.ref('uom.product_uom_day')
         hour_rounding = uom_hour.rounding
         billable_types = ['non_billable', 'non_billable_project', 'billable_time', 'non_billable_timesheet', 'billable_fixed']
@@ -185,7 +185,7 @@ class Project(models.Model):
             return False
 
         uom_hour = self.env.ref('uom.product_uom_hour')
-        company_uom = self.env.company.timesheet_encode_uom_id
+        company_uom = self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id')
         is_uom_day = company_uom and company_uom == self.env.ref('uom.product_uom_day')
 
         # build SQL query and fetch raw data
@@ -522,7 +522,7 @@ class Project(models.Model):
 
         ts_tree = self.env.ref('hr_timesheet.hr_timesheet_line_tree')
         ts_form = self.env.ref('hr_timesheet.hr_timesheet_line_form')
-        if self.env.company.timesheet_encode_uom_id == self.env.ref('uom.product_uom_day'):
+        if self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id') == self.env.ref('uom.product_uom_day'):
             timesheet_label = [_('Days'), _('Recorded')]
         else:
             timesheet_label = [_('Hours'), _('Recorded')]

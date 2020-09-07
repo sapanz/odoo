@@ -15,7 +15,7 @@ class AccountAnalyticLine(models.Model):
     def default_get(self, field_list):
         result = super(AccountAnalyticLine, self).default_get(field_list)
         if 'encoding_uom_id' in field_list:
-            result['encoding_uom_id'] = self.env.company.timesheet_encode_uom_id.id
+            result['encoding_uom_id'] = int(self.env['ir.config_parameter'].sudo().get_param('hr_timesheet.timesheet_encode_uom_id'))
         if not self.env.context.get('default_employee_id') and 'employee_id' in field_list and result.get('user_id'):
             result['employee_id'] = self.env['hr.employee'].search([('user_id', '=', result['user_id'])], limit=1).id
         return result
@@ -47,11 +47,7 @@ class AccountAnalyticLine(models.Model):
     user_id = fields.Many2one(compute='_compute_user_id', store=True, readonly=False)
     employee_id = fields.Many2one('hr.employee', "Employee", domain=_domain_employee_id)
     department_id = fields.Many2one('hr.department', "Department", compute='_compute_department_id', store=True, compute_sudo=True)
-    encoding_uom_id = fields.Many2one('uom.uom', compute='_compute_encoding_uom_id')
-
-    def _compute_encoding_uom_id(self):
-        for analytic_line in self:
-            analytic_line.encoding_uom_id = analytic_line.company_id.timesheet_encode_uom_id
+    encoding_uom_id = fields.Many2one('uom.uom', readonly=True)
 
     @api.depends('task_id', 'task_id.project_id', 'project_id')
     def _compute_project_task_id(self):
@@ -115,7 +111,7 @@ class AccountAnalyticLine(models.Model):
     @api.model
     def _apply_timesheet_label(self, view_arch, view_type='form'):
         doc = etree.XML(view_arch)
-        encoding_uom = self.env.company.timesheet_encode_uom_id
+        encoding_uom = self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id')
         # Here, we select only the unit_amount field having no string set to give priority to
         # custom inheretied view stored in database. Even if normally, no xpath can be done on
         # 'string' attribute.
@@ -158,8 +154,7 @@ class AccountAnalyticLine(models.Model):
                 vals['partner_id'] = partner_id
         # set timesheet UoM from the AA company (AA implies uom)
         if 'product_uom_id' not in vals and all(v in vals for v in ['account_id', 'project_id']):  # project_id required to check this is timesheet flow
-            analytic_account = self.env['account.analytic.account'].sudo().browse(vals['account_id'])
-            vals['product_uom_id'] = analytic_account.company_id.project_time_mode_id.id
+            vals['product_uom_id'] = int(self.env['ir.config_parameter'].sudo().get_param('hr_timesheet.project_time_mode_id'))
         return vals
 
     def _timesheet_postprocess(self, values):
@@ -193,8 +188,8 @@ class AccountAnalyticLine(models.Model):
         return result
 
     def _is_timesheet_encode_uom_day(self):
-        company_uom = self.env.company.timesheet_encode_uom_id
-        return company_uom == self.env.ref('uom.product_uom_day')
+        default_encoding_uom = self.env['uom.uom']._get_uom_by_config_parameter('hr_timesheet.timesheet_encode_uom_id')
+        return default_encoding_uom == self.env.ref('uom.product_uom_day')
 
     def _convert_hours_to_days(self, time):
         uom_hour = self.env.ref('uom.product_uom_hour')
