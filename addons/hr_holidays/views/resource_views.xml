@@ -6,9 +6,22 @@
         <field name="model">resource.calendar.leaves</field>
         <field name="inherit_id" ref="resource.resource_calendar_leave_form"/>
         <field name="arch" type="xml">
-            <field name="name" position="after">
+            <field name="name" position="replace">
+                <field name="public_name" string="Reason"/>
                 <field name="holiday_id"/>
             </field>
         </field>
     </record>
+
+    <record id="resource_calendar_leave_tree_inherit" model="ir.ui.view">
+        <field name="name">resource.calendar.leaves.tree.inherit</field>
+        <field name="model">resource.calendar.leaves</field>
+        <field name="inherit_id" ref="resource.resource_calendar_leave_tree"/>
+        <field name="arch" type="xml">
+            <field name="name" position="replace">
+                <field name="public_name" string="Reason"/>
+            </field>
+        </field>
+    </record>
+
 </odoo>
