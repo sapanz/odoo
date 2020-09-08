@@ -5,13 +5,40 @@
             <field name="model">applicant.get.refuse.reason</field>
             <field name="arch" type="xml">
                 <form string="Refuse Reason">
-                    <group class="oe_title">
-                        <field name="refuse_reason_id"/>
-                        <field name="applicant_ids" invisible="1"/>
-                    </group>
+                    <!-- truly invisible fields for control and options -->
+                    <field name="composition_mode" invisible="1"/>
+                    <field name="email_from" invisible="1" />
+                    <field name="mail_server_id" invisible="1"/>
+                    <div name="mail_form">
+                        <!-- visible wizard -->
+                        <div>
+                            <group>
+                                <field name="refuse_reason_id"/>
+                                <label for="partner_ids" string="Recipients" groups="base.group_user"/>
+                                <div groups="base.group_user">
+                                    <span>Followers of the document and</span>
+                                    <field name="partner_ids" widget="many2many_tags_email" placeholder="Add contacts to notify..."
+                                        context="{'force_email':True, 'show_email':True}"/>
+                                </div>
+                                <field name="subject" placeholder="Subject..."/>
+                            </group>
+                            <field name="body" style="border:none;" options="{'style-inline': true}"/>
+                        </div>
+                        <group>
+                            <group attrs="{'invisible': [('composition_mode', '=', 'mass_mail')]}">
+                                <field name="attachment_ids" widget="many2many_binary" string="Attach a file" nolabel="1" colspan="2"/>
+                            </group>
+                            <group>
+                                <field name="template_id" options="{'no_create': True, 'no_edit': True}"
+                                    context="{'default_model': 'hr.applicant'}"/>
+                            </group>
+                        </group>
+                    </div>
+
                     <footer>
-                        <button name="action_refuse_reason_apply" string="Submit" type="object" class="btn-primary"/>
-                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                        <button name="action_send_mail" string="Send Mail" type="object" class="btn-primary"/>
+                        <button name="action_refuse_reason_apply" string="Close Without Sending email" type="object" class="btn-primary"/>
+                       <button string="Cancel" class="btn-secondary" special="cancel"/>
                     </footer>
                 </form>
             </field>
