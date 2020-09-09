@@ -35,14 +35,16 @@ class IrUiMenu(models.Model):
                                  help="If you have groups, the visibility of this menu will be based on these groups. "\
                                       "If this field is empty, Odoo will compute visibility based on the related object's read access.")
     complete_name = fields.Char(compute='_compute_complete_name', string='Full Path')
-    web_icon = fields.Char(string='Web Icon File')
     action = fields.Reference(selection=[('ir.actions.report', 'ir.actions.report'),
                                          ('ir.actions.act_window', 'ir.actions.act_window'),
                                          ('ir.actions.act_url', 'ir.actions.act_url'),
                                          ('ir.actions.server', 'ir.actions.server'),
                                          ('ir.actions.client', 'ir.actions.client')])
 
-    web_icon_data = fields.Binary(string='Web Icon Image', attachment=True)
+    # Why is it stored ???
+    web_icon = fields.Char(string='Web Icon File')
+    web_icon_data = fields.Image(string='Web Icon Image', attachment=True)
+    web_icon_url = fields.Char(string='Web Icon File', compute="_compute_web_icon_url", store=True, readonly=False)
 
     @api.depends('name', 'parent_id.complete_name')
     def _compute_complete_name(self):
@@ -57,6 +59,14 @@ class IrUiMenu(models.Model):
             return self.parent_id._get_full_name(level - 1) + MENU_ITEM_SEPARATOR + (self.name or "")
         else:
             return self.name
+
+    @api.depends('web_icon', 'web_icon_data')
+    def _compute_web_icon_url(self):
+        for menu in self:
+            if menu.web_icon_data:
+                menu.web_icon_url = f"/web/image/ir.ui.menu/{lang.id}/web_icon_data"
+            else:
+                menu.web_icon_url = False
 
     def read_image(self, path):
         if not path:
@@ -145,13 +155,13 @@ class IrUiMenu(models.Model):
         self.clear_caches()
         for values in vals_list:
             if 'web_icon' in values:
-                values['web_icon_data'] = self._compute_web_icon_data(values.get('web_icon'))
+                values.update(self._compute_web_icon_data(values.get('web_icon')))
         return super(IrUiMenu, self).create(vals_list)
 
     def write(self, values):
         self.clear_caches()
         if 'web_icon' in values:
-            values['web_icon_data'] = self._compute_web_icon_data(values.get('web_icon'))
+            values.update(self._compute_web_icon_data(values.get('web_icon')))
         return super(IrUiMenu, self).write(values)
 
     def _compute_web_icon_data(self, web_icon):
@@ -162,7 +172,11 @@ class IrUiMenu(models.Model):
             and it only has to call `read_image` if it's an image.
         """
         if web_icon and len(web_icon.split(',')) == 2:
-            return self.read_image(web_icon)
+            split = web_icon.split(',')
+            if len(split) == 2 and split[1].startswith('static/'):
+                return dict(web_icon_url="/%s/%s" % (split[0], split[1]))
+            else:
+                return dict(web_icon_data=self.read_image(web_icon))
 
     def unlink(self):
         # Detach children and promote them to top-level, because it would be unwise to
@@ -224,7 +238,7 @@ class IrUiMenu(models.Model):
         :return: the menu root
         :rtype: dict('children': menu_nodes)
         """
-        fields = ['name', 'sequence', 'parent_id', 'action', 'web_icon', 'web_icon_data']
+        fields = ['name', 'sequence', 'parent_id', 'action', 'web_icon', 'web_icon_data', 'web_icon_url']
         menu_roots = self.get_user_roots()
         menu_roots_data = menu_roots.read(fields) if menu_roots else []
         menu_root = {
