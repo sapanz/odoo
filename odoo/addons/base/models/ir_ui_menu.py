@@ -44,7 +44,7 @@ class IrUiMenu(models.Model):
     # Why is it stored ???
     web_icon = fields.Char(string='Web Icon File')
     web_icon_data = fields.Image(string='Web Icon Image', attachment=True)
-    web_icon_url = fields.Char(string='Web Icon File', compute="_compute_web_icon_url", store=True, readonly=False)
+    web_icon_url = fields.Char(string='Web Icon Url', compute="_compute_web_icon_url", store=True, readonly=False)
 
     @api.depends('name', 'parent_id.complete_name')
     def _compute_complete_name(self):
@@ -60,11 +60,14 @@ class IrUiMenu(models.Model):
         else:
             return self.name
 
+    # VFE FIXME is this compute even useful ?
+    # static web_icon_url value would be probably more useful
+    # and specify web_icon as store False ?
     @api.depends('web_icon', 'web_icon_data')
     def _compute_web_icon_url(self):
         for menu in self:
             if menu.web_icon_data:
-                menu.web_icon_url = f"/web/image/ir.ui.menu/{lang.id}/web_icon_data"
+                menu.web_icon_url = f"/web/image/ir.ui.menu/{menu.id}/web_icon_data"
             else:
                 menu.web_icon_url = False
 
