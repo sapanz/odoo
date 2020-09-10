@@ -5,6 +5,7 @@ from itertools import groupby
 from operator import itemgetter
 
 from odoo import _, api, fields, models
+from odoo.exceptions import UserError
 
 
 class StockPackageLevel(models.Model):
@@ -152,6 +153,8 @@ class StockPackageLevel(models.Model):
         return result
 
     def unlink(self):
+        if any(level.state not in ('draft', 'cancel') for level in self):
+            raise UserError(_('You can only delete draft package.'))
         self.mapped('move_ids').unlink()
         self.mapped('move_line_ids').write({'result_package_id': False})
         return super(StockPackageLevel, self).unlink()
