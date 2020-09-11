@@ -21,13 +21,93 @@ class AccountEdiFormat(models.Model):
     _inherit = 'account.edi.format'
 
     # -------------------------------------------------------------------------
-    # Export
+    # Helpers
     # -------------------------------------------------------------------------
 
-    def _is_embedding_to_invoice_pdf_needed(self):
+    @api.model
+    def _l10n_it_edi_generate_electronic_invoice_filename(self, invoice):
+        a = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        n = self.id
+        progressive_number = ""
+        while n:
+            (n,m) = divmod(n,len(a))
+            progressive_number = a[m] + progressive_number
+
+        return '%(country_code)s%(codice)s_%(progressive_number)s.xml' % {
+            'country_code': self.company_id.country_id.code,
+            'codice': self.company_id.l10n_it_codice_fiscale,
+            'progressive_number': progressive_number.zfill(5),
+            }
+
+    def _l10n_it_edi_check_invoice_configuration(self, invoice):
+        seller = invoice.company_id
+        buyer = invoice.commercial_partner_id
+
+        # <1.1.1.1>
+        if not seller.country_id:
+            raise UserError(_("%s must have a country") % (seller.display_name))
+
+        # <1.1.1.2>
+        if not seller.vat:
+            raise UserError(_("%s must have a VAT number") % (seller.display_name))
+        elif len(seller.vat) > 30:
+            raise UserError(_("The maximum length for VAT number is 30. %s have a VAT number too long: %s.") % (seller.display_name, seller.vat))
+
+        # <1.2.1.2>
+        if not seller.l10n_it_codice_fiscale:
+            raise UserError(_("%s must have a codice fiscale number") % (seller.display_name))
+
+        # <1.2.1.8>
+        if not seller.l10n_it_tax_system:
+            raise UserError(_("The seller's company must have a tax system."))
+
+        # <1.2.2>
+        if not seller.street and not seller.street2:
+            raise UserError(_("%s must have a street.") % (seller.display_name))
+        if not seller.zip:
+            raise UserError(_("%s must have a post code.") % (seller.display_name))
+        if len(seller.zip) != 5 and seller.country_id.code == 'IT':
+            raise UserError(_("%s must have a post code of length 5.") % (seller.display_name))
+        if not seller.city:
+            raise UserError(_("%s must have a city.") % (seller.display_name))
+        if not seller.country_id:
+            raise UserError(_("%s must have a country.") % (seller.display_name))
+
+        if seller.l10n_it_has_tax_representative and not seller.l10n_it_tax_representative_partner_id.vat:
+            raise UserError(_("Tax representative partner %s of %s must have a tax number.") % (seller.l10n_it_tax_representative_partner_id.display_name, seller.display_name))
+
+        # <1.4.1>
+        if not buyer.vat and not buyer.l10n_it_codice_fiscale and buyer.country_id.code == 'IT':
+            raise UserError(_("The buyer, %s, or his company must have either a VAT number either a tax code (Codice Fiscale).") % (buyer.display_name))
+
+        # <1.4.2>
+        if not buyer.street and not buyer.street2:
+            raise UserError(_("%s must have a street.") % (buyer.display_name))
+        if not buyer.zip:
+            raise UserError(_("%s must have a post code.") % (buyer.display_name))
+        if len(buyer.zip) != 5 and buyer.country_id.code == 'IT':
+            raise UserError(_("%s must have a post code of length 5.") % (buyer.display_name))
+        if not buyer.city:
+            raise UserError(_("%s must have a city.") % (buyer.display_name))
+        if not buyer.country_id:
+            raise UserError(_("%s must have a country.") % (buyer.display_name))
+
+        # <2.2.1>
+        for invoice_line in invoice.invoice_line_ids:
+            if len(invoice_line.tax_ids) != 1:
+                raise UserError(_("You must select one and only one tax by line."))
+
+        for tax_line in invoice.line_ids.filtered(lambda line: line.tax_line_id):
+            if not tax_line.tax_line_id.l10n_it_has_exoneration and tax_line.tax_line_id.amount == 0:
+                raise ValidationError(_("%s has an amount of 0.0, you must indicate the kind of exoneration.", tax_line.name))
+
+    # -------------------------------------------------------------------------
+    # EXPORT
+    # -------------------------------------------------------------------------
+
+    def _needs_web_services(self):
         # OVERRIDE
-        self.ensure_one()
-        return True if self.code == 'fattura_pa' else super()._is_embedding_to_invoice_pdf_needed()
+        return self.code == 'fattura_pa' or super()._needs_web_services()
 
     def _is_compatible_with_journal(self, journal):
         # OVERRIDE
@@ -45,6 +125,70 @@ class AccountEdiFormat(models.Model):
         # Determine on which invoices the Mexican CFDI must be generated.
         return invoice.is_sale_document() and invoice.l10n_it_send_state not in ['sent', 'delivered', 'delivered_accepted'] and invoice.country_code == 'IT'
 
+    def _check_before_xml_exporting(self, invoice):
+        errors = []
+        seller = invoice.company_id
+        buyer = invoice.commercial_partner_id
+
+        # <1.1.1.1>
+        if not seller.country_id:
+            errors.append(_("%s must have a country") % (seller.display_name))
+
+        # <1.1.1.2>
+        if not seller.vat:
+            errors.append(_("%s must have a VAT number") % (seller.display_name))
+        elif len(seller.vat) > 30:
+            errors.append(_("The maximum length for VAT number is 30. %s have a VAT number too long: %s.") % (seller.display_name, seller.vat))
+
+        # <1.2.1.2>
+        if not seller.l10n_it_codice_fiscale:
+            errors.append(_("%s must have a codice fiscale number") % (seller.display_name))
+
+        # <1.2.1.8>
+        if not seller.l10n_it_tax_system:
+            errors.append(_("The seller's company must have a tax system."))
+
+        # <1.2.2>
+        if not seller.street and not seller.street2:
+            errors.append(_("%s must have a street.") % (seller.display_name))
+        if not seller.zip:
+            errors.append(_("%s must have a post code.") % (seller.display_name))
+        if len(seller.zip) != 5 and seller.country_id.code == 'IT':
+            errors.append(_("%s must have a post code of length 5.") % (seller.display_name))
+        if not seller.city:
+            errors.append(_("%s must have a city.") % (seller.display_name))
+        if not seller.country_id:
+            errors.append(_("%s must have a country.") % (seller.display_name))
+
+        if seller.l10n_it_has_tax_representative and not seller.l10n_it_tax_representative_partner_id.vat:
+            errors.append(_("Tax representative partner %s of %s must have a tax number.") % (seller.l10n_it_tax_representative_partner_id.display_name, seller.display_name))
+
+        # <1.4.1>
+        if not buyer.vat and not buyer.l10n_it_codice_fiscale and buyer.country_id.code == 'IT':
+            errors.append(_("The buyer, %s, or his company must have either a VAT number either a tax code (Codice Fiscale).") % (buyer.display_name))
+
+        # <1.4.2>
+        if not buyer.street and not buyer.street2:
+            errors.append(_("%s must have a street.") % (buyer.display_name))
+        if not buyer.zip:
+            errors.append(_("%s must have a post code.") % (buyer.display_name))
+        if len(buyer.zip) != 5 and buyer.country_id.code == 'IT':
+            errors.append(_("%s must have a post code of length 5.") % (buyer.display_name))
+        if not buyer.city:
+            errors.append(_("%s must have a city.") % (buyer.display_name))
+        if not buyer.country_id:
+            errors.append(_("%s must have a country.") % (buyer.display_name))
+
+        # <2.2.1>
+        if any(len(l.tax_ids) != 1 for l in invoice.invoice_line_ids):
+            errors.append(_("You must select one and only one tax by line."))
+
+        for tax_line in invoice.line_ids.filtered(lambda line: line.tax_line_id):
+            if not tax_line.tax_line_id.l10n_it_has_exoneration and tax_line.tax_line_id.amount == 0:
+                errors.append(_("%s has an amount of 0.0, you must indicate the kind of exoneration.", tax_line.name))
+
+        return errors
+
     def _post_invoice_edi(self, invoices, test_mode=False):
         # OVERRIDE
         self.ensure_one()
@@ -54,15 +198,16 @@ class AccountEdiFormat(models.Model):
 
         invoice = invoices  # no batching ensure that we only have one invoice
         invoice.l10n_it_send_state = 'other'
-        invoice._check_before_xml_exporting()
-        res = invoice.invoice_generate_xml()
-        if len(invoice.commercial_partner_id.l10n_it_pa_index or '') == 6:
-            invoice.message_post(
-                body=(_("Invoices for PA are not managed by Odoo, you can download the document and send it on your own."))
-            )
-        else:
-            invoice.l10n_it_send_state = 'to_send'
-            invoice.send_pec_mail()
+        res = {'errors': invoice._check_before_xml_exporting()}
+        if not res['errors']:
+            res = invoice.invoice_generate_xml()
+            if len(invoice.commercial_partner_id.l10n_it_pa_index or '') == 6:
+                invoice.message_post(
+                    body=(_("Invoices for PA are not managed by Odoo, you can download the document and send it on your own."))
+                )
+            else:
+                invoice.l10n_it_send_state = 'to_send'
+                invoice.send_pec_mail()
         return {invoice: res}
 
     # -------------------------------------------------------------------------
