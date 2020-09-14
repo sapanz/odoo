@@ -164,10 +164,10 @@ class PaymentTransaction(models.Model):
         if tx_status in (
             'ChallengeShopper', 'IdentifyShopper', 'Pending', 'PresentToShopper', 'Received',
             'RedirectShopper'
-        ):  # pending
+        ):  # `pending` state
             if self.state != 'pending':  # Redundant feedbacks can be sent through the webhook
                 self._set_pending()
-        elif tx_status == 'Authorised':  # done
+        elif tx_status == 'Authorised':  # `done` state
             if self.tokenize \
                     and 'recurring.recurringDetailReference' in data.get('additionalData', {}):
                 # Create the token with the data of the payment method  TODO probably factor that out when manage tokens is in da place
@@ -186,10 +186,10 @@ class PaymentTransaction(models.Model):
                 )
             if self.state != 'done':  # Redundant feedbacks can be sent through the webhook
                 self._set_done()
-        elif tx_status == 'Cancelled':  # cancel
+        elif tx_status == 'Cancelled':  # `cancel` state
             if self.state != 'cancel':  # Redundant feedbacks can be sent through the webhook
                 self._set_canceled()
-        else:  # error
+        else:  # `error` state
             if self.state != 'error':  # Redundant feedbacks can be sent through the webhook
                 _logger.info(f"received data with invalid transaction status: {tx_status}")
                 self._set_error("Adyen: " + _(
