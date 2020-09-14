@@ -346,8 +346,8 @@ class PaymentTransaction(models.Model):
     def _send_payment_request(self, operation='online'):
         """ Request the provider of the acquirer handling the transactions to execute the payment.
 
-        For an acquirer to support tokenization, it must override this method and request a money
-        transfer to its provider, then call this method to log the 'sent' message.
+        For an acquirer to support tokenization, it must override this method and call it to log the
+        'sent' message, then request a money transfer to its provider.
 
         :param str operation: The operation of the payment: 'online', 'offline' or 'validation'.
         :return: None
@@ -686,7 +686,7 @@ class PaymentTransaction(models.Model):
     #=== LOGGING METHODS ===#
 
     def _log_sent_message(self):
-        """ Log in the chatter of relevant documents that the transactions have been sent.
+        """ Log in the chatter of relevant documents that the transactions have been requested.
 
         :return: None
         """
@@ -696,7 +696,7 @@ class PaymentTransaction(models.Model):
                 invoice.message_post(body=message)
 
     def _get_sent_message(self):
-        """ Return the message stating that the transaction has been sent.
+        """ Return the message stating that the transaction has been requested.
 
         Note: self.ensure_one()
 
@@ -717,12 +717,12 @@ class PaymentTransaction(models.Model):
             message = _(
                 "The customer has selected %(acq_name)s to make the payment.",
                 acq_name=self.acquirer_id.name
-            )
+            )  # TODO ANV check that payment_transfer indeed uses this, or remove
         else:  # The payment is direct and initiated through an inline form
             message = _(
                 "A transaction with reference %(ref)s has been initiated (%(acq_name)s).",
                 ref=self.reference, acq_name=self.acquirer_id.name
-            )
+            )  # TODO ANV check that at least one acquirer uses this, or remove
         return message
 
     def _log_received_message(self):

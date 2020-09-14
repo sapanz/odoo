@@ -54,8 +54,10 @@ class PaymentTransaction(models.Model):
         :param str operation: The operation of the payment: 'online', 'offline' or 'validation'.
         :return: None
         """
+        super()._send_payment_request(operation)  # Log the 'sent' message
+
         if self.acquirer_id.provider != 'adyen':
-            return super()._send_payment_request(operation)
+            return
 
         # Make the payment requests to Adyen
         for tx in self:
@@ -95,8 +97,6 @@ class PaymentTransaction(models.Model):
             # Handle the payment request response
             _logger.info(f"payment request response:\n{pprint.pformat(response_content)}")
             tx._handle_feedback_data(response_content, 'adyen')
-
-        return super()._send_payment_request(operation)
 
     @api.model
     def _get_tx_from_data(self, data, provider):
