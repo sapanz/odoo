@@ -149,6 +149,8 @@ class IrActionsReport(models.Model):
             # expected in the route /report/<converter>/<reportname> and must
             # not be removed by clean_action
             "context", "data",
+            # not a real field but an option to be forwarded to the js framework
+            "close_on_report_download",
         }
 
     def associated_view(self):

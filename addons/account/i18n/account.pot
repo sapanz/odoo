@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Odoo Server 14.0\n"
+"Project-Id-Version: Odoo Server 14.0+e\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-02 14:11+0000\n"
-"PO-Revision-Date: 2020-10-02 14:11+0000\n"
+"POT-Creation-Date: 2020-10-05 13:53+0000\n"
+"PO-Revision-Date: 2020-10-05 13:53+0000\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "MIME-Version: 1.0\n"
@@ -7029,6 +7029,11 @@ msgid "Layout"
 msgstr ""
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.account_tour_upload_bill
+msgid "Learn how to do it."
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,help:account.field_account_journal__sale_activity_user_id
 msgid "Leave empty to assign the Salesperson of the invoice."
 msgstr ""
@@ -7069,6 +7074,13 @@ msgstr ""
 #. module: account
 #: model_terms:ir.ui.view,arch_db:account.dashboard_onboarding_bill_step
 msgid "Let's start!"
+msgstr ""
+
+#. module: account
+#. openerp-web
+#: code:addons/account/static/src/js/tours/account.js:0
+#, python-format
+msgid "Let’s go back to the dashboard."
 msgstr ""
 
 #. module: account
@@ -7946,7 +7958,7 @@ msgstr ""
 #. openerp-web
 #: code:addons/account/static/src/js/tours/account.js:0
 #, python-format
-msgid "Once everything is as you want it, validate."
+msgid "Once everything is as you want, press SAVE."
 msgstr ""
 
 #. module: account
@@ -8137,6 +8149,18 @@ msgstr ""
 #: model:ir.model.fields,field_description:account.field_account_payment_term_line__option
 #: model_terms:ir.ui.view,arch_db:account.tax_adjustments_wizard
 msgid "Options"
+msgstr ""
+
+#. module: account
+#: code:addons/account/wizard/account_tour_upload_bill.py:0
+#, python-format
+msgid "Or send a bill by email"
+msgstr ""
+
+#. module: account
+#: code:addons/account/wizard/account_tour_upload_bill.py:0
+#, python-format
+msgid "Or send a bill to %s@%s"
 msgstr ""
 
 #. module: account
@@ -12656,6 +12680,12 @@ msgid "Transfers"
 msgstr ""
 
 #. module: account
+#: code:addons/account/wizard/account_tour_upload_bill.py:0
+#, python-format
+msgid "Try a sample vendor bill"
+msgstr ""
+
+#. module: account
 #: model:ir.model.fields,field_description:account.field_account_account__user_type_id
 #: model:ir.model.fields,field_description:account.field_account_account_template__user_type_id
 #: model:ir.model.fields,field_description:account.field_account_account_type__type
@@ -12852,6 +12882,12 @@ msgstr ""
 #: code:addons/account/static/src/xml/bills_tree_upload_views.xml:0
 #, python-format
 msgid "Upload"
+msgstr ""
+
+#. module: account
+#: code:addons/account/wizard/account_tour_upload_bill.py:0
+#, python-format
+msgid "Upload your own bill"
 msgstr ""
 
 #. module: account
@@ -13707,6 +13743,11 @@ msgid "You don't have the access rights to post an invoice."
 msgstr ""
 
 #. module: account
+#: model_terms:ir.ui.view,arch_db:account.account_tour_upload_bill
+msgid "You email server is not set up."
+msgstr ""
+
+#. module: account
 #: model_terms:ir.ui.view,arch_db:account.view_move_form
 msgid "You have"
 msgstr ""
@@ -13771,6 +13812,7 @@ msgstr ""
 
 #. module: account
 #: code:addons/account/models/account_move.py:0
+#: code:addons/account/wizard/account_automatic_entry_wizard.py:0
 #: code:addons/account/wizard/account_automatic_entry_wizard.py:0
 #, python-format
 msgid "[Not set]"

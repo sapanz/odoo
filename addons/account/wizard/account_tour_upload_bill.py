@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 
-from odoo import fields, models, api, _
+from odoo import fields, models, _
+from odoo.tools.misc import format_date
 from odoo.modules.module import get_resource_path
+
 import base64
+import io
+from PyPDF2 import PdfFileReader, PdfFileWriter
+from reportlab.pdfgen import canvas
+from datetime import timedelta
+
 
 class AccountTourUploadBill(models.TransientModel):
     _name = 'account.tour.upload.bill'
@@ -23,18 +30,80 @@ class AccountTourUploadBill(models.TransientModel):
     )
 
     def _selection_values(self):
+        values = [
+            ('sample', _('Try a sample vendor bill')),
+            ('upload', _('Upload your own bill')),
+        ]
         journal_alias = self.env['account.journal'] \
             .search([('type', '=', 'purchase'), ('company_id', '=', self.env.company.id)], limit=1)
+        if journal_alias.alias_domain:
+            values += [('email', _('Or send a bill to %s@%s', journal_alias.alias_name, journal_alias.alias_domain))]
+        else:
+            values += [('noemail', _('Or send a bill by email'))]
 
-        return [('sample', 'Try a sample vendor bill'),
-                ('upload', 'Upload your own bill'),
-                ('email', 'Or send a bill to %s@%s' % (journal_alias.alias_name, journal_alias.alias_domain))]
+        return values
 
     def _compute_sample_bill_image(self):
         """ Retrieve sample bill with facturx to speed up onboarding """
+        def addAddress(canvas, x, y, partner):
+            can.setFillColorRGB(1, 1, 1)
+            can.rect(x, y, width*0.3, height*0.1, fill=1, stroke=0)
+            can.setFillColorRGB(0.4, 0.4, 0.4)
+            for i, line in enumerate(partner.split('\n')):
+                if i == 0:
+                    can.setFont("Helvetica-Bold", height/80)
+                if i == 1:
+                    can.setFont("Helvetica", height/80)
+                can.drawString(x + width*0.01, y + height*0.09 - i*height/70, line)
+
+        def addDate(canvas, x, y, date):
+            can.setFillColorRGB(1, 1, 1)
+            can.rect(x, y, width*0.1, height*0.0166, fill=1, stroke=0)
+            can.setFont("Helvetica", height/80)
+            can.setFillColorRGB(0.52, 0.52, 0.52)
+            can.drawString(x + width/500, y + height/250, date)
+
         try:
             path = get_resource_path('account_edi_facturx', 'data/files', 'Invoice.pdf')
-            self.sample_bill_preview = base64.b64encode(open(path, 'rb').read()) if path else False
+            pdf_reader = PdfFileReader(open(path, 'rb'))
+            pdf_writer = PdfFileWriter()
+            for i in range(pdf_reader.getNumPages()):
+                page = pdf_reader.getPage(i)
+                canvas_stream = io.BytesIO()
+                can = canvas.Canvas(canvas_stream)
+                width = float(abs(page.mediaBox.getWidth()))
+                height = float(abs(page.mediaBox.getHeight()))
+                # Vendor address
+                addAddress(can, width*0.15, height*0.88, (
+                    "Odoo\n"
+                    "Chaussée de Namur, 40\n"
+                    "1367 Grand-Rosière\n"
+                    "Belgium"
+                ))
+                # Client address
+                addAddress(can, width*0.58, height*0.765, (
+                    "{name}\n"
+                    "{street}\n"
+                    "{street2}\n"
+                    "{zip} {city}\n"
+                    "{country}\n"
+                    "{vat}"
+                ).format(
+                    **{key: val or "" for key, val in self.env.company.read()[0].items()},
+                    country=self.env.company.country_id.name or "",
+                ))
+                # Invoice Date
+                addDate(can, width*0.05, height*0.675, format_date(self.env, fields.Date.today()))
+                # Due Date
+                addDate(can, width*0.182, height*0.675, format_date(self.env, fields.Date.today() + timedelta(days=7)))
+                can.save()
+                item_pdf = PdfFileReader(canvas_stream, overwriteWarnings=False)
+
+                page.mergePage(item_pdf.getPage(i))
+                pdf_writer.addPage(page)
+            original_stream = io.BytesIO()
+            pdf_writer.write(original_stream)
+            self.sample_bill_preview = base64.b64encode(original_stream.getvalue())
         except (IOError, OSError):
             self.sample_bill_preview = False
         return
