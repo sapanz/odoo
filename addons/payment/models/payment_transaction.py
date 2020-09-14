@@ -343,13 +343,13 @@ class PaymentTransaction(models.Model):
         """
         return dict()
 
-    def _send_payment_request(self, _operation='online'):
+    def _send_payment_request(self, operation='online'):
         """ Request the provider of the acquirer handling the transactions to execute the payment.
 
         For an acquirer to support tokenization, it must override this method and request a money
-        transfer to its provider, then call this method to log the sent message.
+        transfer to its provider, then call this method to log the 'sent' message.
 
-        :param str _operation: The operation of the payment: 'online', 'offline' or 'validation'.
+        :param str operation: The operation of the payment: 'online', 'offline' or 'validation'.
         :return: None
         """
         self._log_sent_message()
