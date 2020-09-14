@@ -1,0 +1,22 @@
+.recurrent-checkbox {
+    padding-left: 0.5rem !important;
+}
+
+.recurrent-table {
+	margin-bottom: 0 !important;
+
+	th, td {
+    	padding: 0.5rem !important;
+	}
+
+	input {
+		z-index:1 !important;
+		position: relative !important;
+	}
+}
+
+.recurrent-dropdown-item-text {
+    display: block;
+    padding: 0.25rem 0.8rem;
+    color: #666666;
+}

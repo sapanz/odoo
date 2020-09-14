@@ -678,13 +678,14 @@ class Task(models.Model):
         ('day', 'Day of the Year'),
     ], default='date', compute='_compute_repeat', readonly=False)
 
-    mon = fields.Boolean(string="Mon", compute='_compute_repeat', readonly=False)
-    tue = fields.Boolean(string="Tue", compute='_compute_repeat', readonly=False)
-    wed = fields.Boolean(string="Wed", compute='_compute_repeat', readonly=False)
-    thu = fields.Boolean(string="Thu", compute='_compute_repeat', readonly=False)
-    fri = fields.Boolean(string="Fri", compute='_compute_repeat', readonly=False)
-    sat = fields.Boolean(string="Sat", compute='_compute_repeat', readonly=False)
-    sun = fields.Boolean(string="Sun", compute='_compute_repeat', readonly=False)
+    weekly = fields.Boolean('Weekly', store=False)
+    mo = fields.Boolean(string="Mo", compute='_compute_repeat', readonly=False)
+    tu = fields.Boolean(string="Tu", compute='_compute_repeat', readonly=False)
+    we = fields.Boolean(string="We", compute='_compute_repeat', readonly=False)
+    th = fields.Boolean(string="Th", compute='_compute_repeat', readonly=False)
+    fr = fields.Boolean(string="Fr", compute='_compute_repeat', readonly=False)
+    sa = fields.Boolean(string="Sa", compute='_compute_repeat', readonly=False)
+    su = fields.Boolean(string="Su", compute='_compute_repeat', readonly=False)
 
     repeat_day = fields.Selection([
         (str(i), str(i)) for i in range(1, 32)
@@ -696,13 +697,13 @@ class Task(models.Model):
         ('last', 'Last'),
     ], default='first', compute='_compute_repeat', readonly=False)
     repeat_weekday = fields.Selection([
-        ('mon', 'Monday'),
-        ('tue', 'Tuesday'),
-        ('wed', 'Wednesday'),
-        ('thu', 'Thursday'),
-        ('fri', 'Friday'),
-        ('sat', 'Saturday'),
-        ('sun', 'Sunday'),
+        ('mo', 'Monday'),
+        ('tu', 'Tuesday'),
+        ('we', 'Wednesday'),
+        ('th', 'Thursday'),
+        ('fr', 'Friday'),
+        ('sa', 'Saturday'),
+        ('su', 'Sunday'),
     ], string='Day Of The Week', compute='_compute_repeat', readonly=False)
     repeat_month = fields.Selection([
         ('january', 'January'),
@@ -727,8 +728,8 @@ class Task(models.Model):
     @api.model
     def _get_recurrence_fields(self):
         return ['repeat_interval', 'repeat_unit', 'repeat_type', 'repeat_until', 'repeat_number',
-                'repeat_on_month', 'repeat_on_year', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat',
-                'sun', 'repeat_day', 'repeat_week', 'repeat_month', 'repeat_weekday']
+                'repeat_on_month', 'repeat_on_year', 'mo', 'tu', 'we', 'th', 'fr', 'sa',
+                'su', 'repeat_day', 'repeat_week', 'repeat_month', 'repeat_weekday']
 
     @api.depends('recurring_task', 'repeat_unit', 'repeat_on_month', 'repeat_on_year')
     def _compute_repeat_visibility(self):
@@ -760,8 +761,8 @@ class Task(models.Model):
 
     @api.depends(
         'recurring_task', 'repeat_interval', 'repeat_unit', 'repeat_type', 'repeat_until',
-        'repeat_number', 'repeat_on_month', 'repeat_on_year', 'mon', 'tue', 'wed', 'thu', 'fri',
-        'sat', 'sun', 'repeat_day', 'repeat_week', 'repeat_month', 'repeat_weekday')
+        'repeat_number', 'repeat_on_month', 'repeat_on_year', 'mo', 'tu', 'we', 'th', 'fr',
+        'sa', 'su', 'repeat_day', 'repeat_week', 'repeat_month', 'repeat_weekday')
     def _compute_recurrence_message(self):
         self.recurrence_message = False
         for task in self.filtered(lambda t: t.recurring_task and t._is_recurrence_valid()):

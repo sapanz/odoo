@@ -714,13 +714,7 @@
                                     </div>
 
 
-                                    <field name="mon" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
-                                    <field name="tue" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
-                                    <field name="wed" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
-                                    <field name="thu" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
-                                    <field name="fri" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
-                                    <field name="sat" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
-                                    <field name="sun" attrs="{'invisible': [('repeat_show_dow', '=', False)]}" />
+                                    <field name="weekly" widget="web_weekly_recurrent_task"/>
 
                                     <label for="repeat_type" />
                                     <div class="o_row">

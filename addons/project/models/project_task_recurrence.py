@@ -24,13 +24,13 @@ MONTHS = {
 }
 
 DAYS = {
-    'mon': MO,
-    'tue': TU,
-    'wed': WE,
-    'thu': TH,
-    'fri': FR,
-    'sat': SA,
-    'sun': SU,
+    'mo': MO,
+    'tu': TU,
+    'we': WE,
+    'th': TH,
+    'fr': FR,
+    'sa': SA,
+    'su': SU,
 }
 
 WEEKS = {
@@ -73,13 +73,13 @@ class ProjectTaskRecurrence(models.Model):
         ('day', 'Day of the Year'),
     ])
 
-    mon = fields.Boolean(string="Mon")
-    tue = fields.Boolean(string="Tue")
-    wed = fields.Boolean(string="Wed")
-    thu = fields.Boolean(string="Thu")
-    fri = fields.Boolean(string="Fri")
-    sat = fields.Boolean(string="Sat")
-    sun = fields.Boolean(string="Sun")
+    mo = fields.Boolean(string="Mo")
+    tu = fields.Boolean(string="Tu")
+    we = fields.Boolean(string="We")
+    th = fields.Boolean(string="Th")
+    fr = fields.Boolean(string="Fr")
+    sa = fields.Boolean(string="Sa")
+    su = fields.Boolean(string="Su")
 
     repeat_day = fields.Selection([
         (str(i), str(i)) for i in range(1, 32)
@@ -91,13 +91,13 @@ class ProjectTaskRecurrence(models.Model):
         ('last', 'Last'),
     ])
     repeat_weekday = fields.Selection([
-        ('mon', 'Monday'),
-        ('tue', 'Tuesday'),
-        ('wed', 'Wednesday'),
-        ('thu', 'Thursday'),
-        ('fri', 'Friday'),
-        ('sat', 'Saturday'),
-        ('sun', 'Sunday'),
+        ('mo', 'Monday'),
+        ('tu', 'Tuesday'),
+        ('we', 'Wednesday'),
+        ('th', 'Thursday'),
+        ('fr', 'Friday'),
+        ('sa', 'Saturday'),
+        ('su', 'Sunday'),
     ], string='Day Of The Week', readonly=False)
     repeat_month = fields.Selection([
         ('january', 'January'),
@@ -114,10 +114,10 @@ class ProjectTaskRecurrence(models.Model):
         ('december', 'December'),
     ])
 
-    @api.constrains('repeat_unit', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun')
+    @api.constrains('repeat_unit', 'mo', 'tu', 'we', 'th', 'fr', 'sa', 'su')
     def _check_recurrence_days(self):
         for project in self.filtered(lambda p: p.repeat_unit == 'week'):
-            if not any([project.mon, project.tue, project.wed, project.thu, project.fri, project.sat, project.sun]):
+            if not any([project.mo, project.tu, project.we, project.th, project.fr, project.sa, project.su]):
                 raise ValidationError('You should select a least one day')
 
     @api.constrains('repeat_interval')

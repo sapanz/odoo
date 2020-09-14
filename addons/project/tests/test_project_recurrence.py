@@ -109,7 +109,7 @@ class TestProjectrecurrence(SavepointCase):
                     'repeat_unit': 'week',
                     'repeat_type': 'after',
                     'repeat_number': 2,
-                    'mon': True,
+                    'mo': True,
                 })
 
         with patch.object(fields.Date, 'today', lambda: datetime(2020, 1, 6)):
@@ -200,23 +200,24 @@ class TestProjectrecurrence(SavepointCase):
         self.assertFalse(form.repeat_show_month)
 
     def test_recurrence_week_day(self):
-        form = Form(self.env['project.task'])
-
-        form.name = 'test recurring task'
-        form.project_id = self.project_recurring
-        form.recurring_task = True
-        form.repeat_unit = 'week'
-
-        form.mon = False
-        form.tue = False
-        form.wed = False
-        form.thu = False
-        form.fri = False
-        form.sat = False
-        form.sun = False
-
+        # because of new web_recurrent_task widget, no need for mo,tu...,
+        # su field to be in xml, so need to change test case
         with self.assertRaises(ValidationError), self.cr.savepoint():
-            form.save()
+            self.env['project.task'].create({
+                'name': 'test recurring task',
+                'project_id': self.project_recurring.id,
+                'recurring_task': True,
+                'repeat_interval': 1,
+                'repeat_unit': 'week',
+                'repeat_type': 'forever',
+                'mo': False,
+                'tu': False,
+                'we': False,
+                'th': False,
+                'fr': False,
+                'sa': False,
+                'su': False,
+            })
 
     def test_recurrence_next_dates_week(self):
         dates = self.env['project.task.recurrence']._get_next_recurring_dates(

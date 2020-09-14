@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<template>
+
+<t t-name="web.recurrent_task" owl="1">
+    <div class="dropdown dropright">
+        <a class="btn btn-link" data-toggle="dropdown" role="button" data-boundary="window" t-on-click="_onDropdownShow"><i class="fa fa-info-circle" role="img" title="Info"/>
+        </a>
+        <div class="dropdown-menu o_activity" role="menu"/>
+    </div>
+</t>
+
+<t t-name="web.RecurrentTask.dropdown.content">
+    <span role="menuitem"  class="text-center recurrent-dropdown-item-text">
+        <table class="table table-bordered recurrent-table">
+            <thead>
+                <tr>
+                    <t t-foreach="weekdays" t-as="day">
+                        <th><t t-esc="week_days[day]"/></th>
+                    </t>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <t t-foreach="weekdays" t-as="day">
+                        <td>    
+                            <div class="custom-control custom-checkbox recurrent-checkbox">
+                                <input
+                                    type="checkbox"
+                                    class="custom-control-input"
+                                    t-att-id="week_days[day]"
+                                    t-att-value="week_days[day]"
+                                    t-on-click="_onCheckboxClick"
+                                />
+                                <label class="custom-control-label"></label>
+                            </div>
+                        </td>
+                    </t>
+                </tr>
+            </tbody>
+        </table>
+    </span>
+</t>
+
+<t t-name="web.recurrent_task.Loading">
+    <div class="dropdown-item text-center o_no_activity">
+        <span class="fa fa-spinner fa-spin fa-2x" role="img" aria-label="Loading..." title="Loading..."/>
+    </div>
+</t>
+</template>

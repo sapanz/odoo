@@ -70,6 +70,7 @@
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/modal.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/animation.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/rainbow.scss"/>
+        <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/weekly_recurrent_task.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/datepicker.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/daterangepicker.scss"/>
         <link rel="stylesheet" type="text/scss" href="/web/static/src/scss/banner.scss"/>
@@ -288,6 +289,7 @@
 
         <script type="text/javascript" src="/web/static/src/js/widgets/pie_chart.js"></script>
         <script type="text/javascript" src="/web/static/src/js/widgets/ribbon.js"></script>
+        <script type="text/javascript" src="/web/static/src/js/widgets/weekly_recurrent_task.js"></script>        
         <script type="text/javascript" src="/web/static/src/js/widgets/signature.js"></script>
         <script type="text/javascript" src="/web/static/src/js/components/action_menus.js"></script>
         <script type="text/javascript" src="/web/static/src/js/components/dropdown_menu.js"></script>
