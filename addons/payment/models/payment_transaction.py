@@ -455,7 +455,7 @@ class PaymentTransaction(models.Model):
         allowed_states = ('draft', 'authorized', 'pending', 'error')
         target_state = 'done'
         tx_to_process = self._update_state(allowed_states, target_state)
-        # tx_to_process._log_received_message() # FIXME ANV
+        tx_to_process._log_received_message()
 
     def _set_canceled(self):
         """ Update the transactions' state to 'cancel'.
@@ -484,7 +484,7 @@ class PaymentTransaction(models.Model):
     def _update_state(self, allowed_states, target_state, update_message=""):
         """ Update the transactions' state according to the specified allowed and target states.
 
-        :param tuple(string) allowed_states: The allowed source states for the target state
+        :param tuple[str] allowed_states: The allowed source states for the target state
         :param string target_state: The target state
         :param string update_message: The message to write in `state_message`. If `None`, the
                                       previous message is *not* overwritten
@@ -763,9 +763,11 @@ class PaymentTransaction(models.Model):
                 "(%(acq_name)s).", ref=self.reference, amount=formatted_amount,
                 acq_name=self.acquirer_id.name
             )
-            message += _(
-                "\nThe related payment is posted: %s", self.payment_id._get_payment_chatter_link()
-            )
+            if self.payment_id:
+                message += _(
+                    "\nThe related payment is posted: %s",
+                    self.payment_id._get_payment_chatter_link()
+                )
         elif self.state == 'error':
             message = _(
                 "The transaction with reference %(ref)s for %(amount)s encountered an error"
