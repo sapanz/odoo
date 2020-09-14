@@ -35,7 +35,6 @@ _logger = logging.getLogger(__name__)
 
 
 class PaymentAcquirer(models.Model):
-
     _inherit = 'payment.acquirer'
 
     provider = fields.Selection(

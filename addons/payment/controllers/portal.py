@@ -182,7 +182,7 @@ class WebsitePayment(http.Controller):
         self, payment_option_id, reference, amount, currency_id, partner_id, flow,
         tokenization_requested, is_validation, landing_route, access_token=None, **kwargs
     ):
-        """ Create the transaction in draft and return its processing values.
+        """ Create a draft transaction and return its processing values.
 
         :param int payment_option_id: The payment option handling the transaction, as a
                                       `payment.acquirer` id or a `payment.token` id
@@ -198,7 +198,7 @@ class WebsitePayment(http.Controller):
         :param str landing_route: The route the user is redirected to after the transaction
         :param str access_token: The access token used to authenticate the partner
         :param dict kwargs: Optional data. Locally processed keys: order_id
-        :return: The values necessary for the processing of the transaction
+        :return: The mandatory values for the processing of the transaction
         :rtype: dict
         :raise: werkzeug.exceptions.NotFound if the access token is invalid
         """

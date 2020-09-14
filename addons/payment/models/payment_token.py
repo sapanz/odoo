@@ -9,7 +9,6 @@ _logger = logging.getLogger(__name__)
 
 
 class PaymentToken(models.Model):
-
     _name = 'payment.token'
     _order = 'partner_id, id desc'
     _description = 'Payment Token'

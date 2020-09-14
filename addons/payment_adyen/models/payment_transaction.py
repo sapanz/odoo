@@ -13,12 +13,12 @@ _logger = logging.getLogger(__name__)
 
 
 class PaymentTransaction(models.Model):
-
     _inherit = 'payment.transaction'
 
     adyen_payment_data = fields.Char(
         string="Saved Payment Data",
-        help="Data that must be passed back to Adyen when returning from redirect", readonly=True)
+        help="Data that must be passed back to Adyen when returning from redirect", readonly=True,
+        groups='base.group_system')  # TODO ANV review group
 
     #=== BUSINESS METHODS ===#
 

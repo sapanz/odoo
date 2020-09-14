@@ -5,12 +5,11 @@ from odoo.exceptions import ValidationError, UserError
 
 
 class PaymentToken(models.Model):
-
     _inherit = 'payment.token'
 
     adyen_shopper_reference = fields.Char(
         string="Shopper Reference", help="The unique reference of the partner owning this token",
-        readonly=True)
+        readonly=True, groups='base.group_system')  # TODO ANV review group
 
     #=== BUSINESS METHODS ===#
 

@@ -18,7 +18,6 @@ _logger = logging.getLogger(__name__)
 
 
 class PaymentTransaction(models.Model):
-
     _name = 'payment.transaction'
     _description = 'Payment Transaction'
     _order = 'id desc'
@@ -114,7 +113,7 @@ class PaymentTransaction(models.Model):
     def _compute_invoice_ids_nbr(self):
         """ TODO. """
         for tx in self:
-            tx.invoice_ids_nbr = len(tx.invoice_ids)
+            tx.invoice_ids_nbr = len(tx.invoice_ids)  # TODO ANV read_group
 
     #=== CRUD METHODS ===#
 

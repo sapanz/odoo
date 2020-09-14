@@ -17,7 +17,6 @@ def create_missing_journals(cr, _registry):
 
 
 class PaymentAcquirer(models.Model):
-
     _name = 'payment.acquirer'
     _description = 'Payment Acquirer'
     _order = 'module_state, state, sequence, name'
@@ -191,7 +190,7 @@ class PaymentAcquirer(models.Model):
         return {'authorization': False, 'fees_computation': False, 'tokenization': False}
 
     @api.depends('state', 'module_state')
-    def _compute_color(self):  # TODO make colors constants
+    def _compute_color(self):
         """ Update the color of the kanban card based on the state of the acquirer.
 
         :return: None
@@ -326,9 +325,9 @@ class PaymentAcquirer(models.Model):
         The base criteria are that acquirers must not be disabled, be in the company that is
         provided, and support the country of the partner if it exists.
 
-        If a `preferred_acquirer_id` is specified, only the corresponding acquirer is returned.
-        If that acquirer does not exist or does not match the criteria, only the acquirers that
-        do match them are returned.
+        If a `preferred_acquirer_id` is specified, only the corresponding acquirer is returned *if*
+        it exists and matches the criteria. Otherwise, we fallback on the default behavior that is
+        returning only the acquirers that do match the criteria.
 
         :param int company_id: The company to which acquirers must belong, as a `res.company` id
         :param int partner_id: The partner making the payment, as a `res.partner` id
@@ -340,9 +339,9 @@ class PaymentAcquirer(models.Model):
         """
         # Compute the base domain for compatible acquirers
         domain = ['&', ('state', 'in', ['enabled', 'test']), ('company_id', '=', company_id)]
-        partner = self.env['res.partner'].browse(partner_id)
 
         # Handle partner country
+        partner = self.env['res.partner'].browse(partner_id)
         if partner.country_id:  # The partner country must either not be set or be supported
             domain = expression.AND([
                 domain,
@@ -410,7 +409,7 @@ class PaymentAcquirer(models.Model):
         :rtype: float
         """
         self.ensure_one()
-        return 0.
+        return 0.0
 
     def _get_validation_amount(self):
         """ Get the amount to transfer in a payment method validation operation.
@@ -424,7 +423,7 @@ class PaymentAcquirer(models.Model):
         :rtype: float
         """
         self.ensure_one()
-        return 0.
+        return 0.0
 
     def _get_validation_currency(self):
         """ Get the currency of the transfer in a payment method validation operation.

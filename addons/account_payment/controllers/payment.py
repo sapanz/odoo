@@ -17,7 +17,7 @@ class PaymentPortal(http.Controller):
         self, invoice_id, payment_option_id, flow, tokenization_requested, access_token=None,
         **kwargs
     ):
-        """ Create the transaction in draft and return its processing values.
+        """ Create a draft transaction and return its processing values.
 
         :param str invoice_id: The invoice to pay, as a `account.move` id
         :param int payment_option_id: The payment option handling the transaction, as a
@@ -26,7 +26,7 @@ class PaymentPortal(http.Controller):
         :param bool tokenization_requested: Whether the user requested that a token is created
         :param str access_token: The access token used to authenticate the request
         :param dict kwargs: Optional data. Locally processed keys: order_id
-        :return: The values necessary for the processing of the transaction
+        :return: The mandatory values for the processing of the transaction
         :rtype: dict
         :raise: werkzeug.exceptions.NotFound if the invoice id or the access token is invalid
         """
@@ -102,7 +102,7 @@ class PaymentPortal(http.Controller):
         # )
         #
         # success_url = kwargs.get(
-        #     'success_url', "%s?%s" % (invoice_sudo.access_url, werkzeug.urls.url_encode({'access_token': access_token}) if access_token else '')
+        #     'success_url', "%s?%s" % (invoice_sudo.access_url, werkzeug.urls.url_encode({'access_token': access_token}) if access_token else '')  # TODO keep the import of url_encode
         # )
         # vals = {
         #     'acquirer_id': acquirer_id,
