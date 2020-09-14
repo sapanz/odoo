@@ -539,12 +539,6 @@ class Task(models.Model):
         return self.stage_find(project_id, [('fold', '=', False), ('is_closed', '=', False)])
 
     @api.model
-    def _default_company_id(self):
-        if self._context.get('default_project_id'):
-            return self.env['project.project'].browse(self._context['default_project_id']).company_id
-        return self.env.company
-
-    @api.model
     def _read_group_stage_ids(self, stages, domain, order):
         search_domain = [('id', 'in', stages.ids)]
         if 'default_project_id' in self.env.context:
@@ -607,8 +601,8 @@ class Task(models.Model):
     partner_city = fields.Char(related='partner_id.city', readonly=False)
     manager_id = fields.Many2one('res.users', string='Project Manager', related='project_id.user_id', readonly=True)
     company_id = fields.Many2one(
-        'res.company', string='Company', compute='_compute_company_id', store=True, readonly=False,
-        required=True, copy=True, default=_default_company_id)
+        'res.company', string='Company', compute='_compute_company_id',
+        store=True, readonly=False, required=True, copy=True)
     color = fields.Integer(string='Color Index')
     user_email = fields.Char(related='user_id.email', string='User Email', readonly=True, related_sudo=False)
     attachment_ids = fields.One2many('ir.attachment', compute='_compute_attachment_ids', string="Main Attachments",
@@ -735,6 +729,8 @@ class Task(models.Model):
 
     @api.depends('recurring_task', 'repeat_unit')
     def _compute_repeat(self):
+        # VFE FIXME do not depend on default_get for a compute behavior...
+        # not stored computed fields should have no default...
         rec_fields = self._get_recurrence_fields()
         defaults = self.default_get(rec_fields)
         for task in self:
@@ -940,8 +936,10 @@ class Task(models.Model):
 
     @api.depends('project_id.company_id')
     def _compute_company_id(self):
-        for task in self.filtered(lambda task: task.project_id):
+        tasks_with_project = self.filtered('project_id')
+        for task in tasks_with_project:
             task.company_id = task.project_id.company_id
+        (self - tasks_with_project).company_id = self.env.company
 
     @api.depends('project_id')
     def _compute_stage_id(self):
@@ -1048,7 +1046,7 @@ class Task(models.Model):
         default_stage = dict()
         for vals in vals_list:
             project_id = vals.get('project_id') or self.env.context.get('default_project_id')
-            if project_id and not "company_id" in vals:
+            if "company_id" not in vals:
                 vals["company_id"] = self.env["project.project"].browse(
                     project_id
                 ).company_id.id or self.env.company.id
