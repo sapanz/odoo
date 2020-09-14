@@ -582,7 +582,7 @@ class PaymentTransaction(models.Model):
         :return: None
         """
         # Validate invoices automatically once the transaction is confirmed
-        self.mapped('invoice_ids').filtered(lambda inv: inv.state == 'draft')._post()
+        self.mapped('invoice_ids').filtered(lambda inv: inv.state == 'draft').action_post()
 
         # Create and post missing payments
         for tx in self.filtered(lambda t: not t.payment_id):
@@ -622,7 +622,7 @@ class PaymentTransaction(models.Model):
         self.payment_id = payment
 
         if self.invoice_ids:
-            self.invoice_ids.filtered(lambda inv: inv.state == 'draft').post()
+            self.invoice_ids.filtered(lambda inv: inv.state == 'draft').action_post()
 
             (payment.line_ids + self.invoice_ids.line_ids).filtered(
                 lambda line: line.account_id == payment.destination_account_id
