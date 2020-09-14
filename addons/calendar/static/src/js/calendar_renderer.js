@@ -36,7 +36,7 @@ const AttendeeCalendarPopover = CalendarPopover.extend({
      * @return {boolean}
      */
     isCurrentPartnerAttendee() {
-        return this.event.extendedProps.record.partner_ids.includes(session.partner_id);
+        return this.event.extendedProps.record.partner_ids.includes(session.partner_id) && this.event.extendedProps.attendee_id === session.partner_id;
     },
     /**
      * @override
@@ -104,6 +104,22 @@ const AttendeeCalendarRenderer = CalendarRenderer.extend({
         CalendarPopover: AttendeeCalendarPopover,
         eventTemplate: 'Calendar.calendar-box',
     }),
+    /**
+     * Add the attendee-id attribute in order to distinct the events when there are
+     * several attendees in the event.
+     * @override
+     */
+    _addEventAttributes: function (element, event) {
+        this._super(...arguments);
+        element.attr('data-attendee-id', event.extendedProps.attendee_id);
+    },
+    /**
+     * Check also the attendee-id attribute to select the good event.
+     * @override
+     */
+    _findActualEvent: function (info) {
+        return this._super(...arguments) + _.str.sprintf('[data-attendee-id=%s]', info.event.extendedProps.attendee_id);
+    },
 });
 
 return AttendeeCalendarRenderer

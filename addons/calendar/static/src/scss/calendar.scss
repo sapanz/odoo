@@ -71,7 +71,7 @@
 
 .o_calendar_view .fc-view .fc-event-container {
 
-    .fc-event.o_attendee_status_needsAction, .fc-event.o_attendee_status_tentative, .fc-event.o_attendee_status_declined {
+    .fc-event.o_attendee_status_needsAction, .fc-event.o_attendee_status_tentative, .fc-event.o_attendee_status_declined, .fc-event.o_attendee_status_alone {
 
         color: gray('700');
         border-width: 2px 2px 2px !important;

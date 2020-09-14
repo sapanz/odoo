@@ -449,7 +449,7 @@ return AbstractRenderer.extend({
                 var event = info.event;
                 var element = $(info.el);
                 var view = info.view;
-                element.attr('data-event-id', event.id);
+                self._addEventAttributes(element, event);
                 if (view.type === 'dayGridYear') {
                     const color = this.getColor(event.extendedProps.color_index);
                     if (typeof color === 'string') {
@@ -506,13 +506,13 @@ return AbstractRenderer.extend({
             // The css ":hover" selector can't be used because these events
             // are rendered using multiple elements.
             eventMouseEnter: function (mouseEnterInfo) {
-                $(self.calendarElement).find(_.str.sprintf('[data-event-id=%s]', mouseEnterInfo.event.id)).addClass('o_cw_custom_hover');
+                $(self.calendarElement).find(self._findActualEvent(mouseEnterInfo)).addClass('o_cw_custom_hover');
             },
             eventMouseLeave: function (mouseLeaveInfo) {
                 if (!mouseLeaveInfo.event.id) {
                     return;
                 }
-                $(self.calendarElement).find(_.str.sprintf('[data-event-id=%s]', mouseLeaveInfo.event.id)).removeClass('o_cw_custom_hover');
+                $(self.calendarElement).find(self._findActualEvent(mouseLeaveInfo)).removeClass('o_cw_custom_hover');
             },
             eventDragStart: function (mouseDragInfo) {
                 $(self.calendarElement).find(_.str.sprintf('[data-event-id=%s]', mouseDragInfo.event.id)).addClass('o_cw_custom_hover');
@@ -549,6 +549,22 @@ return AbstractRenderer.extend({
         }, fcOptions);
         options.plugins.push(createYearCalendarView(FullCalendar, options));
         return options;
+    },
+    /**
+     * Compute the string to find the good event.
+     * @param {jQueryElement} info
+     * @returns {String}
+     */
+    _findActualEvent: function (info) {
+        return _.str.sprintf('[data-event-id=%s]', info.event.id)
+    },
+    /**
+     * Add attribute to the element
+     * @param {jQueryElement} element 
+     * @param {Object} event 
+     */
+    _addEventAttributes: function (element, event) {
+        element.attr('data-event-id', event.id);
     },
     /**
      * Initialize the main calendar
