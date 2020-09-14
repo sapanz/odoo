@@ -4,6 +4,7 @@ import hashlib
 import hmac
 import logging
 import pprint
+import re
 import unicodedata
 from datetime import datetime
 
@@ -52,7 +53,6 @@ class PaymentTransaction(models.Model):
         readonly=True)
     last_state_change = fields.Datetime(
         string="Last Sate Change Date", readonly=True, default=fields.Datetime.now)
-    html_3ds = fields.Char(string="3D Secure HTML")  # TODO drop (ingenico only)
 
     # Fields used for traceability
     operation = fields.Selection(  # This should not be trusted if the state is 'draft' or 'pending'
@@ -163,31 +163,28 @@ class PaymentTransaction(models.Model):
     #=== BUSINESS METHODS ===#
 
     @api.model
-    def _compute_reference(self, prefix=None, separator='-', **kwargs):  # TODO ANV do the search in python to fix the SUB4-5 issue
+    def _compute_reference(self, prefix=None, separator='-', **kwargs):
         """ Compute a unique reference for the transaction.
 
         The reference either corresponds to the prefix if no other transaction with that prefix
-        already exists, or follows the pattern `{computed_prefix}{separator}{computed_suffix}` where
+        already exists, or follows the pattern `{computed_prefix}{separator}{sequence_number}` where
           - {computed_prefix} is:
             - The provided custom prefix, if any.
             - 'tx', if neither the custom prefix nor the kwargs are filled.
             - The computation result of `_compute_reference_prefix` if the custom prefix is not
               filled but the kwargs are.
-          - {separator} is a custom string (defaults to '-') also used in
-            `_compute_reference_prefix`.
-          - {computed_suffix} is an increment of the largest suffix of an existing reference with
-            the same prefix, '1' if there is only one matching reference (hence with no suffix).
+          - {separator} is a custom string also used in `_compute_reference_prefix`.
+          - {sequence_number} is the next integer in the sequence of references sharing the exact
+            same prefix, '1' if there is only one matching reference (hence without sequence number)
 
         Examples:
           - Given the custom prefix 'example' which has no match with an existing reference, the
             full reference will be 'example'.
-          - Given the custom prefix 'example' which matches the existing reference 'example', the
-            full reference will be 'example-1'.
-          - Given the custom separator 'X' and the custom prefix 'example' which matches the
-            existing references 'example' and 'exampleX1', the full reference will be 'exampleX2'.
-          - Given the kwargs {'invoice_ids': [1, 2]} and no custom prefix, the full reference will
-            be 'INV1,INV2' (or similar) if no existing reference has the same prefix, or 'S1,S2-n'
-            if n-1 existing references have the same prefix.
+          - Given the custom prefix 'example' which matches the existing reference 'example', and
+            the custom separator '-', the full reference will be 'example-1'.
+          - Given the kwargs {'invoice_ids': [1, 2]}, the custom separator '-' and no custom prefix,
+            the full reference will be 'INV1-INV2' (or similar) if no existing reference has the
+            same prefix, or 'INV1-INV2-n' if n existing references have the same prefix.
 
         :param str prefix: The custom prefix used to compute the full reference
         :param str separator: The custom separator used to separate the prefix from the suffix, and
@@ -197,36 +194,46 @@ class PaymentTransaction(models.Model):
         :return: The unique reference for the transaction
         :rtype: str
         """
+        # Compute the prefix
         if prefix:
-            # Replace special characters by their ASCII equivalent (é -> e ; ä -> a ; ...)
+            # Replace special characters by their ASCII alternative (é -> e ; ä -> a ; ...)
             prefix = unicodedata.normalize('NFKD', prefix).encode('ascii', 'ignore').decode('utf-8')
-        else:
+        else:  # No prefix provided, compute it based on the kwargs or fallback on 'tx'
             prefix = self._compute_reference_prefix(separator, kwargs) or 'tx'
 
-        # Fetch the largest suffix of an existing transaction with the same reference prefix
-        self._cr.execute(
-            '''
-            SELECT CAST(SUBSTRING(reference FROM '\d+$') AS integer) AS suffix 
-            FROM payment_transaction
-            WHERE reference LIKE %s
-            ORDER BY suffix DESC NULLS LAST
-            LIMIT 1
-            ''',
-            [prefix + '%']
-        )
-        query_res = self._cr.fetchone()
+        # Compute the sequence number
+        reference = prefix  # The first reference of a sequence has no sequence number
+        if self.search([('reference', '=', prefix)]):  # The reference already has an exact match
+            # We now execute a second search on `payment.transaction` to fetch all the references
+            # starting with the given prefix. The load of these two searches is mitigated by the
+            # index on `reference`. Although not ideal, this solution allows for quickly knowing
+            # whether the sequence for a given prefix is already started or not, usually not. An SQL
+            # query wouldn't help either as the selector is arbitrary and doing that would be an
+            # open-door to SQL injections.
+            same_prefix_references = self.search(
+                [('reference', 'like', f'{prefix}{separator}%')]
+            ).with_context(prefetch_fields=False).mapped('reference')
 
-        # Compute the suffix
-        new_sequence = 0
-        if query_res:  # There exists at least one transaction with the same reference prefix
-            previous_sequence = query_res[0]
-            if previous_sequence:  # That transaction has a reference suffix
-                new_sequence = previous_sequence + 1  # Continue the sequence
-            else:
-                new_sequence = 1  # Start a new sequence
-        else:
-            pass  # Don't start a new sequence if there are no match for that reference prefix
-        return f'{prefix}{separator}{new_sequence}' if new_sequence else prefix
+            # A final regex search is necessary to figure out the next sequence number. It's not an
+            # option to alphabetically sort the references with a matching prefix as both the prefix
+            # and the separator are arbitrary. A given prefix could happen to be a substring of a
+            # reference from a different sequence.
+            # For instance, the prefix 'example' is a valid match for the existing references
+            # 'example', 'example-1' and 'example-ref', in that order. Trusting the order to infer
+            # the sequence number would lead to a collision with 'example-1'.
+            search_pattern = re.compile(rf'^{prefix}{separator}(\d+)$')
+            max_sequence_number = 0  # If no match is found, start the sequence with this reference
+            for existing_reference in same_prefix_references:
+                search_result = re.search(search_pattern, existing_reference)
+                if search_result:  # The reference has the same prefix and is from the same sequence
+                    # Find the largest sequence number, if any
+                    current_sequence = int(search_result.group(1))
+                    if current_sequence > max_sequence_number:
+                        max_sequence_number = current_sequence
+
+            # Compute the full reference
+            reference = f'{prefix}{separator}{max_sequence_number + 1}'
+        return reference
 
     @api.model
     def _compute_reference_prefix(self, separator, data):
