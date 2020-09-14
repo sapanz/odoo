@@ -368,12 +368,11 @@ $o-cw-filter-avatar-size: 20px;
             }
 
             > .fc-month-container {
-                width: 25%;
-                min-width: 25rem;
                 box-sizing: border-box;
-
+                width: 50%;
+                min-width: 12rem;
                 > .fc-month {
-                    width: 21rem;
+                    width: 96%;
                     margin: auto;
 
                     > .fc-toolbar.fc-header-toolbar {

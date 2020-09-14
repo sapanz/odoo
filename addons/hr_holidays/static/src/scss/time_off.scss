@@ -42,3 +42,28 @@
         color: $o-enterprise-primary-color;
     }
 }
+
+.o_content{
+    @include media-breakpoint-down(sm){
+        img{
+            height: 48px !important;
+            width: 48px !important;
+        }
+    }
+    .o_timeoff_container{
+        @include media-breakpoint-down(md){
+            display: none !important;
+        }
+    }
+    .o_gantt_view {
+        @include media-breakpoint-down(md) {
+        > .o_gantt_row_container{
+            > .o_gantt_containment{
+                    width: 100%;
+                    overflow-x: auto;
+                    white-space: nowrap;
+                }
+            }
+        }   
+    }
+}
