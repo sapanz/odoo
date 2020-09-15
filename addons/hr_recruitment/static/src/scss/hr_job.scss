@@ -2,8 +2,17 @@
     &.o_hr_recruitment_kanban {
         &.o_kanban_ungrouped .o_kanban_record {
             width: 350px;
+            @include media-breakpoint-down(sm) {
+                margin-bottom: -20px;
+            }
             &:not(.o_kanban_ghost) {
                 height: 180px;
+            }
+            @include media-breakpoint-down(sm) {
+                .o_kanban_card_content {
+                    margin-top: 0px;
+                    margin-bottom: 20px;
+                }
             }
         }
 
@@ -55,6 +64,9 @@
                 text-align: right;
             }
             .o_link_trackers{
+                .oe_kanban_action_a{
+                    padding-top: 0px;
+                }
                 .fa{
                     color: $o-brand-primary;
                 } 
@@ -97,5 +109,15 @@
 .o_recruitment_list {
     .o_list_button {
         text-align: right;
+    }
+}
+@include media-breakpoint-down(sm) {
+    .o_statusbar_buttons {
+        .btn.btn-primary.o_create_employee.dropdown-item {
+            color: #FFFFFF !important;
+        }
+        .btn.btn-secondary.dropdown-item {
+            color: #00A09D !important;
+        }
     }
 }

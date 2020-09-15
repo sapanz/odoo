@@ -11,6 +11,22 @@
         </field>
     </record>
 
+    <record id="view_hr_recruitment_kanban_url" model="ir.ui.view" >
+        <field name="name">hr.recruitment.kanban.inherit.url</field>
+        <field name="model">hr.recruitment.source</field>
+        <field name="inherit_id" ref="hr_recruitment.hr_recruitment_source_kanban"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='email']" position="after">
+                <field name="url"/>
+            </xpath>
+            <xpath expr="//div[hasclass('col') and hasclass('text-right')]" position="before">
+                <div class="col-3">
+                    <span><a role="button" t-att-href="record.url.value" title="share it" class="fa fa-share-alt"></a></span>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
     <record id="view_hr_job_form_website_published_button" model="ir.ui.view" >
         <field name="name">hr.job.form.inherit.published.button</field>
         <field name="model">hr.job</field>
