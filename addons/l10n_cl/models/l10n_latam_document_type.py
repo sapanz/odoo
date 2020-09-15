@@ -17,7 +17,7 @@ class L10nLatamDocumentType(models.Model):
 
     def _get_document_sequence_vals(self, journal):
         values = {}
-        if self.country_id != self.env.ref('base.cl'):
+        if self.country_id.code != "CL":
             return values
         values.update({
             'name': '%s - %s' % (journal.name, self.name),

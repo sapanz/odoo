@@ -61,7 +61,7 @@ class AccountMove(models.Model):
 
         # Retrieve invoices to generate the xml.
         invoices_to_export = posted.filtered(lambda move:
-                move.company_id.country_id == self.env.ref('base.it') and
+                move.company_id.country_id.code == "IT" and
                 move.is_sale_document() and
                 move.l10n_it_send_state not in ['sent', 'delivered', 'delivered_accepted'])
 

@@ -107,7 +107,7 @@ class AccountJournal(models.Model):
                     'l10n_latam_use_documents')
     def _check_afip_configurations(self):
         """ Do not let to update journal if already have confirmed invoices """
-        arg_sale_journals = self.filtered(lambda x: x.company_id.country_id == self.env.ref('base.ar') and
+        arg_sale_journals = self.filtered(lambda x: x.company_id.country_id.code == "AR" and
                                           x.type == 'sale' and x._origin.type == 'sale')
         invoices = self.env['account.move'].search([('journal_id', 'in', arg_sale_journals.ids), ('state', '!=', 'draft')])
         if invoices:
@@ -119,7 +119,7 @@ class AccountJournal(models.Model):
     def _check_afip_pos_number(self):
         to_review = self.filtered(
             lambda x: x.type == 'sale' and x.l10n_latam_use_documents and
-            x.company_id.country_id == self.env.ref('base.ar'))
+            x.company_id.country_id.code == "AR")
 
         if to_review.filtered(lambda x: x.l10n_ar_afip_pos_number == 0):
             raise ValidationError(_('Please define an AFIP POS number'))

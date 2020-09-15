@@ -26,7 +26,7 @@ class AccountJournal(models.Model):
 
     def create_document_sequences_cl(self):
         self.ensure_one()
-        if (self.company_id.country_id != self.env.ref('base.cl')) or self.env['ir.sequence'].search(
+        if (self.company_id.country_id.code != "CL") or self.env['ir.sequence'].search(
                 [('l10n_latam_document_type_id', '!=', False)]) or self.type != 'sale' or not self.l10n_latam_use_documents:
             return
         self.button_create_new_sequences()

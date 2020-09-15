@@ -16,8 +16,7 @@ class AccountMove(models.Model):
     def _get_l10n_latam_documents_domain(self):
         self.ensure_one()
         domain = super()._get_l10n_latam_documents_domain()
-        if (self.journal_id.l10n_latam_use_documents and
-                self.journal_id.company_id.country_id == self.env.ref('base.cl')):
+        if self.journal_id.l10n_latam_use_documents and self.journal_id.company_id.country_id.code == "CL":
             if self.journal_id.type == 'sale':
                 document_type_ids = self.journal_id.l10n_cl_sequence_ids.mapped('l10n_latam_document_type_id').ids
             else:
@@ -43,18 +42,18 @@ class AccountMove(models.Model):
 
     def _check_document_types_post(self):
         for rec in self.filtered(
-                lambda r: r.company_id.country_id == self.env.ref('base.cl') and
+                lambda r: r.company_id.country_id.code == "CL" and
                           r.journal_id.type in ['sale', 'purchase']):
             tax_payer_type = rec.partner_id.l10n_cl_sii_taxpayer_type
             vat = rec.partner_id.vat
             country_id = rec.partner_id.country_id
             latam_document_type_code = rec.l10n_latam_document_type_id.code
-            if (not tax_payer_type or not vat) and (country_id == self.env.ref('base.cl') and latam_document_type_code
+            if (not tax_payer_type or not vat) and (country_id.code == "CL" and latam_document_type_code
                                                   and latam_document_type_code not in ['35', '38', '39', '41']):
                 raise ValidationError(_('Tax payer type and vat number are mandatory for this type of '
                                         'document. Please set the current tax payer type of this customer'))
             if rec.journal_id.type == 'sale' and rec.journal_id.l10n_latam_use_documents:
-                if country_id != self.env.ref('base.cl'):
+                if country_id.code != "CL":
                     if not ((tax_payer_type == '4' and latam_document_type_code in ['110', '111', '112']) or (
                             tax_payer_type == '3' and latam_document_type_code in ['39', '41', '61', '56'])):
                         raise ValidationError(_(
@@ -65,7 +64,7 @@ class AccountMove(models.Model):
                     raise ValidationError(_('The DIN document is intended to be used only with RUT 60805000-0'
                                             ' (Tesorería General de La República)'))
                 if not tax_payer_type or not vat:
-                    if country_id == self.env.ref('base.cl') and latam_document_type_code not in [
+                    if country_id.code == "CL" and latam_document_type_code not in [
                             '35', '38', '39', '41']:
                         raise ValidationError(_('Tax payer type and vat number are mandatory for this type of '
                                                 'document. Please set the current tax payer type of this supplier'))
@@ -79,7 +78,7 @@ class AccountMove(models.Model):
                     if latam_document_type_code in ['110', '111', '112']:
                         raise ValidationError(_('The tax payer type of this supplier is not entitled to deliver '
                                                 'imports documents'))
-                if tax_payer_type == '4' or country_id != self.env.ref('base.cl'):
+                if tax_payer_type == '4' or country_id.code != "CL":
                     raise ValidationError(_('You need a journal without the use of documents for foreign '
                                             'suppliers'))
             if rec.journal_id.type == 'purchase' and not rec.journal_id.l10n_latam_use_documents:
@@ -101,14 +100,14 @@ class AccountMove(models.Model):
     def _get_starting_sequence(self):
         """ If use documents then will create a new starting sequence using the document type code prefix and the
         journal document number with a 8 padding number """
-        if self.journal_id.l10n_latam_use_documents and self.env.company.country_id == self.env.ref('base.cl'):
+        if self.journal_id.l10n_latam_use_documents and self.env.company.country_id.code == "CL":
             if self.l10n_latam_document_type_id:
                 return self._l10n_cl_get_formatted_sequence()
         return super()._get_starting_sequence()
 
     def _get_last_sequence_domain(self, relaxed=False):
         where_string, param = super(AccountMove, self)._get_last_sequence_domain(relaxed)
-        if self.company_id.country_id == self.env.ref('base.cl') and self.l10n_latam_use_documents:
+        if self.company_id.country_id.code == "CL" and self.l10n_latam_use_documents:
             journals = self.journal_id.l10n_cl_sequence_ids.filtered(lambda s: s.l10n_latam_document_type_id == self.l10n_latam_document_type_id).l10n_cl_journal_ids.ids
             if len(journals) > 1:
                 where_string.replace("journal_id = %(journal_ids)s", "journal_id in %(journal_ids)s")
