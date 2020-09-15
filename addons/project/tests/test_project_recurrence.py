@@ -88,6 +88,12 @@ class TestProjectrecurrence(SavepointCase):
 
         with patch.object(fields.Date, 'today', lambda: datetime(2020, 2, 15)):
             self.env['project.task.recurrence']._cron_create_recurring_tasks()
+            self.assertEqual(self.env['project.task'].search_count([('project_id', '=', self.project_recurring.id)]), 3)
+            self.assertEqual(task.recurrence_id.recurrence_left, 0)
+
+        with patch.object(fields.Date, 'today', lambda: datetime(2020, 3, 15)):
+            self.env['project.task.recurrence']._cron_create_recurring_tasks()
+            self.assertEqual(self.env['project.task'].search_count([('project_id', '=', self.project_recurring.id)]), 3, 'there should not be more than 3 tasks (The main task and the 2 recurrences tasks)')
             self.assertEqual(task.recurrence_id.recurrence_left, 0)
 
         tasks = self.env['project.task'].search([('project_id', '=', self.project_recurring.id)])
