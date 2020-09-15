@@ -7,6 +7,7 @@ from odoo.exceptions import UserError
 from odoo.osv import expression
 
 from datetime import datetime
+from pathlib import PurePath
 
 import logging
 
@@ -98,12 +99,17 @@ class AccountEdiFormat(models.Model):
                 attachment_name = element.xpath('cbc:ID', namespaces=namespaces)
                 attachment_data = element.xpath('cac:Attachment//cbc:EmbeddedDocumentBinaryObject', namespaces=namespaces)
                 if attachment_name and attachment_data:
+                    name = attachment_name[0].text
+                    # Because some e-fff emitters put the path of the xml instead of the pdf's name,
+                    # we get only the filename and change the extension because we are nice people.
+                    name = PurePath(name.replace('\\', '/')).with_suffix('.pdf').name
                     attachments |= self.env['ir.attachment'].create({
-                        'name': attachment_name[0].text,
+                        'name': name,
                         'res_id': invoice.id,
                         'res_model': 'account.move',
                         'datas': attachment_data[0].text,
                         'type': 'binary',
+                        'mimetype': 'application/pdf',
                     })
             if attachments:
                 invoice.with_context(no_new_invoice=True).message_post(attachment_ids=attachments.ids)
