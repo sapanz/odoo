@@ -17,6 +17,7 @@ class Project(models.Model):
         "sale order item defines, and if this employee is not in the 'Employee/Sales Order Item Mapping' of the project, "
         "the timesheet entry will be linked to the sales order item defined on the project.")
     sale_order_id = fields.Many2one('sale.order', 'Sales Order', domain="[('partner_id', '=', partner_id)]", readonly=True, copy=False, help="Sales order to which the project is linked.")
+    project_overview = fields.Boolean('Show Project Overview', compute='_compute_project_overview')
 
     _sql_constraints = [
         ('sale_order_required_if_sale_line', "CHECK((sale_line_id IS NOT NULL AND sale_order_id IS NOT NULL) OR (sale_line_id IS NULL))", 'The Project should be linked to a Sale Order to select an Sale Order Items.'),
@@ -28,6 +29,13 @@ class Project(models.Model):
         defaults['sale_line_id'] = False
         return defaults
 
+    @api.depends('analytic_account_id')
+    def _compute_project_overview(self):
+        overview = self.env['project.project']
+        if self.user_has_groups('analytic.group_analytic_accounting'):
+            overview = self.filtered(lambda p: p.analytic_account_id)
+            overview.project_overview = True
+        (self - overview).project_overview = False
 
 class ProjectTask(models.Model):
     _inherit = "project.task"

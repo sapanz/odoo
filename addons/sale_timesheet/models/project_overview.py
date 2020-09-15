@@ -450,8 +450,10 @@ class Project(models.Model):
         task_projects_ids = self.env['project.task'].read_group([('project_id', 'in', self.ids)], ['project_id'], ['project_id'])
         task_projects_ids = [p['project_id'][0] for p in task_projects_ids]
 
-        if len(task_projects_ids) == 1:
-            tasks_context = {**tasks_context, 'default_project_id': task_projects_ids[0]}
+        default_project_ctx = {}
+        if len(self) == 1:
+            default_project_ctx = {'default_project_id': self.id}
+
         stat_buttons.append({
             'name': _('Tasks'),
             'count': sum(self.mapped('task_count')),
@@ -459,7 +461,7 @@ class Project(models.Model):
             'action': _to_action_data(
                 action=self.env.ref('project.action_view_task'),
                 domain=tasks_domain,
-                context=tasks_context
+                context={**tasks_context, **default_project_ctx}
             )
         })
         stat_buttons.append({
@@ -469,7 +471,7 @@ class Project(models.Model):
             'action': _to_action_data(
                 action=self.env.ref('project.action_view_task'),
                 domain=late_tasks_domain,
-                context=tasks_context,
+                context={**tasks_context, **default_project_ctx}
             ),
         })
         stat_buttons.append({
@@ -479,7 +481,7 @@ class Project(models.Model):
             'action': _to_action_data(
                 action=self.env.ref('project.action_view_task'),
                 domain=overtime_tasks_domain,
-                context=tasks_context,
+                context={**tasks_context, **default_project_ctx}
             ),
         })
 
@@ -492,15 +494,24 @@ class Project(models.Model):
 
             sale_orders = self.mapped('sale_line_id.order_id') | self.env['sale.order'].browse(task_so_ids)
             if sale_orders:
+                so_action = dict(
+                    context={'create': False, 'edit': False, 'delete': False},
+                    domain=[('id', 'in', sale_orders.ids)],
+                )
+
+                if len(sale_orders) == 1:
+                    so_action.update({
+                        'action': self.env.ref('sale.action_sale_order_form_view'),
+                        'res_id': sale_orders.id,
+                    })
+                else:
+                    so_action['action'] = self.env.ref('sale.action_orders')
+
                 stat_buttons.append({
                     'name': _('Sales Orders'),
                     'count': len(sale_orders),
                     'icon': 'fa fa-dollar',
-                    'action': _to_action_data(
-                        action=self.env.ref('sale.action_orders'),
-                        domain=[('id', 'in', sale_orders.ids)],
-                        context={'create': False, 'edit': False, 'delete': False}
-                    )
+                    'action': _to_action_data(**so_action),
                 })
 
                 invoice_ids = self.env['sale.order'].search_read([('id', 'in', sale_orders.ids)], ['invoice_ids'])
@@ -535,6 +546,7 @@ class Project(models.Model):
                 'account.analytic.line',
                 domain=[('project_id', 'in', self.ids)],
                 views=[(ts_tree.id, 'list'), (ts_form.id, 'form')],
+                context=default_project_ctx,
             )
         })
 
