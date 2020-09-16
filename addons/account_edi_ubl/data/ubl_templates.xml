@@ -115,6 +115,12 @@
                 <cbc:InvoiceTypeCode t-esc="type_code"/>
                 <cbc:Note t-esc="invoice.narration"/>
                 <cbc:DocumentCurrencyCode t-esc="invoice.currency_id.name"/>
+                <cac:AdditionalDocumentReference>
+                    <cbc:ID t-esc="pdf_name"/>
+                    <cac:Attachment>
+                        <cbc:EmbeddedDocumentBinaryObject mimeCode="application/pdf" t-esc="pdf" />
+                    </cac:Attachment>
+                </cac:AdditionalDocumentReference>
                 <cac:AccountingSupplierParty t-call="account_edi_ubl.export_ubl_invoice_partner">
                     <t t-set="partner" t-value="invoice.company_id.partner_id.commercial_partner_id"/>
                 </cac:AccountingSupplierParty>

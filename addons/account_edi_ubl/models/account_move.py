@@ -11,6 +11,7 @@ class AccountMove(models.Model):
         def format_monetary(amount):
             # Format the monetary values to avoid trailing decimals (e.g. 90.85000000000001).
             return float_repr(amount, self.currency_id.decimal_places)
+        self.ensure_one()
 
         return {
             'invoice': self,
