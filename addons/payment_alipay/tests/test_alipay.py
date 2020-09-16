@@ -200,3 +200,5 @@ class AlipayTest(PaymentAcquirerCommon):
             'reference': 'test_ref_2',
             'partner_country_id': self.country_france.id
         })
+
+
