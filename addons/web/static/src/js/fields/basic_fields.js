@@ -1592,7 +1592,7 @@ var StateSelectionWidget = AbstractField.extend({
 var FavoriteWidget = AbstractField.extend({
     className: 'o_favorite',
     events: {
-        'click': '_setFavorite'
+        'click a:not(.disabled)': '_setFavorite'
     },
     supportedFieldTypes: ['boolean'],
 
@@ -1620,8 +1620,14 @@ var FavoriteWidget = AbstractField.extend({
      * @private
      */
     _render: function () {
-        var template = this.attrs.nolabel ? '<a href="#"><i class="fa %s" title="%s"></i></a>' : '<a href="#"><i class="fa %s"></i> %s</a>';
+        var isReadonly = this.record.evalModifiers(this.attrs.modifiers).readonly;
+        var template = this.attrs.nolabel || isReadonly ?
+            '<a><i class="fa %s" title="%s"></i></a>' :
+            '<a><i class="fa %s"></i> %s</a>';
         this.$el.empty().append(_.str.sprintf(template, this.value ? 'fa-star' : 'fa-star-o', this.value ? _t('Remove from Favorites') : _t('Add to Favorites')));
+        if (isReadonly) {
+            this.$el.find("a").addClass('disabled');
+        }
     },
 
     //--------------------------------------------------------------------------
