@@ -5,30 +5,30 @@
         <div class="o_VisitorBanner">
             <div class="o_VisitorBanner_sidebar">
                 <div class="o_VisitorBanner_avatarContainer">
-                    <img class="o_VisitorBanner_avatar rounded-circle" t-att-src="visitor.avatarUrl" alt="Avatar"/>
-                    <t t-if="visitor.is_connected">
+                    <img class="o_VisitorBanner_avatar rounded-circle" t-att-src="visitor.__mfield_avatarUrl(mself)" alt="Avatar"/>
+                    <t t-if="visitor.__mfield_is_connected(mself)">
                         <i class="o_VisitorBanner_onlineStatusIcon fa fa-circle" title="Online" role="img" aria-label="Visitor is online"/>
                     </t>
                 </div>
             </div>
             <div class="o_VisitorBanner_content">
-                <t t-if="visitor.country">
-                    <img class="o_VisitorBanner_country o_country_flag" t-att-src="visitor.country.flagUrl" t-att-alt="visitor.country.code or visitor.country.name"/>
+                <t t-if="visitor.__mfield_country(mself)">
+                    <img class="o_VisitorBanner_country o_country_flag" t-att-src="visitor.__mfield_country(mself).__mfield_flagUrl(mself)" t-att-alt="visitor.__mfield_country(mself).__mfield_code(mself) or visitor.__mfield_country(mself).__mfield_name(mself)"/>
                 </t>
-                <span class="o_VisitorBanner_visitor" t-esc="visitor.nameOrDisplayName"/>
+                <span class="o_VisitorBanner_visitor" t-esc="visitor.__mfield_nameOrDisplayName(mself)"/>
                 <span class="o_VisitorBanner_language">
                     <i class="o_VisitorBanner_languageIcon fa fa-comment-o" aria-label="Lang"/>
-                    <t t-esc="visitor.lang"/>
+                    <t t-esc="visitor.__mfield_lang(mself)"/>
                 </span>
-                <t t-if="visitor.website">
+                <t t-if="visitor.__mfield_website(mself)">
                     <span class="o_VisitorBanner_website">
                         <i class="o_VisitorBanner_websiteIcon fa fa-globe" aria-label="Website"/>
-                        <span t-esc="visitor.website"/>
+                        <span t-esc="visitor.__mfield_website(mself)"/>
                     </span>
                 </t>
                 <div class="o_VisitorBanner_history">
                     <i class="o_VisitorBanner_historyIcon fa fa-history" aria-label="History"/>
-                    <span t-esc="visitor.history"/>
+                    <span t-esc="visitor.__mfield_history(mself)"/>
                 </div>
             </div>
         </div>

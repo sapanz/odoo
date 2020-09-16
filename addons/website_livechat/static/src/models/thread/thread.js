@@ -20,12 +20,12 @@ registerClassPatchModel('mail.thread', 'website_livechat/static/src/models/threa
         const data2 = this._super(data);
         if ('visitor' in data) {
             if (data.visitor) {
-                data2.visitor = [[
+                data2.__mfield_visitor = [[
                     'insert',
                     this.env.models['website_livechat.visitor'].convertData(data.visitor)
                 ]];
             } else {
-                data2.visitor = [['unlink']];
+                data2.__mfield_visitor = [['unlink']];
             }
         }
         return data2;
@@ -37,8 +37,8 @@ registerFieldPatchModel('mail.thread', 'website_livechat/static/src/models/threa
     /**
      * Visitor connected to the livechat.
      */
-    visitor: many2one('website_livechat.visitor', {
-        inverse: 'threads',
+    __mfield_visitor: many2one('website_livechat.visitor', {
+        inverse: '__mfield_threads',
     }),
 });
 

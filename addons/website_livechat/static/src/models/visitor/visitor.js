@@ -18,35 +18,37 @@ function factory(dependencies) {
             const data2 = {};
             if ('country_id' in data) {
                 if (data.country_id) {
-                    data2.country = [['insert', {
-                        id: data.country_id,
-                        code: data.country_code,
+                    data2.__mfield_country = [['insert', {
+                        __mfield_id: data.country_id,
+                        __mfield_code: data.country_code,
                     }]];
                 } else {
-                    data2.country = [['unlink']];
+                    data2.__mfield_country = [['unlink']];
                 }
             }
             if ('history' in data) {
-                data2.history = data.history;
+                data2.__mfield_history = data.history;
             }
             if ('is_connected' in data) {
-                data2.is_connected = data.is_connected;
+                data2.__mfield_is_connected = data.is_connected;
             }
             if ('lang' in data) {
-                data2.lang = data.lang;
+                data2.__mfield_lang = data.lang;
             }
             if ('name' in data) {
-                data2.name = data.name;
+                data2.__mfield_name = data.name;
             }
             if ('partner_id' in data) {
                 if (data.partner_id) {
-                    data2.partner = [['insert', { id: data.partner_id }]];
+                    data2.__mfield_partner = [['insert', {
+                        __mfield_id: data.partner_id,
+                    }]];
                 } else {
-                    data2.partner = [['unlink']];
+                    data2.__mfield_partner = [['unlink']];
                 }
             }
             if ('website' in data) {
-                data2.website = data.website;
+                data2.__mfield_website = data.website;
             }
             return data2;
         }
@@ -60,10 +62,10 @@ function factory(dependencies) {
          * @returns {string}
          */
         _computeAvatarUrl() {
-            if (!this.partner) {
+            if (!this.__mfield_partner(this)) {
                 return '/mail/static/src/img/smiley/avatar.jpg';
             }
-            return this.partner.avatarUrl;
+            return this.__mfield_partner(this).__mfield_avatarUrl(this);
         }
 
         /**
@@ -71,11 +73,11 @@ function factory(dependencies) {
          * @returns {mail.country}
          */
         _computeCountry() {
-            if (this.partner && this.partner.country) {
-                return [['link', this.partner.country]];
+            if (this.__mfield_partner(this) && this.__mfield_partner(this).__mfield_country(this)) {
+                return [['link', this.__mfield_partner(this).__mfield_country(this)]];
             }
-            if (this.country) {
-                return [['link', this.country]];
+            if (this.__mfield_country(this)) {
+                return [['link', this.__mfield_country(this)]];
             }
             return [['unlink']];
         }
@@ -85,10 +87,10 @@ function factory(dependencies) {
          * @returns {string}
          */
         _computeNameOrDisplayName() {
-            if (this.partner) {
-                return this.partner.nameOrDisplayName;
+            if (this.__mfield_partner(this)) {
+                return this.__mfield_partner(this).__mfield_nameOrDisplayName(this);
             }
-            return this.name;
+            return this.__mfield_name(this);
         }
     }
 
@@ -96,67 +98,69 @@ function factory(dependencies) {
         /**
          * Url to the avatar of the visitor.
          */
-        avatarUrl: attr({
+        __mfield_avatarUrl: attr({
             compute: '_computeAvatarUrl',
             dependencies: [
-                'partner',
-                'partnerAvatarUrl',
+                '__mfield_partner',
+                '__mfield_partnerAvatarUrl',
             ],
         }),
         /**
          * Country of the visitor.
          */
-        country: many2one('mail.country', {
+        __mfield_country: many2one('mail.country', {
             compute: '_computeCountry',
             dependencies: [
-                'country',
-                'partnerCountry',
+                '__mfield_country',
+                '__mfield_partnerCountry',
             ],
         }),
         /**
          * Browsing history of the visitor as a string.
          */
-        history: attr(),
+        __mfield_history: attr(),
         /**
          * Determine whether the visitor is connected or not.
          */
-        is_connected: attr(),
+        __mfield_is_connected: attr(),
         /**
          * Name of the language of the visitor. (Ex: "English")
          */
-        lang: attr(),
+        __mfield_lang: attr(),
         /**
          * Name of the visitor.
          */
-        name: attr(),
-        nameOrDisplayName: attr({
+        __mfield_name: attr(),
+        __mfield_nameOrDisplayName: attr({
             compute: '_computeNameOrDisplayName',
             dependencies: [
-                'name',
-                'partnerNameOrDisplayName',
+                '__mfield_name',
+                '__mfield_partnerNameOrDisplayName',
             ],
         }),
         /**
          * Partner linked to this visitor, if any.
          */
-        partner: many2one('mail.partner'),
-        partnerAvatarUrl: attr({
-            related: 'partner.avatarUrl',
+        __mfield_partner: many2one('mail.partner'),
+        __mfield_partnerAvatarUrl: attr({
+            related: '__mfield_partner.__mfield_avatarUrl',
         }),
-        partnerCountry: many2one('mail.country',{
-            related: 'partner.country',
+        __mfield_partnerCountry: many2one('mail.country',{
+            related: '__mfield_partner.__mfield_country',
         }),
-        partnerNameOrDisplayName: attr({related: 'partner.nameOrDisplayName'}),
+        __mfield_partnerNameOrDisplayName: attr({
+            related: '__mfield_partner.__mfield_nameOrDisplayName',
+        }),
         /**
          * Threads with this visitor as member
          */
-        threads: one2many('mail.thread', {
-            inverse: 'visitor',
+        __mfield_threads: one2many('mail.thread', {
+            inverse: '__mfield_visitor',
         }),
         /**
          * Name of the website on which the visitor is connected. (Ex: "Website 1")
          */
-        website: attr(),
+        __mfield_website: attr(),
     };
 
     Visitor.modelName = 'website_livechat.visitor';

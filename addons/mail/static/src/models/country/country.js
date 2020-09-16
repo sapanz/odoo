@@ -2,8 +2,8 @@ odoo.define('mail/static/src/models/country/country.js', function (require) {
 'use strict';
 
 const { registerNewModel } = require('mail/static/src/model/model_core.js');
-const { attr } = require('mail/static/src/model/model_field.js');
 const { clear } = require('mail/static/src/model/model_field_command.js');
+const { attr } = require('mail/static/src/model/model_field_utils.js');
 
 function factory(dependencies) {
 
@@ -17,7 +17,7 @@ function factory(dependencies) {
          * @override
          */
         static _createRecordLocalId(data) {
-            return `${this.modelName}_${data.id}`;
+            return `${this.modelName}_${data.__mfield_id}`;
         }
 
         /**
@@ -25,24 +25,24 @@ function factory(dependencies) {
          * @returns {string|undefined}
          */
         _computeFlagUrl() {
-            if (!this.code) {
+            if (!this.__mfield_code(this)) {
                 return clear();
             }
-            return `/base/static/img/country_flags/${this.code}.png`;
+            return `/base/static/img/country_flags/${this.__mfield_code(this)}.png`;
         }
 
     }
 
     Country.fields = {
-        code: attr(),
-        flagUrl: attr({
+        __mfield_code: attr(),
+        __mfield_flagUrl: attr({
             compute: '_computeFlagUrl',
             dependencies: [
-                'code',
+                '__mfield_code',
             ],
         }),
-        id: attr(),
-        name: attr(),
+        __mfield_id: attr(),
+        __mfield_name: attr(),
     };
 
     Country.modelName = 'mail.country';
