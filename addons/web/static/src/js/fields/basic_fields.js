@@ -1727,7 +1727,7 @@ var FieldBooleanButton = AbstractField.extend({
 
 var BooleanToggle = FieldBoolean.extend({
     events: {
-        'click': '_onClick'
+        'click div:not(.disabled)': '_onClick'
     },
     //--------------------------------------------------------------------------
     // Private
@@ -1750,6 +1750,7 @@ var BooleanToggle = FieldBoolean.extend({
     _renderToggleSwitch: function () {
         this.$el.addClass("o_boolean_toggle");
         var $div = $('<div class="slider"></div>');
+        $div.toggleClass("disabled", this.mode === "readonly");
         $div.insertAfter(this.$("input[type=checkbox]"));
     },
 

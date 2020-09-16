@@ -92,7 +92,6 @@ div.o_boolean_toggle {
 
     .slider {
         position: absolute;
-        cursor: pointer;
         top: 0;
         left: 0;
         right: 0;
@@ -109,6 +108,9 @@ div.o_boolean_toggle {
             bottom: 3px;
             background-color: white;
             border-radius: 50%;
+        }
+        &:not(.disabled) {
+            cursor: pointer;
         }
     }
 
