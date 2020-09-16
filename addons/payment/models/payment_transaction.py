@@ -111,9 +111,19 @@ class PaymentTransaction(models.Model):
 
     @api.depends('invoice_ids')
     def _compute_invoice_ids_nbr(self):
-        """ TODO. """
+        self.env.cr.execute(
+            '''
+            SELECT transaction_id, count(invoice_id)
+            FROM account_invoice_transaction_rel
+            WHERE transaction_id IN %s
+            GROUP BY transaction_id
+            ''',
+            [tuple(self.ids)]
+        )
+        query_res = self.env.cr.fetchall()
+        tx_data = {tx_id: invoice_count for tx_id, invoice_count in query_res}
         for tx in self:
-            tx.invoice_ids_nbr = len(tx.invoice_ids)  # TODO ANV read_group
+            tx.invoice_ids_nbr = tx_data.get(tx.id, 0)
 
     #=== CRUD METHODS ===#
 
