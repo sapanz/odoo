@@ -491,13 +491,22 @@ class Applicant(models.Model):
         return dict_act_window
 
     def archive_applicant(self):
+        ctx = dict(
+            default_model='hr.applicant',
+            # default_res_id=self.id,
+            default_res_model='hr.applicant',
+            default_composition_mode='comment',
+            default_applicant_ids=self.ids,
+            active_test=False,
+            force_email=True
+        )
         return {
             'type': 'ir.actions.act_window',
             'name': _('Refuse Reason'),
             'res_model': 'applicant.get.refuse.reason',
             'view_mode': 'form',
             'target': 'new',
-            'context': {'default_applicant_ids': self.ids, 'active_test': False},
+            'context': ctx,
             'views': [[False, 'form']]
         }
 
@@ -546,6 +555,5 @@ class ApplicantRefuseReason(models.Model):
     _description = 'Refuse Reason of Applicant'
 
     name = fields.Char('Description', required=True, translate=True)
-    template_id = fields.Many2one(
-        'mail.template', "Email Templates")
+    template_id = fields.Many2one('mail.template', "Email Templates")
     active = fields.Boolean('Active', default=True)

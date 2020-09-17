@@ -264,7 +264,7 @@
         <td valign="top">
             <div style="font-size: 13px; margin: 0px; padding: 0px;">
                 Dear,<br/><br/>
-                We would like to thank you for your interest and your time. <br/>
+                We would like to thank you for your interest and your time.<br/>
                 We wish you all the best in your future endeavors.
                 <br/><br/>
                 Best<br/>
@@ -285,7 +285,6 @@
         <field name="auto_delete" eval="True"/>
         <field name="lang">${object.partner_id.lang or ''}</field>
     </record>
-
 
     <record model="hr.recruitment.degree" id="degree_graduate">
         <field name="name">Graduate</field>
