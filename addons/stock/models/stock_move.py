@@ -489,6 +489,7 @@ class StockMove(models.Model):
                     move_line_vals = self._prepare_move_line_vals(quantity=0)
                     move_line_vals['lot_id'] = lot.id
                     move_line_vals['lot_name'] = lot.name
+                    move_line_vals['product_uom_id'] = move.product_id.uom_id.id
                     move_line_vals['qty_done'] = 1
                     move_lines_commands.append((0, 0, move_line_vals))
             move.write({'move_line_ids': move_lines_commands})
@@ -859,6 +860,9 @@ class StockMove(models.Model):
 
     @api.onchange('lot_ids')
     def _onchange_lot_ids(self):
+        qd = sum(ml.product_uom_id._compute_quantity(ml.qty_done, self.product_uom, False) for ml in self.move_line_ids.filtered(lambda x: x.lot_id.id == False and x.lot_name != False))
+        qd += self.product_id.uom_id._compute_quantity(len(self.lot_ids), self.product_uom, False)
+        self.update({'quantity_done': qd})
         used_lots = self.env['stock.move.line'].search([
             ('company_id', '=', self.company_id.id),
             ('product_id', '=', self.product_id.id),
@@ -866,15 +870,6 @@ class StockMove(models.Model):
             ('move_id', '!=', self._origin.id),
             ('state', '!=', 'cancel')
         ])
-
-        counter = self.env['stock.move.line'].search_count([
-            ('company_id', '=', self.company_id.id),
-            ('product_id', '=', self.product_id.id),
-            ('move_id', '=', self._origin.id),
-            ('lot_id', '=', False),
-            ('lot_name', '!=', False),
-        ])
-        self.update({'quantity_done': len(self.lot_ids) + counter})
         if used_lots:
             return {
                 'warning': {'title': _('Warning'), 'message': _('Existing Serial numbers (%s). Please correct the serial numbers encoded.') % ','.join(used_lots.lot_id.mapped('display_name'))}
