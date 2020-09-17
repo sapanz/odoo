@@ -33,7 +33,7 @@ class PaymentTransaction(models.Model):
         """
 
         if self.acquirer_id.provider != 'adyen':
-            return super()._get_processing_values()
+            return super()._get_specific_processing_values(processing_values)
 
         converted_amount = payment_utils.convert_to_minor_units(
             self.amount, self.currency_id, CURRENCY_DECIMALS.get(self.currency_id.name)
