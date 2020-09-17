@@ -408,7 +408,8 @@ var FileWidget = SearchableMediaWidget.extend({
         }
 
         const img = selected[0];
-        if (!img || !img.id) {
+        const isUnchanged = this.$media.attr('src') === img.image_src;
+        if (!img || !img.id || isUnchanged) {
             return this.media;
         }
 
