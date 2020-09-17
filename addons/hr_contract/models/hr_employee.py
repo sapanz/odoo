@@ -15,7 +15,7 @@ class Employee(models.Model):
     calendar_mismatch = fields.Boolean(related='contract_id.calendar_mismatch')
     contracts_count = fields.Integer(compute='_compute_contracts_count', string='Contract Count')
     contract_warning = fields.Boolean(string='Contract Warning', store=True, compute='_compute_contract_warning', groups="hr.group_hr_user")
-    first_contract_date = fields.Date(compute='_compute_first_contract_date', groups="hr.group_hr_user")
+    first_contract_date = fields.Date(compute='_compute_first_contract_date', groups="hr.group_hr_user", store=True)
 
     @api.depends('contract_ids.state')
     def _compute_first_contract_date(self):

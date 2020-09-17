@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_contract_history_view_search" model="ir.ui.view">
+        <field name="name">hr.contract.history.search</field>
+        <field name="model">hr.contract.history</field>
+        <field name="arch" type="xml">
+            <search string="Search Reference Contracts">
+                <field name="name" string="Contract"/>
+                <field name="date_hired"/>
+                <field name="employee_id"/>
+                <field name="job_id"/>
+                <field name="department_id" operator="child_of"/>
+                <field name="resource_calendar_id"/>
+                <field name="state"/>
+                <filter string="Running" name="running" domain="[('state', '=', 'open')]"/>
+                <filter string="New" name="new" domain="[('state', '=', 'draft')]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Employee" name="employee" domain="[]" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Job Position" name="job" domain="[]" context="{'group_by': 'job_id'}"/>
+                    <filter string="Status" name='group_by_state' domain="[]" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="hr_contract_history_view_form_action" model="ir.actions.act_window">
+        <field name="name">Contracts</field>
+        <field name="res_model">hr.contract.history</field>
+        <field name="view_mode">form</field>
+    </record>
+    <record id="hr_contract_history_view_form" model="ir.ui.view">
+        <field name="name">hr.contract.history.form</field>
+        <field name="model">hr.contract.history</field>
+        <field name="arch" type="xml">
+            <form string="Contract History" edit="false" create="false">
+                <header></header>
+                <sheet>
+                    <h1>
+                        <field name="display_name"/>
+                    </h1>
+                    <h2>
+                        <field name="employee_id"/>
+                    </h2>
+                    <group string="Reference contract information">
+                        <group>
+                            <field name="id" invisible="1"/>
+                            <field name="date_hired"/>
+                            <field name="structure_type_id"/>
+                            <field string="Reference Working Time" name="resource_calendar_id"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="wage"/>
+                        </group>
+                        <group>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Contract History" name="contract_history">
+                            <field name="contract_ids" widget="one2many">
+                                <!--
+                                TODO prevent open form on click
+                                 -->
+                                <tree string="Current Contracts"
+                                decoration-primary="state == 'open'" decoration-muted="state == 'close'"
+                                default_order = 'date_start desc'>
+                                    <button name="open_contract" type="object" icon="fa-external-link"/>
+                                    <field name="name"/>
+                                    <field name="date_start"/>
+                                    <field name="date_end"/>
+                                    <field name="resource_calendar_id"/>
+                                    <field name="wage"/>
+                                    <field name="state"/>
+                                    <field name="currency_id" invisible="1"/>
+                                </tree>
+                            </field>
+                        </page>
+                        <page string="Other Information" name="contract_others">
+                            <group>
+                                <field name="hr_responsible_id"/>
+                                <field name="company_id"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <record id="hr_contract_history_view_list_action" model="ir.actions.act_window">
+        <field name="name">Contracts</field>
+        <field name="res_model">hr.contract.history</field>
+        <field name="view_mode">tree,form</field>
+        <field name="domain">[('employee_id', '!=', False)]</field>
+        <field name="context">
+            {
+                'search_default_running': 1,
+                'search_default_new': 1
+            }
+        </field>
+        <field name="search_view_id" ref="hr_contract_history_view_search"/>
+    </record>
+    <record id="hr_contract_history_view_list" model="ir.ui.view">
+        <field name="name">hr.contract.history.list</field>
+        <field name="model">hr.contract.history</field>
+        <field name="arch" type="xml">
+            <tree string="Reference Contracts" default_order = 'date_start desc' create="false" edit="false" delete="false" duplicate="false" import="false">
+                <field name="employee_id" widget="many2one_avatar_employee"/>
+                <field name="date_hired"/>
+                <field name="name"/>
+                <field name="date_start"/>
+                <field name="resource_calendar_id"/>
+                <field name="wage"/>
+                <field name="state" widget="badge" decoration-info="state == 'draft'" decoration-warning="state == 'close'" decoration-success="state == 'open'"/>
+            </tree>
+        </field>
+    </record>
+
+    <menuitem
+        id="hr_menu_contract"
+        action="hr_contract_history_view_list_action"
+        parent="hr.menu_hr_employee_payroll"
+        sequence="4"
+        groups="hr_contract.group_hr_contract_manager"/>
+
+</odoo>
