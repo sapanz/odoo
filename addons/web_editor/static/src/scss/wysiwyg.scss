@@ -466,6 +466,10 @@ img.o_we_custom_image.mx-auto {
         label {
             display: flex;
             align-items: center;
+
+            &.active {
+                background-color: var(--o-we-bg-color-dark);
+            }
         }
 
         button:not(.btn), label {
