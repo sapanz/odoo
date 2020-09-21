@@ -1097,7 +1097,7 @@ class StockMove(models.Model):
             )
         return vals
 
-    def _update_reserved_quantity(self, need, available_quantity, location_id, lot_id=None, package_id=None, owner_id=None, strict=True):
+    def _update_reserved_quantity(self, need, available_quantity, location_id, lot_id=None, package_id=None, owner_id=None, strict=True, quants=None):
         """ Create or update move lines.
         """
         self.ensure_one()
@@ -1123,7 +1123,7 @@ class StockMove(models.Model):
             taken_quantity_move_uom = self.product_id.uom_id._compute_quantity(taken_quantity, self.product_uom, rounding_method='DOWN')
             taken_quantity = self.product_uom._compute_quantity(taken_quantity_move_uom, self.product_id.uom_id, rounding_method='HALF-UP')
 
-        quants = []
+        reserved_quants = []
 
         if self.product_id.tracking == 'serial':
             rounding = self.env['decimal.precision'].precision_get('Product Unit of Measure')
@@ -1133,15 +1133,15 @@ class StockMove(models.Model):
         try:
             with self.env.cr.savepoint():
                 if not float_is_zero(taken_quantity, precision_rounding=self.product_id.uom_id.rounding):
-                    quants = self.env['stock.quant']._update_reserved_quantity(
+                    reserved_quants = self.env['stock.quant']._update_reserved_quantity(
                         self.product_id, location_id, taken_quantity, lot_id=lot_id,
-                        package_id=package_id, owner_id=owner_id, strict=strict
+                        package_id=package_id, owner_id=owner_id, strict=strict, quants=quants
                     )
         except UserError:
             taken_quantity = 0
 
         # Find a candidate move line to update or create a new one.
-        for reserved_quant, quantity in quants:
+        for reserved_quant, quantity in reserved_quants:
             to_update = self.move_line_ids.filtered(lambda ml: ml._reservation_is_updatable(quantity, reserved_quant))
             if to_update:
                 to_update[0].with_context(bypass_reservation_update=True).product_uom_qty += self.product_id.uom_id._compute_quantity(quantity, to_update[0].product_uom_id, rounding_method='HALF-UP')
@@ -1170,6 +1170,16 @@ class StockMove(models.Model):
         reserved_availability = {move: move.reserved_availability for move in self}
         roundings = {move: move.product_id.uom_id.rounding for move in self}
         move_line_vals_list = []
+
+        # Store all quantity related params to minimize # query calls by calling _get_available_quantity
+        # outside of loop
+        products_for_qty_query = self.env['product.product']
+        locations_for_qty_query = self.env['stock.location']
+        packages_for_qty_query = self.env['stock.quant.package']
+        lots_for_qty_query = self.env['stock.production.lot']
+        owners_for_qty_query = self.env['res.partner']
+        # store param combos so we can filter values accordingly after large query completed
+        move_qty_params = defaultdict(dict)
         for move in self.filtered(lambda m: m.state in ['confirmed', 'waiting', 'partially_available']):
             rounding = roundings[move]
             missing_reserved_uom_quantity = move.product_uom_qty - reserved_availability[move]
@@ -1203,18 +1213,14 @@ class StockMove(models.Model):
                     if float_is_zero(need, precision_rounding=rounding):
                         assigned_moves |= move
                         continue
-                    # Reserve new quants and create move lines accordingly.
+                    # Record values for later batch quant query => new quants and create move lines accordingly.
                     forced_package_id = move.package_level_id.package_id or None
-                    available_quantity = self.env['stock.quant']._get_available_quantity(move.product_id, move.location_id, package_id=forced_package_id)
-                    if available_quantity <= 0:
-                        continue
-                    taken_quantity = move._update_reserved_quantity(need, available_quantity, move.location_id, package_id=forced_package_id, strict=False)
-                    if float_is_zero(taken_quantity, precision_rounding=rounding):
-                        continue
-                    if float_compare(need, taken_quantity, precision_rounding=rounding) == 0:
-                        assigned_moves |= move
-                    else:
-                        partially_available_moves |= move
+                    removal_strategy = self.env['stock.quant']._get_removal_strategy(move.product_id, move.location_id)
+                    move_qty_params[(move.id, move.location_id.id, forced_package_id, need, False, removal_strategy)] = {'move': move, 'location': move.location_id, 'package': forced_package_id, 'need': need, 'strict': False, 'removal_strategy': removal_strategy}
+                    products_for_qty_query |= move.product_id
+                    locations_for_qty_query |= move.location_id
+                    if forced_package_id:
+                        packages_for_qty_query |= forced_package_id
                 else:
                     # Check what our parents brought and what our siblings took in order to
                     # determine what we can distribute.
@@ -1272,19 +1278,64 @@ class StockMove(models.Model):
                         # partially `quantity`. When this happens, we chose to reserve the maximum
                         # still available. This situation could not happen on MTS move, because in
                         # this case `quantity` is directly the quantity on the quants themselves.
-                        available_quantity = self.env['stock.quant']._get_available_quantity(
-                            move.product_id, location_id, lot_id=lot_id, package_id=package_id, owner_id=owner_id, strict=True)
-                        if float_is_zero(available_quantity, precision_rounding=rounding):
-                            continue
-                        taken_quantity = move._update_reserved_quantity(need, min(quantity, available_quantity), location_id, lot_id, package_id, owner_id)
-                        if float_is_zero(taken_quantity, precision_rounding=rounding):
-                            continue
-                        if float_is_zero(need - taken_quantity, precision_rounding=rounding):
-                            assigned_moves |= move
-                            break
-                        partially_available_moves |= move
+                        products_for_qty_query |= move.product_id
+                        locations_for_qty_query |= location_id
+                        if package_id:
+                            packages_for_qty_query |= package_id
+                        if lot_id:
+                            lots_for_qty_query |= lot_id
+                        if owner_id:
+                            owners_for_qty_query |= owner_id
+                        removal_strategy = self.env['stock.quant']._get_removal_strategy(move.product_id, location_id)
+                        move_qty_params[(move.id, location_id.id, package_id, need, True, removal_strategy, lot_id, owner_id)] = {
+                            'move': move, 'location': location_id, 'package': package_id, 'need': need, 'strict': True, 'lot_id': lot_id, 'owner_id': owner_id, 'removal_strategy': removal_strategy, 'quantity': quantity}
             if move.product_id.tracking == 'serial':
                 move.next_serial_count = move.product_uom_qty
+
+        available_quants_fifo_strict = self.env['stock.quant']._gather(products_for_qty_query, locations_for_qty_query, lot_id=lots_for_qty_query, package_id=packages_for_qty_query, owner_id=owners_for_qty_query, strict=True, removal_strategy='fifo')
+        available_quants_fifo_not_strict = self.env['stock.quant']._gather(products_for_qty_query, locations_for_qty_query, lot_id=lots_for_qty_query, package_id=packages_for_qty_query, owner_id=owners_for_qty_query, strict=False, removal_strategy='fifo')
+        available_quants_lifo_strict = self.env['stock.quant']._gather(products_for_qty_query, locations_for_qty_query, lot_id=lots_for_qty_query, package_id=packages_for_qty_query, owner_id=owners_for_qty_query, strict=True, removal_strategy='lifo')
+        available_quants_lifo_not_strict = self.env['stock.quant']._gather(products_for_qty_query, locations_for_qty_query, lot_id=lots_for_qty_query, package_id=packages_for_qty_query, owner_id=owners_for_qty_query, strict=False, removal_strategy='lifo')
+        for move_qty_param in move_qty_params.values():
+            move = move_qty_param.get('move')
+            rounding = roundings[move]
+            domain = [('product_id', '=', move.product_id.id)]
+            if move_qty_param.get('package'):
+                domain = expression.AND([[('package_id', '=', move_qty_param.get('package').id)], domain])
+            if move_qty_param.get("lot"):
+                domain = expression.AND([[('lot_id', '=', move_qty_param.get('package').id)], domain])
+            if move_qty_param.get('owner_id'):
+                domain = expression.AND([[('owner_id', '=', move_qty_param.get('owner_id').id)], domain])
+            strict = move_qty_param.get('strict', False)
+            if strict:
+                domain = expression.AND([[('location_id', '=', move_qty_param.get('location').id)], domain])
+            else:
+                domain = expression.AND([[('location_id', 'child_of', move_qty_param.get('location').id)], domain])
+            if move_qty_param.get('removal_strategy') == 'fifo' and strict:
+                quants = available_quants_fifo_strict.filtered_domain(domain)
+            elif move_qty_param.get('removal_strategy') == 'fifo' and not strict:
+                quants = available_quants_fifo_not_strict.filtered_domain(domain)
+            elif move_qty_param.get('removal_strategy') == 'lifo' and strict:
+                quants = available_quants_lifo_strict.filtered_domain(domain)
+            elif move_qty_param.get('removal_strategy') == 'lifo' and not strict:
+                quants = available_quants_lifo_not_strict.filtered_domain(domain)
+            else:
+                # custom removal strategy
+                quants = self.env['stock.quant']._gather(move.product_id, move_qty_param.get('location'), lot_id=move_qty_param.get('lot'), package_id=move_qty_param.get('package'), owner_id=move_qty_param.get('owner'), strict=strict, removal_strategy=move_qty_param.get('removal_strategy'))
+            if not quants:
+                continue
+            available_quantity = self.env['stock.quant']._get_available_quantity(move.product_id, move_qty_param.get('location'), quants=quants)
+            if available_quantity <= 0:
+                continue
+            if move_qty_param.get('quantity'):
+                available_quantity = min(move_qty_param.get('quantity'), available_quantity)
+            taken_quantity = move._update_reserved_quantity(need, available_quantity, move_qty_param.get('location'), lot_id=move_qty_param.get('lot'), package_id=move_qty_param.get('package'), owner_id=move_qty_param.get('owner'), strict=strict, quants=quants)
+            if float_is_zero(taken_quantity, precision_rounding=rounding):
+                continue
+            if float_is_zero(need - taken_quantity, precision_rounding=rounding):
+                assigned_moves |= move
+            else:
+                partially_available_moves |= move
 
         self.env['stock.move.line'].create(move_line_vals_list)
         partially_available_moves.write({'state': 'partially_available'})

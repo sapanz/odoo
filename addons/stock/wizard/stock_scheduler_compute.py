@@ -6,7 +6,7 @@
 #    - Order if the virtual stock of today is below the min of the defined order point
 #
 
-from odoo import api, models, tools
+from odoo import api, models, tools, fields
 
 import logging
 import threading
@@ -35,10 +35,13 @@ class StockSchedulerCompute(models.TransientModel):
                 return {}
 
             for company in self.env.user.company_ids:
-                cids = (self.env.user.company_id | self.env.user.company_ids).ids
-                self.env['procurement.group'].with_context(allowed_company_ids=cids).run_scheduler(
-                    use_new_cursor=self._cr.dbname,
-                    company_id=company.id)
+                if company.id != 4:
+                    print("-------------> STARTING Scheduler for company: " + str(company.id) + " at time: " + str(fields.Datetime.now()))
+                    cids = (self.env.user.company_id | self.env.user.company_ids).ids
+                    self.env['procurement.group'].with_context(allowed_company_ids=cids).run_scheduler(
+                        use_new_cursor=self._cr.dbname,
+                        company_id=company.id)
+                    print("-------------> FINISHED Scheduler for company: " + str(company.id) + " at time: " + str(fields.Datetime.now()))
             new_cr.close()
             return {}
 
