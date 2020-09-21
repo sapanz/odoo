@@ -198,20 +198,21 @@ class WebsiteForm(http.Controller):
         record = request.env[model_name].with_user(SUPERUSER_ID).with_context(mail_create_nosubscribe=True).create(values)
 
         # email_cc, email_from add as a follower if they are known res.partner
-        comma_separated_emails = values.get(
-            'email_from') and values.get('email_from') or False
+        email_addresses = [values.get('email_from')]
         if values.get('email_cc') and issubclass(request.registry[model_name], request.registry['mail.thread.cc']):
-            if comma_separated_emails:
-                comma_separated_emails += ',%s' % values.get('email_cc')
-            else:
-                comma_separated_emails = values.get('email_cc')
-        if comma_separated_emails:
-            emails = record._mail_cc_sanitized_raw_dict(
-                comma_separated_emails).values()
-            partner_ids = request.env['res.partner'].sudo().search(
-                [('email', 'in', list(emails))]).ids
-            if partner_ids:
-                record.message_subscribe(partner_ids=partner_ids)
+            cc_mail_addresses = list(record._mail_cc_sanitized_raw_dict(values.get('email_cc')).values())
+            email_addresses.extend(cc_mail_addresses)
+
+        partner_ids = request.env['res.partner'].sudo().search([('email', 'in', email_addresses)])
+        if partner_ids:
+            record.message_subscribe(partner_ids=partner_ids.ids)
+            mail = request.env['mail.mail'].sudo().create({
+                'subject': _('Thank you for contact us'),
+                'body_html': _("<p>Dear %s,<br/>Your message has been sent successfully. We will get back to you shortly. Thanks!!</p>") % values['contact_name'],
+                'email_from': request.env.company.partner_id.email_formatted,
+                'email_to': partner_ids.mapped('email_formatted'),
+            })
+            mail.send(raise_exception=False)
 
         if custom or meta:
             _custom_label = "%s\n___________\n\n" % _("Other Information:")  # Title for custom fields
