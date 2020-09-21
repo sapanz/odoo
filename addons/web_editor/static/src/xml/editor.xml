@@ -25,6 +25,11 @@
             </div>
         </div>
     </t>
+    <t t-name="web_editor.background_overlay_grid">
+        <span class="grid-dashed dashed-h"></span>
+        <span class="grid-dashed dashed-v"></span>
+        <span class="grid-center"></span>
+    </t>
     <!-- Save Snippet Name option dialog -->
     <t t-name="web_editor.dialog.save_snippet">
         <div>
