@@ -10,36 +10,36 @@ odoo.define('project.ProjectFormView', function (require) {
     const _t = core._t;
 
     const ProjectFormController = FormController.extend({
-        _getActionMenuItems: function (state) {
+        _getActionMenuItems(state) {
             if (!this.archiveEnabled || !state.data['recurrence_id']) {
-                return this._super.apply(this, arguments);
+                return this._super(...arguments);
             }
 
             this.archiveEnabled = false;
-            let actions = this._super.apply(this, arguments);
+            let actions = this._super(...arguments);
             this.archiveEnabled = true;
 
             if (actions) {
                 const activeField = this.model.getActiveField(state);
                 actions.items.other.unshift({
                     description: state.data[activeField] ? _t('Archive') : _t('Unarchive'),
-                    callback: () => this._stopRecurrence(state.data['id']),
+                    callback: () => this._stopRecurrence(state.data['id'], state.data[activeField]?'archive':'unarchive'),
                 });
             }
 
             return actions;
         },
 
-        _onDeleteRecord: function () {
+        _onDeleteRecord() {
             const record = this.model.get(this.handle);
             
             if(!record.data.recurrence_id) {
-                return this._super.apply(this, arguments);
+                return this._super(...arguments);
             }
-            this._stopRecurrence(record.res_id);
+            this._stopRecurrence(record.res_id, 'delete');
         },
 
-        _stopRecurrence(res_id) {
+        _stopRecurrence(res_id, mode) {
             new Dialog(this, {
                 buttons: [
                     {
@@ -50,7 +50,13 @@ odoo.define('project.ProjectFormView', function (require) {
                                 method: 'action_stop_recurrence',
                                 args: [res_id],
                             }).then(() => {
-                                this.reload();
+                                if (mode === 'archive') {
+                                    this._toggleArchiveState(true);
+                                } else if (mode === 'unarchive') {
+                                    this._toggleArchiveState(false);
+                                } else if (mode === 'delete') {
+                                    this._deleteRecords([this.handle]);
+                                }
                             });
                         },
                         close: true,
@@ -63,7 +69,13 @@ odoo.define('project.ProjectFormView', function (require) {
                                 method: 'action_continue_recurrence',
                                 args: [res_id],
                             }).then(() => {
-                                this.reload();
+                                if (mode === 'archive') {
+                                    this._toggleArchiveState(true);
+                                } else if (mode === 'unarchive') {
+                                    this._toggleArchiveState(false);
+                                } else if (mode === 'delete') {
+                                    this._deleteRecords([this.handle]);
+                                }
                             });
                         },
                         close: true,

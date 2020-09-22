@@ -1377,13 +1377,11 @@ class Task(models.Model):
         }
 
     def action_stop_recurrence(self):
-        self.ensure_one()
         tasks = self.env['project.task'].with_context(active_test=False).search([('recurrence_id', 'in', self.recurrence_id.ids)])
         tasks.write({'recurring_task': False})
         self.recurrence_id.unlink()
 
     def action_continue_recurrence(self):
-        self.ensure_one()
         self.recurrence_id = False
         self.recurring_task = False
 

@@ -10,20 +10,20 @@ odoo.define('project.ProjectListView', function (require) {
     const _t = core._t;
 
     const ProjectListController = ListController.extend({
-        _getActionMenuItems: function (state) {
-            if(!this.archiveEnabled || this.selectedRecords.length != 1) {
-                return this._super.apply(this, arguments);
+        _getActionMenuItems(state) {
+            if(!this.archiveEnabled) {
+                return this._super(...arguments);
             }
 
-            const record = this.getSelectedRecords()[0];
-            this.archiveEnabled = !record.data.recurrence_id;
-            let actions = this._super.apply(this, arguments);
+            const recurringRecords = this.getSelectedRecords().filter(rec => rec.data.recurrence_id).map(rec => rec.data.id);
+            this.archiveEnabled = recurringRecords.length == 0;
+            let actions = this._super(...arguments);
             this.archiveEnabled = true;
 
-            if(actions && record.data.recurrence_id) {
+            if(actions && recurringRecords.length > 0) {
                 actions.items.other.unshift({
                     description: _t('Archive'),
-                    callback: () => this._stopRecurrence(record.res_id),
+                    callback: () => this._stopRecurrence(recurringRecords, this.selectedRecords, 'archive'),
                 }, {
                     description: _t('Unarchive'),
                     callback: () => this._toggleArchiveState(false)
@@ -32,20 +32,23 @@ odoo.define('project.ProjectListView', function (require) {
             return actions;
         },
 
-        _onDeleteSelectedRecords: async function () {
-            const recurringRecords = this.getSelectedRecords().filter(rec => rec.data.recurrence_id);
-            if(recurringRecords.length == 1) {
-                const record = recurringRecords[0];
-                if(record.data.recurrence_id) {
-                    return this._stopRecurrence(record);
-                }
+        _onDeleteSelectedRecords() {
+            const recurringRecords = this.getSelectedRecords().filter(rec => rec.data.recurrence_id).map(rec => rec.data.id);
+            if(recurringRecords.length > 0) {
+                return this._stopRecurrence(recurringRecords, this.selectedRecords, 'delete');
             }
 
-            return this._super.apply(this, arguments);
+            return this._super(...arguments);
         },
 
-        _stopRecurrence(record) {
-            new Dialog(this, {
+        _stopRecurrence(recurring_res_ids, res_ids, mode) {
+            let warning;
+            if (res_ids.length > 1) {
+                warning = _t('It seems that some tasks are part of a recurrence.');
+            } else {
+                warning = _t('It seems that this task is part of a recurrence.');
+            }
+            return new Dialog(this, {
                 buttons: [
                     {
                         classes: 'btn-primary',
@@ -53,9 +56,13 @@ odoo.define('project.ProjectListView', function (require) {
                             this._rpc({
                                 model: 'project.task',
                                 method: 'action_stop_recurrence',
-                                args: [record.res_id],
+                                args: [recurring_res_ids],
                             }).then(() => {
-                                this.reload();
+                                if (mode === 'archive') {
+                                    this._toggleArchiveState(true);
+                                } else if (mode === 'delete') {
+                                    this._deleteRecords(res_ids);
+                                }
                             });
                         },
                         close: true,
@@ -66,9 +73,13 @@ odoo.define('project.ProjectListView', function (require) {
                             this._rpc({
                                 model: 'project.task',
                                 method: 'action_continue_recurrence',
-                                args: [record.res_id],
+                                args: [recurring_res_ids],
                             }).then(() => {
-                                this.reload();
+                                if (mode === 'archive') {
+                                    this._toggleArchiveState(true);
+                                } else if (mode === 'delete') {
+                                    this._deleteRecords(res_ids);
+                                }
                             });
                         },
                         close: true,
@@ -83,7 +94,7 @@ odoo.define('project.ProjectListView', function (require) {
                 title: _t('Confirmation'),
                 $content: $('<main/>', {
                     role: 'alert',
-                    text: _t('It seems that this task is part of a recurrence.'),
+                    text: warning,
                 }),
             }).open();
         }
