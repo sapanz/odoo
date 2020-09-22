@@ -5,6 +5,7 @@ odoo.define('web.KanbanRecord', function (require) {
  * This file defines the KanbanRecord widget, which corresponds to a card in
  * a Kanban view.
  */
+// var AbstractFieldBinary = require('web.basic_fields').AbstractFieldBinary;
 var config = require('web.config');
 var core = require('web.core');
 var Domain = require('web.Domain');
@@ -22,6 +23,10 @@ var KANBAN_RECORD_COLORS = require('web.basic_fields').FieldColorPicker.prototyp
 var NB_KANBAN_RECORD_COLORS = KANBAN_RECORD_COLORS.length;
 
 var KanbanRecord = Widget.extend({
+    // fieldDependencies: _.extend({}, Widget.prototype.fieldDependencies, {
+    //     __last_update: {type: 'datetime'},
+    // }),
+
     events: {
         'click .oe_kanban_action': '_onKanbanActionClicked',
         'click .o_kanban_manage_toggle_button': '_onManageTogglerClicked',
@@ -30,6 +35,7 @@ var KanbanRecord = Widget.extend({
      * @override
      */
     init: function (parent, state, options) {
+        // debugger
         this._super(parent);
 
         this.fields = state.fields;
@@ -172,6 +178,8 @@ var KanbanRecord = Widget.extend({
      * @returns {string} the url of the image
      */
     _getImageURL: function (model, field, id, placeholder) {
+        debugger;
+        // var unique = this.record.__last_update;
         id = (_.isArray(id) ? id[0] : id) || null;
         var isCurrentRecord = this.modelName === model && this.recordData.id === id;
         var url;
@@ -188,7 +196,10 @@ var KanbanRecord = Widget.extend({
                 id: id
             };
             if (isCurrentRecord) {
+                debugger
                 params.unique = this.record.__last_update && this.record.__last_update.value.replace(/[^0-9]/g, '');
+                // params.unique = field_utils.format.datetime(unique).replace(/[^0-9]/g, '');
+                // params.unique = this.record.write_date && this.record.write_date.value.replace(/[^0-9]/g, '');
             }
             url = session.url('/web/image', params);
         }
@@ -263,6 +274,7 @@ var KanbanRecord = Widget.extend({
      * @returns {Jquery} the modified node
      */
     _processField: function ($field, field_name) {
+        // debugger
         // no widget specified for that field, so simply use a formatter
         // note: we could have used the widget corresponding to the field's type, but
         // it is much more efficient to use a formatter
@@ -510,11 +522,13 @@ var KanbanRecord = Widget.extend({
      * @param {Object} recordState
      */
     _setState: function (recordState) {
+        debugger
         this.state = recordState;
         this.id = recordState.res_id;
         this.db_id = recordState.id;
         this.recordData = recordState.data;
         this.record = this._transformRecord(recordState.data);
+        // this.record.__last_update = moment();
         this.qweb_context = {
             context: this.state.getContext(),
             kanban_image: this._getImageURL.bind(this),

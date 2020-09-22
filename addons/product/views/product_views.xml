@@ -358,16 +358,19 @@
                     <field name="id"/>
                     <field name="lst_price"/>
                     <field name="activity_state"/>
+                    <field name="image_variant_1920" invisible="1"/>
                     <progressbar field="activity_state" colors='{"planned": "success", "today": "warning", "overdue": "danger"}'/>
                     <templates>
                         <t t-name="kanban-box">
                             <div class="oe_kanban_global_click">
                                 <div class="o_kanban_image">
+                                    <!-- <field name="image_128" widget="image"/> -->
                                     <img t-att-src="kanban_image('product.product', 'image_128', record.id.raw_value)" alt="Product" class="o_image_64_contain"/>
                                 </div>
                                 <div class="oe_kanban_details">
                                     <strong class="o_kanban_record_title">
                                         <field name="name"/>
+                                        <field name="write_date" invisible="1"/>
                                         <small t-if="record.default_code.value">[<field name="default_code"/>]</small>
                                     </strong>
                                     <div class="o_kanban_tags_section">

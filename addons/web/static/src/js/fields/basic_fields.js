@@ -682,6 +682,7 @@ var FieldDateRange = InputField.extend({
      */
     _renderEdit: function () {
         this._super.apply(this, arguments);
+        debugger
         var self = this;
         var startDate;
         var endDate;
@@ -1843,6 +1844,7 @@ var FieldBinaryImage = AbstractFieldBinary.extend({
      * @returns {string} URL of the image
      */
     _getImageUrl: function (model, res_id, field, unique) {
+        debugger;
         return session.url('/web/image', {
             model: model,
             id: JSON.stringify(res_id),
@@ -1894,6 +1896,7 @@ var FieldBinaryImage = AbstractFieldBinary.extend({
      * @private
      */
     _renderReadonly: function () {
+        debugger;
         this._super.apply(this, arguments);
 
         var unique = this.recordData.__last_update;
