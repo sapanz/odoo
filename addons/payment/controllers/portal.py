@@ -166,7 +166,7 @@ class WebsitePayment(http.Controller):
             'tokens': _select_payment_tokens(acquirers_sudo, partner_id) if logged_in else [],
             'fees_by_acquirer': fees_by_acquirer,
             'show_tokenize_input': logged_in,  # Prevent saving payment methods on different partner
-            'reference': reference or 'tx',  # Use 'tx' to always have a ref if it was not provided
+            'reference_prefix': reference or 'tx',  # Use 'tx' to always have a ref if it was not provided # TODO ANV append timestamp to tx
             'amount': amount,
             'currency': currency,
             'partner_id': partner_id,
@@ -179,14 +179,14 @@ class WebsitePayment(http.Controller):
 
     @http.route('/website_payment/transaction', type='json', auth='public', csrf=True)
     def transaction(
-        self, payment_option_id, reference, amount, currency_id, partner_id, flow,
+        self, payment_option_id, reference_prefix, amount, currency_id, partner_id, flow,
         tokenization_requested, is_validation, landing_route, access_token=None, **kwargs
     ):
         """ Create a draft transaction and return its processing values.
 
         :param int payment_option_id: The payment option handling the transaction, as a
                                       `payment.acquirer` id or a `payment.token` id
-        :param str reference: The custom prefix to compute the full reference
+        :param str reference_prefix: The custom prefix to compute the full reference
         :param float|None amount: The amount to pay in the given currency. None if in a payment
                                   method validation operation
         :param int|None currency_id: The currency of the transaction, as a `res.currency` id. None
@@ -230,9 +230,9 @@ class WebsitePayment(http.Controller):
         processing_values = {}  # The generic and acquirer-specific values to process the tx
         if flow in ['redirect', 'direct']:  # Payment through (inline or redirect) form
             acquirer_sudo = request.env['payment.acquirer'].sudo().browse(payment_option_id)
-            tx_reference = request.env['payment.transaction']._compute_reference(
+            reference = request.env['payment.transaction']._compute_reference(
                 acquirer_sudo.provider,
-                prefix=reference,
+                prefix=reference_prefix,
                 sale_order_ids=([order_id] if order_id else [])
             )
             tokenize = bool(
@@ -243,7 +243,7 @@ class WebsitePayment(http.Controller):
             )
             tx_sudo = request.env['payment.transaction'].sudo().with_context(lang=None).create({
                 'acquirer_id': acquirer_sudo.id,
-                'reference': tx_reference,
+                'reference': reference,
                 'tokenize': tokenize,
                 **create_tx_values,
             })
@@ -252,14 +252,14 @@ class WebsitePayment(http.Controller):
             token_sudo = request.env['payment.token'].sudo().browse(payment_option_id).exists()
             if not token_sudo:
                 raise UserError(_("No token token with id %s could be found.", payment_option_id))
-            tx_reference = request.env['payment.transaction']._compute_reference(
+            reference = request.env['payment.transaction']._compute_reference(
                 token_sudo.acquirer_id.provider,
-                prefix=reference,
+                prefix=reference_prefix,
                 sale_order_ids=([order_id] if order_id else [])
             )
             tx_sudo = request.env['payment.transaction'].sudo().with_context(lang=None).create({
                 'acquirer_id': token_sudo.acquirer_id.id,
-                'reference': tx_reference,
+                'reference': reference,
                 'token_id': payment_option_id,
                 **create_tx_values,
             })  # Created in sudo to allowed writing on callback fields
@@ -351,7 +351,7 @@ class WebsitePayment(http.Controller):
         tx_context = {
             'acquirers': acquirers,
             'tokens': tokens,
-            'reference': 'validation',
+            'reference_prefix': 'validation',  # TODO ANV append timestamp
             'partner_id': partner.id,
             'init_tx_route': '/website_payment/transaction',
             'landing_route': '/website_payment/validate',

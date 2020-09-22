@@ -841,7 +841,6 @@ class WebsiteSale(http.Controller):
         values['fees_by_acquirer'] = {acq_sudo: acq_sudo._compute_fees(
             order.amount_total, order.currency_id, order.partner_id.country_id.id
         ) for acq_sudo in acquirers_sudo.filtered('fees_active')}
-        values['reference'] = ''
         values['amount'] = order.amount_total
         values['currency'] = order.currency_id
         values['access_token'] = order.access_token

@@ -276,7 +276,7 @@ odoo.define('payment.payment_form_mixin', require => {
                 route: this.txContext.initTxRoute,
                 params: {
                     'payment_option_id': paymentOptionId,
-                    'reference': this.txContext.reference,
+                    'reference_prefix': this.txContext.referencePrefix,
                     'amount': this.txContext.amount !== undefined
                         ? parseFloat(this.txContext.amount) : null,
                     'currency_id': this.txContext.currencyId

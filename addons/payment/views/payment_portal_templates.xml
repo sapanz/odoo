@@ -42,8 +42,8 @@
                     <!-- Payment page -->
                     <div class="row">
                         <div class="col-lg-7">
-                            <t t-if="reference and amount and currency">
-                                <b>Reference:</b> <t t-esc="reference"/><br/>
+                            <t t-if="reference_prefix and amount and currency">
+                                <b>Reference:</b> <t t-esc="reference_prefix"/><br/>
                                 <b>Amount:</b> <t t-esc="amount"
                                                   t-options="{'widget': 'monetary',
                                                               'display_currency': currency}"/>
@@ -58,7 +58,7 @@
                                     <t t-call="payment.checkout"/>
                                 </t>
                             </t>
-                            <t t-elif="not reference">
+                            <t t-elif="not reference_prefix">
                                 <div class="alert alert-warning">
                                     <strong>Warning!</strong> The reference is missing.
                                 </div>

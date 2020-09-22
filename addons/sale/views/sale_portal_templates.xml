@@ -242,6 +242,7 @@
                                     <div t-if="pms or acquirers" id="payment_method" class="text-left">
                                         <h3 class="mb24">Pay with</h3>
                                         <t t-call="payment.checkout">
+<!--                                            TODO ANV-->
                                             <t t-set="mode" t-value="'payment'"/>
                                             <t t-set="submit_button_label">Pay &amp; Confirm</t>
                                             <t t-set="submit_button_icon_class" t-value="'fa-lock'"/>

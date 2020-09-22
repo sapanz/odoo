@@ -74,7 +74,7 @@ odoo.define('payment_adyen.payment_form', require => {
                 route: this.txContext.initTxRoute,
                 params: {
                     'payment_option_id': dropin.acquirerId,
-                    'reference': this.txContext.reference,
+                    'reference_prefix': this.txContext.referencePrefix,
                     'amount': this.txContext.amount !== undefined
                         ? parseFloat(this.txContext.amount) : null,
                     'currency_id': this.txContext.currencyId
