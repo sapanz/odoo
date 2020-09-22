@@ -136,7 +136,9 @@ class PaymentTransaction(models.Model):
                 # If the values contain a (6, 0, ids) command for the invoices, extract their ids
                 # and use them to compute the reference
                 invoice_ids = list(values['invoice_ids'][0][2]) if 'invoice_ids' in values else []
-                values['reference'] = self._compute_reference(invoice_ids=invoice_ids)
+                values['reference'] = self._compute_reference(
+                    acquirer.provider, invoice_ids=invoice_ids
+                )
 
             # Compute fees
             values['fees'] = acquirer._compute_fees(
@@ -173,7 +175,7 @@ class PaymentTransaction(models.Model):
     #=== BUSINESS METHODS ===#
 
     @api.model
-    def _compute_reference(self, prefix=None, separator='-', **kwargs):
+    def _compute_reference(self, provider, prefix=None, separator='-', **kwargs):
         """ Compute a unique reference for the transaction.
 
         The reference either corresponds to the prefix if no other transaction with that prefix
@@ -196,6 +198,7 @@ class PaymentTransaction(models.Model):
             the full reference will be 'INV1-INV2' (or similar) if no existing reference has the
             same prefix, or 'INV1-INV2-n' if n existing references have the same prefix.
 
+        :param str provider: The provider of the acquirer handling the transaction
         :param str prefix: The custom prefix used to compute the full reference
         :param str separator: The custom separator used to separate the prefix from the suffix, and
                               passed to `_compute_reference_prefix` if it is called
@@ -209,7 +212,7 @@ class PaymentTransaction(models.Model):
             # Replace special characters by their ASCII alternative (é -> e ; ä -> a ; ...)
             prefix = unicodedata.normalize('NFKD', prefix).encode('ascii', 'ignore').decode('utf-8')
         else:  # No prefix provided, compute it based on the kwargs or fallback on 'tx'
-            prefix = self._compute_reference_prefix(separator, kwargs) or 'tx'
+            prefix = self._compute_reference_prefix(separator, kwargs, provider) or 'tx'
 
         # Compute the sequence number
         reference = prefix  # The first reference of a sequence has no sequence number
@@ -224,10 +227,10 @@ class PaymentTransaction(models.Model):
                 [('reference', 'like', f'{prefix}{separator}%')]
             ).with_context(prefetch_fields=False).mapped('reference')
 
-            # A final regex search is necessary to figure out the next sequence number. It's not an
-            # option to alphabetically sort the references with a matching prefix as both the prefix
-            # and the separator are arbitrary. A given prefix could happen to be a substring of a
-            # reference from a different sequence.
+            # A final regex search is necessary to figure out the next sequence number. The previous
+            # search could not rely on alphabetically sorting the reference to infer the largest
+            # sequence number because both the prefix and the separator are arbitrary. A given
+            # prefix could happen to be a substring of the reference from a different sequence.
             # For instance, the prefix 'example' is a valid match for the existing references
             # 'example', 'example-1' and 'example-ref', in that order. Trusting the order to infer
             # the sequence number would lead to a collision with 'example-1'.
@@ -246,12 +249,13 @@ class PaymentTransaction(models.Model):
         return reference
 
     @api.model
-    def _compute_reference_prefix(self, separator, data):
+    def _compute_reference_prefix(self, separator, data, provider):
         """ Compute the reference prefix from the transaction data. Return an empty str if no data.
 
         The `data` parameter is only used in the computation if it has an entry with the key
         'invoice_ids' and an iterable of valid `account.move` ids as value.
 
+        :param str provider: The provider of the acquirer handling the transaction
         :param str separator: The custom separator used to separate data references
         :param dict data: The transaction data used to compute the reference prefix. It should have
                           the structure {'invoice_ids': [1, 2, ...]}.
