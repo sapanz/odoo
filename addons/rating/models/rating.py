@@ -119,6 +119,8 @@ class Rating(models.Model):
             if rating.rating >= RATING_LIMIT_SATISFIED:
                 rating.rating_text = 'satisfied'
             elif rating.rating >= RATING_LIMIT_OK:
+                rating.rating_text = 'satisfied'
+            elif rating.rating > RATING_LIMIT_MIN:
                 rating.rating_text = 'not_satisfied'
             elif rating.rating >= RATING_LIMIT_MIN:
                 rating.rating_text = 'highly_dissatisfied'
