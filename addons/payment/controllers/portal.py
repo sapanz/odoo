@@ -218,14 +218,15 @@ class WebsitePayment(http.Controller):
             currency_id = acquirer_sudo._get_validation_currency().id
 
         # Prepare the create values that are common to all online payment flows
-        order_id = kwargs.get('order_id')
         create_tx_values = {
             'amount': amount,
             'currency_id': currency_id,
             'partner_id': partner_id,
             'operation': f'online_{flow}' if not is_validation else 'validation',
-            'sale_order_ids': [(6, 0, [int(order_id)])] if order_id else [],
         }
+        order_id = kwargs.get('order_id')
+        if order_id:
+            create_tx_values['sale_order_ids'] = [(6, 0, [int(order_id)])]
 
         processing_values = {}  # The generic and acquirer-specific values to process the tx
         if flow in ['redirect', 'direct']:  # Payment through (inline or redirect) form
