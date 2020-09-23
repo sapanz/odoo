@@ -56,8 +56,8 @@ odoo.define('payment.checkout_form', require => {
             const checkedRadio = $checkedRadios[0];
 
             // Extract contextual values from the radio button
-            const paymentOptionId = this._getPaymentOptionIdFromRadio(checkedRadio);
             const provider = this._getProviderFromRadio(checkedRadio);
+            const paymentOptionId = this._getPaymentOptionIdFromRadio(checkedRadio);
             const flow = this._getPaymentFlowFromRadio(checkedRadio);
 
             // Update the tx context with the value of the "Save my payment details" checkbox
@@ -68,7 +68,7 @@ odoo.define('payment.checkout_form', require => {
 
             // Make the payment
             this._disableButton();
-            this._processTx(paymentOptionId, provider, flow);
+            this._processTx(provider, paymentOptionId, flow);
             this._enableButton();
         },
 

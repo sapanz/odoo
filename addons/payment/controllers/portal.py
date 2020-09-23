@@ -39,7 +39,7 @@ class WebsitePayment(http.Controller):
     @http.route('/website_payment/pay', type='http', auth='public', website=True, sitemap=False)
     def pay(
         self, reference=None, amount=None, currency_id=None, partner_id=None, order_id=None,
-        company_id=None, acquirer_id=None, access_token=None, **_kwargs
+        company_id=None, acquirer_id=None, access_token=None, **kwargs
     ):
         """ Display the payment form with optional filtering of payment options.
 
@@ -61,7 +61,7 @@ class WebsitePayment(http.Controller):
         :param str company_id: The related company, as a `res.company` id
         :param str acquirer_id: The desired acquirer, as a `payment.acquirer` id
         :param str access_token: The access token used to authenticate the partner
-        :param dict _kwargs: Optional data. This parameter is not used here.
+        :param dict kwargs: Optional data. This parameter is not used here.
         :return: The rendered checkout form
         :rtype: str
         :raise: werkzeug.exceptions.NotFound if the access token is invalid
@@ -287,12 +287,12 @@ class WebsitePayment(http.Controller):
         return processing_values
 
     @http.route('/website_payment/confirm', type='http', auth='public', website=True, sitemap=False)
-    def confirm(self, tx_id, access_token, **_kwargs):
+    def confirm(self, tx_id, access_token, **kwargs):
         """ Display the payment confirmation page with the appropriate status message to the user.
 
         :param str tx_id: The transaction to confirm, as a `payment.transaction` id
         :param str access_token: The access token used to verify the user
-        :param dict _kwargs: Optional data. This parameter is not used here.
+        :param dict kwargs: Optional data. This parameter is not used here.
         :raise: werkzeug.exceptions.NotFound if the access token is invalid
         """
         tx_id, = self.cast_as_numeric([tx_id], numeric_type='int')
@@ -334,10 +334,10 @@ class WebsitePayment(http.Controller):
             return request.redirect('/my/home')
 
     @http.route('/my/payment_method', type='http', auth='user', website=True)
-    def payment_method(self, **_kwargs):
+    def payment_method(self, **kwargs):
         """ Display the form to manage payment methods.
 
-        :param dict _kwargs: Optional data. This parameter is not used here.
+        :param dict kwargs: Optional data. This parameter is not used here.
         :return: The rendered manage form
         :rtype: str
         """
@@ -359,12 +359,12 @@ class WebsitePayment(http.Controller):
         return request.render('payment.payment_methods', tx_context)
 
     @http.route('/website_payment/validate', type='http', auth='user', website=True, sitemap=False)
-    def validate(self, tx_id, **_kwargs):
+    def validate(self, tx_id, **kwargs):
         """ Refund a payment method validation transaction and redirect the user.
 
         :param str tx_id: The token registration transaction to confirm, as a
                           `payment.transaction` id
-        :param dict _kwargs: Optional data. This parameter is not used here.
+        :param dict kwargs: Optional data. This parameter is not used here.
         """
         tx_id, = self.cast_as_numeric([tx_id], numeric_type='int')
         if tx_id:
@@ -412,10 +412,10 @@ class PaymentPostProcessing(http.Controller):
     MONITORED_TX_IDS_KEY = '__payment_monitored_tx_ids__'
 
     @http.route('/payment/status', type='http', auth='public', website=True, sitemap=False)
-    def status(self, **_kwargs):
+    def status(self, **kwargs):
         """ Display the payment status page.
 
-        :param dict _kwargs: Optional data. This parameter is not used here.
+        :param dict kwargs: Optional data. This parameter is not used here.
         :return: The rendered status page
         :rtype: str
         """

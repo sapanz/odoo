@@ -38,22 +38,22 @@ class PaymentToken(models.Model):
                 acquirer = self.env['payment.acquirer'].browse(values['acquirer_id'])
 
                 # Include acquirer-specific create values
-                values.update(self._get_create_values(values, acquirer.provider))
+                values.update(self._get_specific_create_values(acquirer.provider, values))
             else:
                 pass  # Let psycopg warn about the missing required field
 
         return super().create(values_list)
 
     @api.model
-    def _get_create_values(self, _values, _provider):
+    def _get_specific_create_values(self, provider, values):
         """ Complete the values of the `create` method with acquirer-specific values.
 
         For an acquirer to add its own create values, it must overwrite this method and return a
         dict of values. Acquirer-specific values take precedence over those of the dict of generic
         create values.
 
-        :param dict _values: The original create values
-        :param str _provider: The provider of the acquirer managing the token
+        :param str provider: The provider of the acquirer managing the token
+        :param dict values: The original create values
         :return: The dict of acquirer-specific create values
         :rtype: dict
         """

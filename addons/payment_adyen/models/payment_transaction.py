@@ -96,19 +96,19 @@ class PaymentTransaction(models.Model):
 
             # Handle the payment request response
             _logger.info(f"payment request response:\n{pprint.pformat(response_content)}")
-            tx._handle_feedback_data(response_content, 'adyen')
+            tx._handle_feedback_data('adyen', response_content)
 
     @api.model
-    def _get_tx_from_data(self, data, provider):
+    def _get_tx_from_data(self, provider, data):
         """ Find the transaction based on the transaction data.
 
-        :param dict data: The transaction data sent by the acquirer
         :param str provider: The provider of the acquirer that handled the transaction
+        :param dict data: The transaction data sent by the acquirer
         :return: The payment.transaction record if found, else None
         :rtype: recordset or None
         """
         if provider != 'adyen':
-            return super()._get_tx_from_data(data, provider)
+            return super()._get_tx_from_data(provider, data)
 
         # Check that all necessary keys are in feedback data
         reference = data.get('merchantReference')

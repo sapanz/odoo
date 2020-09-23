@@ -115,12 +115,12 @@ odoo.define('payment.payment_form_mixin', require => {
             this._setPaymentFlow();
 
             // Extract contextual values from the radio button
-            const paymentOptionId = this._getPaymentOptionIdFromRadio(radio);
             const provider = this._getProviderFromRadio(radio);
+            const paymentOptionId = this._getPaymentOptionIdFromRadio(radio);
             const flow = this._getPaymentFlowFromRadio(radio);
 
             // Prepare the inline form of the selected payment option and display it if not empty
-            this._prepareInlineForm(paymentOptionId, provider, flow);
+            this._prepareInlineForm(provider, paymentOptionId, flow);
             const $inlineForm = this.$(`#o_payment_inline_form_${paymentOptionId}`);
             if (!$inlineForm.is(':empty')) {
                 $inlineForm.removeClass('d-none');
@@ -251,12 +251,12 @@ odoo.define('payment.payment_form_mixin', require => {
          * inline form. Otherwise, the call must be sent back to the parent method.
          *
          * @private
-         * @param {number} _paymentOptionId - The id of the selected payment option
-         * @param {string} _provider - The provider of the selected payment option's acquirer
-         * @param {string} _flow - The online payment flow of the selected payment option
+         * @param {string} provider - The provider of the selected payment option's acquirer
+         * @param {number} paymentOptionId - The id of the selected payment option
+         * @param {string} flow - The online payment flow of the selected payment option
          * @return {undefined}
          */
-        _prepareInlineForm: (_paymentOptionId, _provider, _flow) => {},
+        _prepareInlineForm: (provider, paymentOptionId, flow) => {},
 
         /**
          * Create and process the transaction.
@@ -265,12 +265,12 @@ odoo.define('payment.payment_form_mixin', require => {
          * or to do post-processing work, it must override this method.
          *
          * @private
+         * @param {string} provider - The provider of the payment option's acquirer
          * @param {number} paymentOptionId - The id of the payment option handling the transaction
-         * @param {string} _provider - The provider of the payment option's acquirer
          * @param {string} flow - The online payment flow of the transaction
          * @return {undefined}
          */
-        _processTx: function (paymentOptionId, _provider, flow) {
+        _processTx: function (provider, paymentOptionId, flow) {
             // Call the init route to initialize the transaction and retrieve processing values
             this._rpc({
                 route: this.txContext.initTxRoute,

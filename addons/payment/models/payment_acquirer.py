@@ -170,7 +170,7 @@ class PaymentAcquirer(models.Model):
             acquirer.support_tokenization = supported_features.get('tokenization', False)
 
     @api.model
-    def _get_supported_features(self, _provider):
+    def _get_supported_features(self, provider):
         """Get the specification of supported features.
 
         For an acquirer to specify that it supports one of the features, it must override this
@@ -181,7 +181,7 @@ class PaymentAcquirer(models.Model):
             - fees_computation: support payment fees computation
             - tokenization: support saving payment data as a `payment.token` record
 
-        :param string _provider: The provider of the acquirer
+        :param string provider: The provider of the acquirer
         :return: The supported features for this acquirer. To specify a feature as supported, the
                  dict must have an entry of the technical name of the feature as the key, and True
                  as the value.
@@ -317,8 +317,7 @@ class PaymentAcquirer(models.Model):
 
     @api.model
     def _get_compatible_acquirers(
-        self, company_id, partner_id, allow_tokenization=False, preferred_acquirer_id=None,
-        **_kwargs
+        self, company_id, partner_id, allow_tokenization=False, preferred_acquirer_id=None, **kwargs
     ):
         """ Select and return the acquirers matching the criteria.
 
@@ -333,7 +332,7 @@ class PaymentAcquirer(models.Model):
         :param int partner_id: The partner making the payment, as a `res.partner` id
         :param bool allow_tokenization: Whether matching acquirers must allow tokenization
         :param int preferred_acquirer_id: The preferred acquirer, as a `payment.acquirer` id
-        :param dict _kwargs: Optional data. This parameter is not used here
+        :param dict kwargs: Optional data. This parameter is not used here
         :return: The compatible acquirers
         :rtype: recordset of `payment.acquirer`
         """
@@ -394,7 +393,7 @@ class PaymentAcquirer(models.Model):
             url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         return url
 
-    def _compute_fees(self, _amount, _currency_id, _country_id):
+    def _compute_fees(self, amount, currency_id, country_id):
         """ Compute the acquirer-specific fees given a transaction context.
 
         For an acquirer to implement fees computation, it must override this method and return the
@@ -402,9 +401,9 @@ class PaymentAcquirer(models.Model):
 
         Note: self.ensure_one()
 
-        :param float _amount: The amount to pay for the transaction
-        :param int _currency_id: The currency of the transaction, as a `res.currency` id
-        :param int _country_id|None: The customer country as a `res.country` id
+        :param float amount: The amount to pay for the transaction
+        :param int currency_id: The currency of the transaction, as a `res.currency` id
+        :param int country_id|None: The customer country as a `res.country` id
         :return: The computed fees
         :rtype: float
         """

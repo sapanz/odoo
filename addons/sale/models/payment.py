@@ -135,8 +135,8 @@ class PaymentTransaction(models.Model):
                 trans.invoice_ids = [(6, 0, invoices.ids)]
 
     @api.model
-    def _compute_reference_prefix(self, separator, data):
-        prefix = super()._compute_reference_prefix(separator, data)
+    def _compute_reference_prefix(self, provider, separator, data):
+        prefix = super()._compute_reference_prefix(provider, separator, data)
         order_ids = data.get('sale_order_ids')
         if not prefix and order_ids:  # 'order_ids' is in data, and order_ids is not empty
             orders = self.env['sale.order'].browse(order_ids).exists()

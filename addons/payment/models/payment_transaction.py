@@ -80,10 +80,11 @@ class PaymentTransaction(models.Model):
         string="Landing Route",
         help="The route the user is redirected to after the transaction")
     callback_model_id = fields.Many2one(
-        string="Callback Document Model", comodel_name='ir.model', groups="base.group_system")
-    callback_res_id = fields.Integer(string="Callback Record ID", groups="base.group_system")
-    callback_method = fields.Char(string="Callback Method", groups="base.group_system")
-    callback_hash = fields.Char(string="Callback Hash", groups="base.group_system")
+        string="Callback Document Model", comodel_name='ir.model', groups='base.group_system')
+    callback_res_id = fields.Integer(string="Callback Record ID", groups='base.group_system')
+    callback_method = fields.Char(string="Callback Method", groups='base.group_system')
+    # Hash for additional security on top of the callback fields' group in case a bug exposes a sudo
+    callback_hash = fields.Char(string="Callback Hash", groups='base.group_system')
     callback_is_done = fields.Char(
         string="Callback Done", help="Whether the callback has already been executed",
         groups="base.group_system", readonly=True)
@@ -146,7 +147,7 @@ class PaymentTransaction(models.Model):
             )
 
             # Include acquirer-specific create values
-            values.update(self._get_create_values(values, acquirer.provider))
+            values.update(self._get_specific_create_values(acquirer.provider, values))
 
             # Generate the hash for the callback if one has be configured on the tx
             values['callback_hash'] = self._generate_callback_hash(
@@ -158,15 +159,15 @@ class PaymentTransaction(models.Model):
         return super().create(values_list)
 
     @api.model
-    def _get_create_values(self, _values, _provider):
+    def _get_specific_create_values(self, provider, values):
         """ Complete the values of the `create` method with acquirer-specific values.
 
         For an acquirer to add its own create values, it must overwrite this method and return a
         dict of values. Acquirer-specific values take precedence over those of the dict of generic
         create values.
 
-        :param dict _values: The original create values
-        :param str _provider: The provider of the acquirer that handled the transaction
+        :param str provider: The provider of the acquirer that handled the transaction
+        :param dict values: The original create values
         :return: The dict of acquirer-specific create values
         :rtype: dict
         """
@@ -212,7 +213,7 @@ class PaymentTransaction(models.Model):
             # Replace special characters by their ASCII alternative (é -> e ; ä -> a ; ...)
             prefix = unicodedata.normalize('NFKD', prefix).encode('ascii', 'ignore').decode('utf-8')
         else:  # No prefix provided, compute it based on the kwargs or fallback on 'tx'
-            prefix = self._compute_reference_prefix(separator, kwargs, provider) or 'tx'
+            prefix = self._compute_reference_prefix(provider, separator, kwargs) or 'tx'
 
         # Compute the sequence number
         reference = prefix  # The first reference of a sequence has no sequence number
@@ -249,7 +250,7 @@ class PaymentTransaction(models.Model):
         return reference
 
     @api.model
-    def _compute_reference_prefix(self, separator, data, provider):
+    def _compute_reference_prefix(self, provider, separator, data):
         """ Compute the reference prefix from the transaction data. Return an empty str if no data.
 
         The `data` parameter is only used in the computation if it has an entry with the key
@@ -375,16 +376,16 @@ class PaymentTransaction(models.Model):
         self._log_sent_message()
     
     @api.model
-    def _handle_feedback_data(self, data, provider):
+    def _handle_feedback_data(self, provider, data):
         """ Handle the feedback data sent by the provider.
 
-        :param dict data: The feedback data sent by the provider
         :param str provider: The provider of the acquirer that handled the transaction
+        :param dict data: The feedback data sent by the provider
         :return: The transaction if found, and the feedback processing result
         :rtype: tuple[recordset of `payment.transaction`, bool]
         """
         feedback_result = True
-        tx = self._get_tx_from_data(data, provider)
+        tx = self._get_tx_from_data(provider, data)
         if tx:
             invalid_parameters = tx._get_invalid_parameters(data)
             if invalid_parameters:
@@ -403,20 +404,20 @@ class PaymentTransaction(models.Model):
         return tx, feedback_result
 
     @api.model
-    def _get_tx_from_data(self, _data, _provider):
+    def _get_tx_from_data(self, provider, data):
         """ Find and return the transaction based on the transaction data and on the acquirer.
 
         For an acquirer to handle transaction post-processing, it must overwrite this method and
         return the transaction that is identified by the data.
 
-        :param dict _data: The transaction data sent by the acquirer
-        :param str _provider: The provider of the acquirer that handled the transaction
+        :param str provider: The provider of the acquirer that handled the transaction
+        :param dict data: The transaction data sent by the acquirer
         :return: The payment.transaction record if found, else an empty recordset
         :rtype: recordset of `payment.transaction`
         """
         return self
 
-    def _get_invalid_parameters(self, _data):
+    def _get_invalid_parameters(self, data):
         """ List acquirer-specific invalid parameters and return them.
 
         For an acquirer to handle transaction post-processing, it must overwrite this method and
@@ -424,7 +425,7 @@ class PaymentTransaction(models.Model):
 
         Note: self.ensure_one()
 
-        :param dict _data: The transaction data sent by the acquirer
+        :param dict data: The transaction data sent by the acquirer
         :return: The dict of invalid parameters whose entries have the name of the parameter
                  as key and a tuple (expected value, received value) as value
         :rtype: dict
@@ -432,7 +433,7 @@ class PaymentTransaction(models.Model):
         self.ensure_one()
         return dict()
 
-    def _process_feedback_data(self, _data):
+    def _process_feedback_data(self, data):
         """ Process the feedback data for the current transaction and make necessary updates.
 
         For an acquirer to handle transaction post-processing, it must overwrite this method and
@@ -440,7 +441,7 @@ class PaymentTransaction(models.Model):
 
         Note: self.ensure_one()
 
-        :param dict _data: The transaction data sent by the acquirer
+        :param dict data: The transaction data sent by the acquirer
         :return: True if the feedback is successfully processed, False otherwise
         :rtype: bool
         """
@@ -555,12 +556,12 @@ class PaymentTransaction(models.Model):
     def _execute_callback(self):
         """ Execute the callbacks defined on the transactions.
 
-        Only successful callbacks are marked as done. This allows callbacks to reschedule themselves
-        should the conditions not be met in this call, but eventually in a second one.
+        Callbacks that have already been executed are silently ignored. This case can happen when a
+        transaction is first authorized before being confirmed, for instance. In this case, both
+        status updates try to execute the callback.
 
-        Callbacks that have already been executed are silently ignored. This case can happen when
-        a transaction first authorized before being confirmed, for instance. In this which case,
-        both status updates try to execute the callback.
+        Only successful callbacks are marked as done. This allows callbacks to reschedule themselves
+        should the conditions not be met in the present call.
 
         :return: None
         """
