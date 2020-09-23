@@ -709,6 +709,16 @@
             data-excluded="theme, common, custom"/>
     </div>
 
+    <div data-js="topMenuLinkColor"
+         data-selector="[data-main-object^='website.page('] #wrapwrap > header"
+         data-no-check="true">
+        <we-colorpicker string="⌙ Link Color"
+            id="option_header_transparent_link_color"
+            data-select-style="true"
+            data-css-property="color"
+            data-color-prefix="text-"/>
+    </div>
+
     <!-- Header > Navbar Options -->
     <div data-js="HeaderNavbar"
          data-selector="#wrapwrap > header > nav"

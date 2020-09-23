@@ -1915,6 +1915,20 @@ options.registry.TopMenuVisibility = VisibilityPageOptionUpdate.extend({
                 onSuccess: () => resolve(),
             });
         });
+        await new Promise(resolve => {
+            this.trigger_up('action_demand', {
+                actionName: 'toggle_page_option',
+                params: [{name: 'header_link_color', value: ''}],
+                onSuccess: () => resolve(),
+            });
+        });
+        await new Promise(resolve => {
+            this.trigger_up('action_demand', {
+                actionName: 'toggle_page_option',
+                params: [{name: 'header_inline_link_color', value: ''}],
+                onSuccess: () => resolve(),
+            });
+        });
     },
     /**
      * @override
@@ -1949,6 +1963,51 @@ options.registry.topMenuColor = options.Class.extend({
         this.trigger_up('action_demand', {
             actionName: 'toggle_page_option',
             params: [{name: 'header_color', value: className}],
+        });
+    },
+
+    //--------------------------------------------------------------------------
+    // Private
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    _computeVisibility: async function () {
+        const show = await this._super(...arguments);
+        if (!show) {
+            return false;
+        }
+        return new Promise(resolve => {
+            this.trigger_up('action_demand', {
+                actionName: 'get_page_option',
+                params: ['header_overlay'],
+                onSuccess: value => resolve(!!value),
+            });
+        });
+    },
+});
+
+options.registry.topMenuLinkColor = options.Class.extend({
+
+    //--------------------------------------------------------------------------
+    // Options
+    //--------------------------------------------------------------------------
+
+    /**
+     * @override
+     */
+    selectStyle(previewMode, widgetValue, params) {
+        this._super(...arguments);
+        const className = widgetValue && !ColorpickerWidget.isCSSColor(widgetValue) ? (params.colorPrefix + widgetValue) : '';
+        const inlineColor = ColorpickerWidget.isCSSColor(widgetValue) ? widgetValue : '';
+        this.trigger_up('action_demand', {
+            actionName: 'toggle_page_option',
+            params: [{name: 'header_link_color', value: className}],
+        });
+        this.trigger_up('action_demand', {
+            actionName: 'toggle_page_option',
+            params: [{name: 'header_inline_link_color', value: inlineColor}],
         });
     },
 
