@@ -87,7 +87,6 @@ odoo.define('payment.checkout_form', require => {
 
             this._onClickPay(ev);
         },
-
     });
     return publicWidget.registry.PaymentCheckoutForm;
 });

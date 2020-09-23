@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <template id="ogone_inline_template">
+            <div t-attf-id="ogone-dropin-container_{{acquirer_id}}">
+                <iframe t-attf-id="oe_ogone_iframe_{{id}}" t-attf-name="oe_ogone_iframe_{{id}}" class="oe_ogone_iframe">
+                </iframe>
+            </div>
+        </template>
+    </data>
+</odoo>

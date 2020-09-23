@@ -45,10 +45,10 @@ odoo.define('website_sale.payment', require => {
 
     };
 
-    checkoutForm.include(Object.assign({}, websiteSalePaymentMixin, {
-        events: Object.assign({}, checkoutForm.prototype.events, {
-            'change #checkbox_tc': '_onClickTCCheckbox',
-        }),
+    checkoutForm.include(
+
+    );
+
 
         //--------------------------------------------------------------------------
         // Private

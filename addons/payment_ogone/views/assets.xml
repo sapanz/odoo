@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="assets_frontend" inherit_id="web.assets_frontend">
+        <!--        <xpath expr="link[last()]" position="after">-->
+        <!--            &lt;!&ndash; TODO replace by live resource URIs: https://docs.adyen.com/checkout/release-notes &ndash;&gt;-->
+        <!--            <link rel="stylesheet"-->
+        <!--                  href="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.9.4/adyen.css"-->
+        <!--                  integrity="sha384-6qrXvoxlnBlrflZQ9g5Yf5oZapUSSXctPxacP9oRcEukbEO7lXisuSyMKG8pDX8V"-->
+        <!--                  crossorigin="anonymous"/>-->
+        <!--        </xpath>-->
+        <xpath expr="script[last()]" position="after">
+            <!--            <script src="https://checkoutshopper-live.adyen.com/checkoutshopper/sdk/3.9.4/adyen.js"-->
+            <!--                    integrity="sha384-/rpftrZptnl7EIuIvqz4PAEehQoysKXmwqUAGyH9lK3WHgcvY0lWj/S5LH7xrbf+"-->
+            <!--                    crossorigin="anonymous"/>-->
+            <link rel="stylesheet" type="text/scss" href="/payment_ogone/static/src/scss/payment_form.scss"/>
+            <script type="text/javascript" src="/payment_ogone/static/src/js/payment_form.js"/>
+        </xpath>
+    </template>
+
+    <template id="ogone_flexchecout_feedback" name="Payment processing page">
+        <t t-call="web.layout">
+            <t t-set="head">
+                <script type="text/javascript">
+                    odoo.session_info = <t t-raw="json.dumps({
+                        'is_admin': request.env.user._is_admin(),
+                        'is_system': request.env.user._is_system(),
+                        'user_id': request.env.user.id,
+                    })"/>;
+                </script>
+                <t t-call-assets="web.assets_common"/>
+                <t t-call-assets="web.assets_frontend"/>
+                <link rel="stylesheet" type="text/scss" href="/payment_ogone/static/src/scss/payment_feedback.scss"/>
+                <link href="/web/static/lib/fontawesome/css/font-awesome.css" rel="stylesheet" type="text/css"/>
+                <script type="text/javascript" src="/payment_ogone/static/src/js/payment_feedback.js"/>
+            </t>
+            <!--  Small spinner running in an iframe  -->
+            <div class="wrap">
+                <div class="container payment_feedback">
+                    <div class="o_payment_feedback">
+                        <div class="row">
+                            <i class="fa fa-spinner fa-pulse fa-5x"/>
+                            <!-- The content here is handled by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+
+</odoo>
