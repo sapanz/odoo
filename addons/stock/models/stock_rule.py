@@ -561,16 +561,14 @@ class ProcurementGroup(models.Model):
         domain = self._get_orderpoint_domain(company_id=company_id)
         orderpoints_noprefetch = OrderPoint.with_context(prefetch_fields=False).search(
             domain, order=self._procurement_from_orderpoint_get_order()).ids
-        orderpoints_exceptions = []
 
         for orderpoints in split_every(1000, orderpoints_noprefetch):
             orderpoints = self.env['stock.warehouse.orderpoint'].browse(orderpoints)
-            while orderpoints:
-                if use_new_cursor:
-                    print('cursor open')
-                    cr = registry(self._cr.dbname).cursor()
-                    self = self.with_env(self.env(cr=cr))
+            if use_new_cursor:
+                cr = registry(self._cr.dbname).cursor()
+                self = self.with_env(self.env(cr=cr))
 
+            while orderpoints:
                 # Calculate groups that can be executed together
                 location_data = OrderedDict()
                 procurements = []
@@ -629,9 +627,21 @@ class ProcurementGroup(models.Model):
                     with self.env.cr.savepoint():
                         self.env['procurement.group'].with_context(from_orderpoint=True).run(procurements, raise_user_error=False)
                 except ProcurementException as errors:
+                    # Log an activity on product template for failed orderpoints.
+                    failed_orderpoints = self.env['stock.warehouse.orderpoint']
                     for procurement, error_msg in errors.procurement_exceptions:
-                        orderpoints_exceptions += [(procurement.values.get('orderpoint_id'), error_msg)]
-                    failed_orderpoints = self.env['stock.warehouse.orderpoint'].concat(*[o[0] for o in orderpoints_exceptions])
+                        orderpoint = procurement.values.get('orderpoint_id')
+                        failed_orderpoints |= orderpoint
+                        existing_activity = self.env['mail.activity'].search([
+                            ('res_id', '=', orderpoint.product_id.product_tmpl_id.id),
+                            ('res_model_id', '=', self.env.ref('product.model_product_template').id),
+                            ('note', '=', error_msg)])
+                        if not existing_activity:
+                            orderpoint.product_id.product_tmpl_id.activity_schedule(
+                                'mail.mail_activity_data_warning',
+                                note=error_msg,
+                                user_id=orderpoint.product_id.responsible_id.id or SUPERUSER_ID,
+                            )
                     if not failed_orderpoints:
                         _logger.error('Unable to process orderpoints')
                         break
@@ -639,22 +649,9 @@ class ProcurementGroup(models.Model):
                 else:
                     self._procurement_from_orderpoint_post_process(orderpoints.ids)
                     orderpoints = self.env['stock.warehouse.orderpoint']
-                    if use_new_cursor:
-                        cr.commit()
-                        print('cursor close')
-                        cr.close()
 
-        # Log an activity on product template for failed orderpoints.
-        for orderpoint, error_msg in orderpoints_exceptions:
-            existing_activity = self.env['mail.activity'].search([
-                ('res_id', '=', orderpoint.product_id.product_tmpl_id.id),
-                ('res_model_id', '=', self.env.ref('product.model_product_template').id),
-                ('note', '=', error_msg)])
-            if not existing_activity:
-                orderpoint.product_id.product_tmpl_id.activity_schedule(
-                    'mail.mail_activity_data_warning',
-                    note=error_msg,
-                    user_id=orderpoint.product_id.responsible_id.id or SUPERUSER_ID,
-                )
+            if use_new_cursor:
+                cr.commit()
+                cr.close()
 
         return {}
