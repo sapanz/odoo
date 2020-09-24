@@ -274,8 +274,12 @@ class MailThread(models.AbstractModel):
         # automatic logging unless asked not to (mainly for various testing purpose)
         if not self._context.get('mail_create_nolog'):
             doc_name = self.env['ir.model']._get(self._name).name
-            for thread in threads:
-                thread._message_log(body=_('%s created') % doc_name)
+            if doc_name == 'Contact':
+                for thread in threads:
+                    thread._message_log(body=_('Record created'))
+            else:
+                for thread in threads:
+                    thread._message_log(body=_('%s created') % doc_name)
 
         # auto_subscribe: take values and defaults into account
         for thread, values in pycompat.izip(threads, vals_list):
