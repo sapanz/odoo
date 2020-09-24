@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0"> <!-- TODO noupdate -->
+        <record id="document_layout_changed_template" model="mail.template">
+            <field name="name">Document layout changed</field>
+            <field name="model_id" ref="base.model_res_users"/>
+            <field name="auto_delete" eval="True"/>
+            <field name="email_to">${object.email}</field>
+            <field name="subject">Warning: document template of ${ctx['db_name']} - ${ctx['company_id'].name} has been modified</field>
+            <field name="body_html"><![CDATA[
+                <p>Dear ${object.name},<br/><br/>
+                You receive this email because we would like to be sure that you are the person who changed the document 
+                template of company ${ctx['company_id'].name} at ${ctx['timestamp']}. If you don't remember doing such 
+                action, it means your user credentials might be in the hands of a scammer. When they get user credentials,
+                scammers common schemes are the following:</p>
+                <ul>
+                    <li>Changing the footer of your document layout to invite your customers to pay invoices on a scam bank account.</li>
+                    <li>Changing the bank account(s) of the company (same purpose).</li>
+                    <li>Changing the bank account(s) for your vendors so you pay your bills on a scam bank account.</li>
+                </ul>
+                
+                <p>That's why you will receive warning mails like this each time one of those actions is performed.
+                If you think you are victim of a scam:</p>
+                <ul>
+                    <li>Change your user password (use a strong one). Also check that you don't use the same password 
+                        for other purposes as well. Those accounts could be compromised as well.</li>
+                    <li>Log in company ${ctx['company_id'].name} and have a look on the document layout in the general settings.
+                        Check if everything is correct with a particular focus on bank account numbers displayed
+                        and make corrections where necessary.</li>
+                    <li>If you had to fix the document layout, then check no sales invoices were sent between ${ctx['timestamp']} and now.
+                        Contact your customers if necessary.</li>
+                </ul>]]>
+            </field>
+        </record>
+
+    </data>
+</odoo>

@@ -8,6 +8,9 @@ from odoo.addons.bus.models.bus_presence import AWAY_TIMER
 from odoo.addons.bus.models.bus_presence import DISCONNECTION_TIMER
 from odoo.osv import expression
 
+from datetime import datetime
+from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
+
 _logger = logging.getLogger(__name__)
 
 
@@ -24,6 +27,40 @@ class Partner(models.Model):
     channel_ids = fields.Many2many('mail.channel', 'mail_channel_partner', 'partner_id', 'channel_id', string='Channels', copy=False)
     # override the field to track the visibility of user
     user_id = fields.Many2one(tracking=True)
+
+    def write(self, vals):
+        before_banks = {partner: partner.bank_ids for partner in self}
+        res = super().write(vals)
+
+        for partner in self:
+            # email changed
+            if 'email' in vals:
+                mail_template = self.env.ref('mail.user_email_changed_template')
+                ctx = {
+                    'user': self.env.user,
+                    'timestamp': fields.Datetime.context_timestamp(self, datetime.now()).strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                    'new_email': vals['email'],
+                }
+                mail_template.with_context(ctx).send_mail(partner.user_ids.id, force_send=True)
+
+            # bank account changed
+            before = before_banks[partner]
+            if before != partner.bank_ids:
+                mail_template = self.env.ref('mail.partner_bank_account_changed_template')
+                ctx = {
+                    'user': self.env.user,
+                    'timestamp': fields.Datetime.context_timestamp(self, datetime.now()).strftime(DEFAULT_SERVER_DATETIME_FORMAT),
+                }
+                mail_template.with_context(ctx).send_mail(partner.id, force_send=True)
+
+            bank_added = partner.bank_ids - before
+            if bank_added:
+                partner.message_post(body=_('New bank account number: %s', ', '.join([a.acc_number for a in bank_added])))
+            bank_removed = before - partner.bank_ids
+            if bank_removed:
+                partner.message_post(body=_('Bank account removed: %s', ', '.join([a.acc_number for a in bank_removed])))
+
+        return res
 
     def _compute_im_status(self):
         super()._compute_im_status()

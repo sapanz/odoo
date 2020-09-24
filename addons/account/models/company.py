@@ -261,6 +261,17 @@ class ResCompany(models.Model):
                 if self.env['account.move.line'].search([('company_id', '=', company.id)]):
                     raise UserError(_('You cannot change the currency of the company since some journal items already exist'))
 
+            #warn the user if the document layout changed
+            if 'external_report_layout_id' in values and\
+               self.env['account.move'].search([('state', '=', 'posted'), ('move_type', '=', 'out_invoice'), ('company_id', '=', company.id)], limit=1):
+                mail_template = self.env.ref('account.document_layout_changed_template')
+                ctx = {
+                    'company_id': company,
+                    'timestamp': fields.Datetime.context_timestamp(self, datetime.now()),
+                    'db_name': self._cr.dbname,
+                }
+                mail_template.with_context(ctx).send_mail(self.env.user.id, force_send=True)
+
         return super(ResCompany, self).write(values)
 
     @api.model

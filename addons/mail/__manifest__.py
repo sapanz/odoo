@@ -33,6 +33,7 @@
         'data/mail_channel_data.xml',
         'data/mail_activity_data.xml',
         'data/ir_cron_data.xml',
+        'data/security_mail_templates.xml',
         'security/mail_security.xml',
         'security/ir.model.access.csv',
         'views/mail_alias_views.xml',
