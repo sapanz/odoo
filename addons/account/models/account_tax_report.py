@@ -71,11 +71,12 @@ class AccountTaxReport(models.Model):
             lines_to_treat = list(to_yield.children_line_ids) + lines_to_treat[1:]
             yield to_yield
 
-    def get_checks_to_perform(self, d):
+    def get_checks_to_perform(self, amounts, carried_over):
         """ To override in localizations
         If value is a float, it will be formatted with format_value
         The line is not displayed if it is falsy (0, 0.0, False, ...)
-        :param d: the mapping dictionay between codes and values
+        :param amounts: the mapping dictionary between codes and values
+        :param carried_over: the mapping dictionary between codes and whether they are carried over
         :return: iterable of tuple (name, value)
         """
         self.ensure_one()
@@ -109,6 +110,9 @@ class AccountTaxReportLine(models.Model):
     #fields used in specific localization reports, where a report line isn't simply the given by the sum of account.move.line with selected tags
     code = fields.Char(string="Code", help="Optional unique code to refer to this line in total formulas")
     formula = fields.Char(string="Formula", help="Python expression used to compute the value of a total line. This field is mutually exclusive with tag_name, setting it turns the line to a total line. Tax report line codes can be used as variables in this expression to refer to the balance of the corresponding lines in the report. A formula cannot refer to another line using a formula.")
+    carried_over = fields.Boolean(string="Carried over",
+                                  help="Internal boolean used to mark lines that should be carried over between periods",
+                                  default=False)
 
     @api.model
     def create(self, vals):
