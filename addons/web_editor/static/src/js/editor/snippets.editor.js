@@ -402,7 +402,8 @@ var SnippetEditor = Widget.extend({
      */
     toggleOverlayVisibility: function (show) {
         if (this.$el && !this.scrollingTimeout) {
-            if (!this._isInViewport(this.$target.get(0))) {
+            const target = this.$target.get(0);
+            if (!this._isInViewport(target) || !this.$target.is(`:visible`) || !this._hasArea(target)) {
                 show = false;
             }
             this.$el.toggleClass('o_overlay_hidden', !show && this.isShown());
@@ -446,6 +447,17 @@ var SnippetEditor = Widget.extend({
     // Private
     //--------------------------------------------------------------------------
 
+    /**
+     * @private
+     * @param {DOMElement} element
+     */
+    _hasArea: function (element) {
+        const rect = element.getBoundingClientRect();
+        return (
+             rect.bottom - rect.top > 0 &&
+             rect.right - rect.left > 0
+        );
+    },
     /**
      * Instantiates the snippet's options.
      *
