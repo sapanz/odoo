@@ -57,21 +57,6 @@ class PaymentAcquirer(models.Model):
         string="Recurring API URL", help="The base URL for the Recurring API endpoints",
         required_if_provider='adyen', groups='base.group_system')
 
-    #=== COMPUTE METHODS ===#
-
-    @api.model
-    def _get_supported_features(self, provider):
-        """Get the specification of features supported by Adyen.
-
-        :param string provider: The provider of the acquirer
-        :return: The supported features for this acquirer
-        :rtype: dict
-        """
-        if provider != 'adyen':
-            return super()._get_supported_features(provider)
-
-        return {'tokenization': True}
-
     #=== CRUD METHODS ===#
 
     @api.model_create_multi

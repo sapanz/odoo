@@ -108,12 +108,9 @@ class PaymentAcquirer(models.Model):
         default=lambda self: _("Your payment has been cancelled."), translate=True)
 
     # Feature support fields
-    support_authorization = fields.Boolean(
-        string="Authorize Mechanism Supported", compute='_compute_supported_features', store=True)
-    support_fees_computation = fields.Boolean(
-        string="Fees Computation Supported", compute='_compute_supported_features', store=True)
-    support_tokenization = fields.Boolean(
-        string="Tokenization supported", compute='_compute_supported_features', store=True)
+    support_authorization = fields.Boolean(string="Authorize Mechanism Supported")
+    support_fees_computation = fields.Boolean(string="Fees Computation Supported")
+    support_tokenization = fields.Boolean(string="Tokenization supported")
 
     # Fields used in kanban view
     sequence = fields.Integer(string="Sequence", help="Define the display order", default=10)
@@ -156,38 +153,6 @@ class PaymentAcquirer(models.Model):
                     acquirer.inbound_payment_method_ids = [(4, electronic.id)]
             elif electronic in acquirer.inbound_payment_method_ids:
                 acquirer.inbound_payment_method_ids = [(2, electronic.id)]
-
-    @api.depends('provider')
-    def _compute_supported_features(self):
-        """ Update the acquirer-specific fields as specified by their corresponding acquirer.
-
-        :return: None
-        """
-        for acquirer in self:
-            supported_features = self._get_supported_features(acquirer.provider)
-            acquirer.support_authorization = supported_features.get('authorization', False)
-            acquirer.support_fees_computation = supported_features.get('fees_computation', False)
-            acquirer.support_tokenization = supported_features.get('tokenization', False)
-
-    @api.model
-    def _get_supported_features(self, provider):
-        """Get the specification of supported features.
-
-        For an acquirer to specify that it supports one of the features, it must override this
-        method and return a specification of which features it supports.
-
-        List of features and their technical names:
-            - authorization: support authorizing payment (separate authorization and capture)
-            - fees_computation: support payment fees computation
-            - tokenization: support saving payment data as a `payment.token` record
-
-        :param string provider: The provider of the acquirer
-        :return: The supported features for this acquirer. To specify a feature as supported, the
-                 dict must have an entry of the technical name of the feature as the key, and True
-                 as the value.
-        :rtype: dict
-        """
-        return {'authorization': False, 'fees_computation': False, 'tokenization': False}
 
     @api.depends('state', 'module_state')
     def _compute_color(self):
