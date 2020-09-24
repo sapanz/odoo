@@ -259,9 +259,9 @@ class StockQuant(models.Model):
     @api.model
     def _get_removal_strategy_order(self, removal_strategy):
         if removal_strategy == 'fifo':
-            return 'in_date ASC, id'
+            return 'in_date ASC NULLS FIRST, id'
         elif removal_strategy == 'lifo':
-            return 'in_date DESC, id desc'
+            return 'in_date DESC NULLS LAST, id desc'
         raise UserError(_('Removal strategy %s not implemented.') % (removal_strategy,))
 
     def _gather(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, removal_strategy=None):
@@ -283,21 +283,22 @@ class StockQuant(models.Model):
                 domain = expression.AND([[('owner_id', 'in', owner_id.ids)], domain])
             domain = expression.AND([[('location_id', 'child_of', location_id.ids)], domain])
         else:
-            if lot_id:
-                domain = expression.AND([[('lot_id', 'in', lot_id.ids)], domain])
-            else:
-                domain = expression.AND([[('lot_id', '=', False)], domain])
-            if package_id:
-                domain = expression.AND([[('package_id', 'in', package_id.ids)], domain])
-            else:
-                domain = expression.AND([[('package_id', '=', False)], domain])
-            if owner_id:
-                domain = expression.AND([[('owner_id', 'in', owner_id.ids)], domain])
-            else:
-                domain = expression.AND([[('owner_id', '=', False)], domain])
+            domain = expression.AND([[('lot_id', 'in', lot_id and lot_id.ids or [False])], domain])
+            domain = expression.AND([[('package_id', 'in', package_id and package_id.ids or [False])], domain])
+            domain = expression.AND([[('owner_id', 'in', owner_id and owner_id.ids or [False])], domain])
             domain = expression.AND([[('location_id', 'in', location_id.ids)], domain])
 
-        return self.search(domain, order=removal_strategy_order)
+        # Copy code of _search for special NULLS FIRST/LAST order
+        self.check_access_rights('read')
+        query = self._where_calc(domain)
+        self._apply_ir_rules(query, 'read')
+        from_clause, where_clause, where_clause_params = query.get_sql()
+        where_str = where_clause and (" WHERE %s" % where_clause) or ''
+        query_str = 'SELECT "%s".id FROM ' % self._table + from_clause + where_str + " ORDER BY " + removal_strategy_order
+        self._cr.execute(query_str, where_clause_params)
+        res = self._cr.fetchall()
+        # No uniquify list necessary as auto_join is not applied anyways...
+        return self.browse([x[0] for x in res])
 
     @api.model
     def _get_available_quantity(self, product_id, location_id, lot_id=None, package_id=None, owner_id=None, strict=False, allow_negative=False, quants=None):

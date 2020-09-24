@@ -34,14 +34,19 @@ class StockSchedulerCompute(models.TransientModel):
                 self._cr.close()
                 return {}
 
+            times = []
             for company in self.env.user.company_ids:
-                if company.id != 4:
-                    print("-------------> STARTING Scheduler for company: " + str(company.id) + " at time: " + str(fields.Datetime.now()))
-                    cids = (self.env.user.company_id | self.env.user.company_ids).ids
-                    self.env['procurement.group'].with_context(allowed_company_ids=cids).run_scheduler(
-                        use_new_cursor=self._cr.dbname,
-                        company_id=company.id)
-                    print("-------------> FINISHED Scheduler for company: " + str(company.id) + " at time: " + str(fields.Datetime.now()))
+                start = fields.Datetime.now()
+                print("-------------> STARTING Scheduler for company: " + str(company.id) + " at time: " + str(fields.Datetime.now()))
+                cids = (self.env.user.company_id | self.env.user.company_ids).ids
+                self.env['procurement.group'].with_context(allowed_company_ids=cids).run_scheduler(
+                    use_new_cursor=self._cr.dbname,
+                    company_id=company.id)
+                delta = fields.Datetime.now() - start
+                print("-------------> FINISHED Scheduler for company: " + str(company.id) + " at time: " + str(fields.Datetime.now()))
+                print(company.id, delta.total_seconds())
+                times.append("%s\t%s" % (company.id, delta.total_seconds()))
+            print("\n".join(times))
             new_cr.close()
             return {}
 
