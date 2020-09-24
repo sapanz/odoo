@@ -29,36 +29,53 @@ class Partner(models.Model):
     user_id = fields.Many2one(tracking=True)
 
     def write(self, vals):
-        before_banks = {partner: partner.bank_ids for partner in self}
+        before_banks = {partner: {'records': partner.bank_ids, 'cache': {b: b.acc_number for b in partner.bank_ids}} for partner in self}
+        before_emails = {partner: partner.email for partner in self}
         res = super().write(vals)
 
         for partner in self:
             # email changed
-            if 'email' in vals:
+            if 'email' in vals and partner.user_ids:
                 mail_template = self.env.ref('mail.user_email_changed_template')
                 ctx = {
+                    'changed_user': partner.user_ids,
                     'user': self.env.user,
                     'timestamp': fields.Datetime.context_timestamp(self, datetime.now()).strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                    'new_email': vals['email'],
+                    'old_email': before_emails[partner],
                 }
-                mail_template.with_context(ctx).send_mail(partner.user_ids.id, force_send=True)
+                mail_body = mail_template._render(ctx, engine='ir.qweb', minimal_qcontext=True)
+                mail = self.env['mail.mail'].sudo().create({
+                    'subject': _('Warning: your mail was modified'),
+                    'email_to': partner.user_ids.email,
+                    'auto_delete': True,
+                    'body_html': mail_body,
+                })
+                mail.send()
 
             # bank account changed
             before = before_banks[partner]
-            if before != partner.bank_ids:
+            if before['records'] != partner.bank_ids:
                 mail_template = self.env.ref('mail.partner_bank_account_changed_template')
                 ctx = {
-                    'user': self.env.user,
+                    'user_name': self.env.user.name,
+                    'partner': partner,
                     'timestamp': fields.Datetime.context_timestamp(self, datetime.now()).strftime(DEFAULT_SERVER_DATETIME_FORMAT),
                 }
-                mail_template.with_context(ctx).send_mail(partner.id, force_send=True)
+                mail_body = mail_template._render(ctx, engine='ir.qweb', minimal_qcontext=True)
+                mail = self.env['mail.mail'].sudo().create({
+                    'subject': _('Warning: bank account of %s modified', partner.name),
+                    'email_to': self.env.user.email,
+                    'auto_delete': True,
+                    'body_html': mail_body,
+                })
+                mail.send()
 
-            bank_added = partner.bank_ids - before
+            bank_added = partner.bank_ids - before['records']
             if bank_added:
-                partner.message_post(body=_('New bank account number: %s', ', '.join([a.acc_number for a in bank_added])))
-            bank_removed = before - partner.bank_ids
+                partner.message_post(body=_('<ul><li>New bank account number: %s</li></ul>', ', '.join([a.acc_number for a in bank_added])))
+            bank_removed = before['records'] - partner.bank_ids
             if bank_removed:
-                partner.message_post(body=_('Bank account removed: %s', ', '.join([a.acc_number for a in bank_removed])))
+                partner.message_post(body=_('<ul><li>Bank account removed: %s</li></ul>', ', '.join([before['cache'][a] for a in bank_removed])))
 
         return res
 

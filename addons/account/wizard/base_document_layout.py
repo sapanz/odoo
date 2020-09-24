@@ -1,4 +1,4 @@
-from odoo import models, fields
+from odoo import models, fields, _
 
 from datetime import datetime
 from odoo.tools.misc import DEFAULT_SERVER_DATETIME_FORMAT
@@ -14,12 +14,19 @@ class BaseDocumentLayout(models.TransientModel):
             wizard.company_id.action_save_onboarding_invoice_layout()
 
             # warn the user (only if at least one invoice is posted)
-            if self.env['account.move'].search([('state', '=', 'posted'), ('move_type', '=', 'out_invoice'), ('company_id', '=', company.id)], limit=1):
+            if self.env['account.move'].search([('state', '=', 'posted'), ('move_type', '=', 'out_invoice'), ('company_id', '=', wizard.company_id.id)], limit=1):
                 mail_template = self.env.ref('account.document_layout_changed_template')
                 ctx = {
-                    'company_id': self.company_id,
+                    'user_name': self.env.user.name,
+                    'company_name': wizard.company_id.name,
                     'timestamp': fields.Datetime.context_timestamp(self, datetime.now()).strftime(DEFAULT_SERVER_DATETIME_FORMAT),
-                    'db_name': self._cr.dbname,
                 }
-                mail_template.with_context(ctx).send_mail(self.env.user.id, force_send=True)
+                mail_body = mail_template._render(ctx, engine='ir.qweb', minimal_qcontext=True)
+                mail = self.env['mail.mail'].sudo().create({
+                    'subject': _('Warning: document template of %s - %s has been modified', self._cr.dbname, wizard.company_id.name),
+                    'email_to': self.env.user.email,
+                    'auto_delete': True,
+                    'body_html': mail_body,
+                })
+                mail.send()
         return res
