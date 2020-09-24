@@ -2366,6 +2366,46 @@ var BasicModel = AbstractModel.extend({
         return evaluated;
     },
     /**
+     * Fetch the type of model (e.g. 'res.partner') contained in the model_field
+     * @param {Object} record - an element from the localData
+     * @param {Object} fieldName - the name of the field
+     * @param {Object} fieldInfo - the info of the field
+     * @returns {Promise}
+     */
+    _fetchModelFieldReference: async function (record, fieldName, fieldInfo) {
+        let modelField = fieldInfo.options.model_field;
+        const value = record._changes && record._changes[modelField] || record.data[modelField];
+        if (value) {
+            if (record.fields[modelField].type !== "many2one" || record.fields[modelField].relation !== 'ir.model') {
+                throw new Error(`The model_field of the reference field ${fieldName} must be a many2one('ir.model').`);
+            }
+            let modelId = this.localData[value].res_id;
+            let resourceRef = record.specialData[fieldName];
+            if (resourceRef && modelId === resourceRef.modelId) {
+                resourceRef.isModified = false;
+                return Promise.resolve(resourceRef);
+            } else {
+                const result = await this._rpc({
+                    model: 'ir.model',
+                    method: 'read',
+                    args: [modelId, ['id', 'model']],
+                });
+                if (!record._changes && record.data[fieldName] && result[0].model !== this.localData[record.data[fieldName]].model) {
+                    let modelFieldName = record.fields[modelField].string;
+                    let referenceFieldName = record.fields[fieldName].string;
+                    this.do_warn(_t(`'${referenceFieldName}' is unsynchronized with '${modelFieldName}'.`),
+                                 _t(`If you change ${modelFieldName} or ${referenceFieldName}, the synchronization will be reapplied and the data will be modified.`), true);
+                    return false;
+                }
+                return {
+                    modelName: result[0].model,
+                    modelId: result[0].id,
+                    isModified: true,
+                };
+            }
+        }
+    },
+    /**
      * Fetch name_get for a record datapoint.
      *
      * @param {Object} dataPoint
@@ -2846,17 +2886,19 @@ var BasicModel = AbstractModel.extend({
      * @private
      * @param {Object} record - an element from the localData
      * @param {Object} fieldName - the name of the field
+     * @param {Object} fieldInfo - the info of the field
      * @returns {Promise}
      */
-    _fetchSpecialReference: function (record, fieldName) {
-        var def;
+    _fetchSpecialReference: function (record, fieldName, fieldInfo) {
         var field = record.fields[fieldName];
         if (field.type === 'char') {
             // if the widget reference is set on a char field, the name_get
             // needs to be fetched a posteriori
-            def = this._fetchReference(record, fieldName);
+            return Promise.resolve(this._fetchReference(record, fieldName));
+        } else if (fieldInfo.options.model_field) {
+            return Promise.resolve(this._fetchModelFieldReference(record, fieldName, fieldInfo));
         }
-        return Promise.resolve(def);
+        return Promise.resolve();
     },
     /**
      * Fetches all the m2o records associated to the given fieldName. If the

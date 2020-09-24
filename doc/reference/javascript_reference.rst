@@ -2274,6 +2274,11 @@ reference (FieldReference)
 
   - Supported field types: *char, reference*
 
+    Options:
+
+    - model_field: name of the FieldMany2One('ir.model') containing the model of the records that can be selected.
+       If its value is different from False, the select will not exist.
+
 
 Client actions
 ==============
