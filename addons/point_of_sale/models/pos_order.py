@@ -49,6 +49,7 @@ class PosOrder(models.Model):
             'amount_return':  ui_order['amount_return'],
             'company_id': self.env['pos.session'].browse(ui_order['pos_session_id']).company_id.id,
             'to_invoice': ui_order['to_invoice'] if "to_invoice" in ui_order else False,
+            'to_ship': ui_order['to_ship'] if "to_ship" in ui_order else False,
             'is_tipped': ui_order.get('is_tipped', False),
             'tip_amount': ui_order.get('tip_amount', 0),
         }
@@ -255,6 +256,7 @@ class PosOrder(models.Model):
     payment_ids = fields.One2many('pos.payment', 'pos_order_id', string='Payments', readonly=True)
     session_move_id = fields.Many2one('account.move', string='Session Journal Entry', related='session_id.move_id', readonly=True, copy=False)
     to_invoice = fields.Boolean('To invoice')
+    to_ship = fields.Boolean('To ship')
     is_invoiced = fields.Boolean('Is Invoiced', compute='_compute_is_invoiced')
     is_tipped = fields.Boolean('Is this already tipped?', readonly=True)
     tip_amount = fields.Float(string='Tip Amount', digits=0, readonly=True)
@@ -473,16 +475,19 @@ class PosOrder(models.Model):
     def _create_order_picking(self):
         self.ensure_one()
         if not self.session_id.update_stock_at_closing or (self.company_id.anglo_saxon_accounting and self.to_invoice):
-            picking_type = self.config_id.picking_type_id
-            if self.partner_id.property_stock_customer:
-                destination_id = self.partner_id.property_stock_customer.id
-            elif not picking_type or not picking_type.default_location_dest_id:
-                destination_id = self.env['stock.warehouse']._get_partner_locations()[0].id
-            else:
-                destination_id = picking_type.default_location_dest_id.id
+            self.set_order_picking(self.config_id.picking_type_id)
 
-            pickings = self.env['stock.picking']._create_picking_from_pos_order_lines(destination_id, self.lines, picking_type, self.partner_id)
-            pickings.write({'pos_session_id': self.session_id.id, 'pos_order_id': self.id, 'origin': self.name})
+    def set_order_picking(self, picking_type):
+        if self.partner_id.property_stock_customer:
+            destination_id = self.partner_id.property_stock_customer.id
+        elif not picking_type or not picking_type.default_location_dest_id:
+            destination_id = self.env['stock.warehouse']._get_partner_locations()[0].id
+        else:
+            destination_id = picking_type.default_location_dest_id.id
+
+        pickings = self.env['stock.picking']._create_picking_from_pos_order_lines(destination_id, self.lines,
+                                                                                  picking_type, self.partner_id, self.to_ship)
+        pickings.write({'pos_session_id': self.session_id.id, 'pos_order_id': self.id, 'origin': self.name})
 
     def add_payment(self, data):
         """Create a new payment for the order"""
@@ -621,6 +626,7 @@ class PosOrder(models.Model):
             'creation_date': order.date_order.astimezone(timezone),
             'fiscal_position_id': order.fiscal_position_id.id,
             'to_invoice': order.to_invoice,
+            'to_ship': order.to_ship,
             'state': order.state,
             'account_move': order.account_move.id,
             'id': order.id,

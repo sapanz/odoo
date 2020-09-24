@@ -335,7 +335,7 @@ class PosSession(models.Model):
         else:
             session_destination_id = picking_type.default_location_dest_id.id
 
-        for order in self.order_ids:
+        for order in self.order_ids.filtered(lambda o: o.to_ship is not True):
             if order.company_id.anglo_saxon_accounting and order.to_invoice:
                 continue
             destination_id = order.partner_id.property_stock_customer.id or session_destination_id
@@ -347,6 +347,9 @@ class PosSession(models.Model):
         for location_dest_id, lines in lines_grouped_by_dest_location.items():
             pickings = self.env['stock.picking']._create_picking_from_pos_order_lines(location_dest_id, lines, picking_type)
             pickings.write({'pos_session_id': self.id, 'origin': self.name})
+
+        for order in self.order_ids.filtered(lambda o: o.to_ship is True):
+            order.set_order_picking(self.config_id.picking_shipping_type_id)
 
     def _create_account_move(self):
         """ Create account.move and account.move.line records for this session.

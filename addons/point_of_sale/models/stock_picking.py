@@ -25,7 +25,7 @@ class StockPicking(models.Model):
 
 
     @api.model
-    def _create_picking_from_pos_order_lines(self, location_dest_id, lines, picking_type, partner=False):
+    def _create_picking_from_pos_order_lines(self, location_dest_id, lines, picking_type, partner=False, to_ship=False):
         """We'll create some picking based on order_lines"""
 
         pickings = self.env['stock.picking']
@@ -41,10 +41,13 @@ class StockPicking(models.Model):
                 self._prepare_picking_vals(partner, picking_type, location_id, location_dest_id)
             )
 
-            positive_picking._create_move_from_pos_order_lines(positive_lines)
+            positive_picking._create_move_from_pos_order_lines(positive_lines, to_ship)
             try:
                 with self.env.cr.savepoint():
-                    positive_picking._action_done()
+                    if not to_ship:
+                        positive_picking._action_done()
+                    else:
+                        positive_picking.action_assign()
             except (UserError, ValidationError):
                 pass
 
@@ -60,10 +63,13 @@ class StockPicking(models.Model):
             negative_picking = self.env['stock.picking'].create(
                 self._prepare_picking_vals(partner, return_picking_type, location_dest_id, return_location_id)
             )
-            negative_picking._create_move_from_pos_order_lines(negative_lines)
+            negative_picking._create_move_from_pos_order_lines(negative_lines, to_ship)
             try:
                 with self.env.cr.savepoint():
-                    negative_picking._action_done()
+                    if not to_ship:
+                        negative_picking._action_done()
+                    else:
+                        negative_picking.action_assign()
             except (UserError, ValidationError):
                 pass
             pickings |= negative_picking
@@ -83,7 +89,7 @@ class StockPicking(models.Model):
             'company_id': self.company_id.id,
         }
 
-    def _create_move_from_pos_order_lines(self, lines):
+    def _create_move_from_pos_order_lines(self, lines, to_ship=False):
         self.ensure_one()
         lines_by_product = groupby(sorted(lines, key=lambda l: l.product_id.id), key=lambda l: l.product_id.id)
         for product, lines in lines_by_product:
@@ -101,7 +107,8 @@ class StockPicking(models.Model):
                         else:
                             qty = abs(line.qty)
                         ml_vals = current_move._prepare_move_line_vals()
-                        ml_vals.update({'qty_done':qty})
+                        if not to_ship:
+                            ml_vals.update({'qty_done': qty})
                         if self.picking_type_id.use_existing_lots:
                             existing_lot = self.env['stock.production.lot'].search([
                                 ('company_id', '=', self.company_id.id),
@@ -127,14 +134,17 @@ class StockPicking(models.Model):
                         difference_qty = abs(line.qty) - sum_of_lots
                         ml_vals = current_move._prepare_move_line_vals()
                         if line.product_id.tracking == 'serial':
-                            ml_vals.update({'qty_done': 1})
+                            if not to_ship:
+                                ml_vals.update({'qty_done': 1})
                             for i in range(int(difference_qty)):
                                 self.env['stock.move.line'].create(ml_vals)
                         else:
-                            ml_vals.update({'qty_done': difference_qty})
+                            if not to_ship:
+                                ml_vals.update({'qty_done': difference_qty})
                             self.env['stock.move.line'].create(ml_vals)
             else:
-                current_move.quantity_done = abs(sum(order_lines.mapped('qty')))
+                if not to_ship:
+                    current_move.quantity_done = abs(sum(order_lines.mapped('qty')))
 
     def _send_confirmation_email(self):
         # Avoid sending Mail/SMS for POS deliveries

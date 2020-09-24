@@ -527,6 +527,18 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-12 col-lg-6 o_setting_box" title="Operation types show up in the Inventory dashboard.">
+                            <div class="o_setting_right_pane">
+                                <label for="picking_shipping_type_id" string="Shipping Operation Type"/>
+                                <div class="text-muted">
+                                    Operation type used to record product shipping <br/>
+                                    Products will be taken from the default source location of this operation type
+                                </div>
+                                <div class="content-group mt16">
+                                    <field name="picking_shipping_type_id" required="1" domain="[('company_id', '=', company_id)]"/>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <h2>Accounting</h2>
                     <div class="row mt16 o_settings_container" id="accounting_section">

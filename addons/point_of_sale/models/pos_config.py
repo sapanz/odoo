@@ -216,6 +216,13 @@ class PosConfig(models.Model):
     has_active_session = fields.Boolean(compute='_compute_current_session')
     show_allow_invoicing_alert = fields.Boolean(compute="_compute_show_allow_invoicing_alert")
     manual_discount = fields.Boolean(string="Manual Discounts", default=True)
+    picking_shipping_type_id = fields.Many2one(
+        'stock.picking.type',
+        string='Shipping Operation Type',
+        default=_default_picking_type_id,
+        required=True,
+        domain="[warehouse_id.company_id', '=', company_id)]",
+        ondelete='restrict')
 
     @api.depends('use_pricelist', 'available_pricelist_ids')
     def _compute_allowed_pricelist_ids(self):
