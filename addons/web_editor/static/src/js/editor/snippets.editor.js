@@ -346,6 +346,9 @@ var SnippetEditor = Widget.extend({
 
         // Show/hide overlay in preview mode or not
         this.$el.toggleClass('oe_active', show);
+        const $optionWrap = this.$el.find('.o_overlay_options_wrap');
+        const isAtPageTop = show && $optionWrap.length && this.$target.get(0).getBoundingClientRect().top + window.scrollY < 20;
+        $optionWrap.toggleClass('o_page_top', isAtPageTop);
         this.cover();
     },
     /**
@@ -399,6 +402,9 @@ var SnippetEditor = Widget.extend({
      */
     toggleOverlayVisibility: function (show) {
         if (this.$el && !this.scrollingTimeout) {
+            if (!this._isInViewport(this.$target.get(0))) {
+                show = false;
+            }
             this.$el.toggleClass('o_overlay_hidden', !show && this.isShown());
         }
     },
@@ -538,6 +544,19 @@ var SnippetEditor = Widget.extend({
             });
             $optionsSection.toggleClass('d-none', options.length === 0);
         });
+    },
+    /**
+     * @private
+     * @param {DOMElement} element
+     */
+    _isInViewport: function (element) {
+        const rect = element.getBoundingClientRect();
+        return (
+             rect.bottom > 0 &&
+             rect.right > 0 &&
+             (window.innerHeight || document.documentElement.clientHeight) >= rect.top &&
+             (window.innerWidth || document.documentElement.clientWidth) >= rect.left
+        );
     },
     /**
      * @private

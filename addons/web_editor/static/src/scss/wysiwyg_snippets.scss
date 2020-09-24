@@ -1588,6 +1588,12 @@ body.editor_enable.editor_has_snippets {
 
             > .o_overlay_options_wrap {
                 @include o-position-absolute($o-we-handles-offset-to-hide, $left: 50%);
+
+                &.o_page_top {
+                    top: auto;
+                    bottom: -($o-we-handles-offset-to-hide + 50px);
+                }
+
                 transform: translate(-50%, -110%);
 
                 &, > .o_overlay_move_options {
