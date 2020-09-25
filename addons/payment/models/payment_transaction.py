@@ -15,6 +15,8 @@ from odoo.exceptions import ValidationError
 from odoo.tools import consteq, ustr
 from odoo.tools.misc import formatLang
 
+import odoo.addons.payment.utils as payment_utils
+
 _logger = logging.getLogger(__name__)
 
 
@@ -23,6 +25,10 @@ class PaymentTransaction(models.Model):
     _description = 'Payment Transaction'
     _order = 'id desc'
     _rec_name = 'reference'
+
+    @api.model
+    def _lang_get(self):
+        return self.env['res.lang'].get_installed()
 
     acquirer_id = fields.Many2one(
         string="Acquirer", comodel_name='payment.acquirer', readonly=True, required=True)
@@ -89,20 +95,18 @@ class PaymentTransaction(models.Model):
         string="Callback Done", help="Whether the callback has already been executed",
         groups="base.group_system", readonly=True)
 
-    # Duplicated partner fields allowing to keep a record of their values at processing time
-    partner_id = fields.Many2one(string="Customer", comodel_name='res.partner')
-    partner_name = fields.Char(related='partner_id.name', depends=['partner_id'], store=True)
-    partner_lang = fields.Selection(related='partner_id.lang', depends=['partner_id'], store=True)
-    partner_email = fields.Char(related='partner_id.email', depends=['partner_id'], store=True)
-    partner_street = fields.Char(related='partner_id.street', depends=['partner_id'], store=True)
-    partner_street2 = fields.Char(related='partner_id.street2', depends=['partner_id'], store=True)
-    partner_zip = fields.Char(related='partner_id.zip', depends=['partner_id'], store=True)
-    partner_address = fields.Char(
-        related='partner_id.contact_address', depends=['partner_id'], store=True)
-    partner_city = fields.Char(related='partner_id.city', depends=['partner_id'], store=True)
-    partner_country_id = fields.Many2one(
-        related='partner_id.country_id', depends=['partner_id'], store=True)
-    partner_phone = fields.Char(related='partner_id.phone', depends=['partner_id'], store=True)
+    # Duplicated partner values allowing to keep a record of them, should they be later updated
+    partner_id = fields.Many2one(string="Customer", comodel_name='res.partner', readonly=True)
+    partner_name = fields.Char(string="Partner Name")
+    partner_lang = fields.Selection(string="Language", selection=_lang_get)
+    partner_email = fields.Char(string="Email")
+    partner_address = fields.Char(string="Address")
+    partner_zip = fields.Char(string="Zip")
+    partner_city = fields.Char(string="City")
+    partner_country_id = fields.Many2one(string="Country", comodel_name='res.country')
+    partner_phone = fields.Char(string="Phone")
+
+# partner_lang = fields.Selection(_lang_get, 'Language', default=lambda self: self.env.lang)
 
     _sql_constraints = [
         ('reference_uniq', 'unique(reference)', "Reference must be unique!"),
@@ -145,6 +149,21 @@ class PaymentTransaction(models.Model):
             values['fees'] = acquirer._compute_fees(
                 values.get('amount'), values.get('currency_id'), values.get('partner_country_id')
             )
+
+            # Duplicate partner values
+            partner = self.env['res.partner'].browse(values['partner_id'])
+            values.update({
+                'partner_name': partner.name,
+                'partner_lang': partner.lang,
+                'partner_email': partner.email,
+                'partner_address': payment_utils.format_partner_address(
+                    partner.street, partner.street2
+                ),
+                'partner_zip': partner.zip,
+                'partner_city': partner.city,
+                'partner_country_id': partner.country_id.id,
+                'partner_phone': partner.phone,
+            })
 
             # Include acquirer-specific create values
             values.update(self._get_specific_create_values(acquirer.provider, values))
