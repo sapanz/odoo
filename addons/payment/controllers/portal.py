@@ -111,9 +111,10 @@ class WebsitePayment(http.Controller):
         # Raise an HTTP 404 if a partner is provided with an invalid access token
         if partner_id:
             db_secret = request.env['ir.config_parameter'].sudo().get_param('database.secret')
-            if not payment_utils.check_access_token(
-                access_token, db_secret, partner_id, amount, currency_id
-            ):
+            access_token_values = [partner_id, amount]
+            if currency_id:
+                access_token_values.append(currency_id)
+            if not payment_utils.check_access_token(access_token, db_secret, *access_token_values):
                 raise werkzeug.exceptions.NotFound  # Don't leak info about existence of an id
 
         user_sudo = request.env.user.sudo()
@@ -132,7 +133,8 @@ class WebsitePayment(http.Controller):
             )
 
         # Instantiate transaction values to their default if not set in parameters
-        amount = amount or 0.
+        reference = reference or payment_utils.singularize_reference_prefix(prefix='tx')
+        amount = amount or 0.0
         currency_id = currency_id or user_sudo.company_id.currency_id.id
 
         # If a sale order is provided, its currency and amount overwrite any value set before. For
