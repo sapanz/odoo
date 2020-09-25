@@ -197,12 +197,13 @@ class PaymentAcquirer(models.Model):
         version, endpoint = (API_ENDPOINTS[endpoint_key][k] for k in ('version', 'path'))
         url = _build_url(base_url, version, endpoint)
         headers = {'X-API-Key': self.adyen_api_key}
-        response = requests.request(method, url, json=payload, headers=headers)
-        if not response.ok:
-            try:
-                response.raise_for_status()
-            except requests.exceptions.HTTPError:
-                _logger.exception(response.text)
-                # TODO try except in controller
-                raise ValidationError(f"Adyen: {response.text}")
+        try:
+            response = requests.request(method, url, json=payload, headers=headers, timeout=60)
+            response.raise_for_status()
+        except requests.exceptions.ConnectionError:
+            _logger.exception(f"Adyen: unable to reach endpoint at {url}")
+            raise ValidationError("The connection to Adyen could not be established.")
+        except requests.exceptions.HTTPError:
+            _logger.exception(f"Adyen: invalid API request at {url} with data {payload}")
+            raise ValidationError("The communication with Adyen failed.")
         return response.json()
