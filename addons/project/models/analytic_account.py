@@ -26,8 +26,8 @@ class AccountAnalyticAccount(models.Model):
                 raise UserError(_('You cannot change the company of an analytical account if it is related to a project.'))
 
     def unlink(self):
-        projects = self.env['project.project'].search([('analytic_account_id', 'in', self.ids)])
-        has_tasks = self.env['project.task'].search_count([('project_id', 'in', projects.ids)])
+        projects_subquery = self.env['project.project']._search([('analytic_account_id', 'in', self.ids)])
+        has_tasks = self.env['project.task'].search_count([('project_id', 'in', projects_subquery)])
         if has_tasks:
             raise UserError(_('Please remove existing tasks in the project linked to the accounts you want to delete.'))
         return super(AccountAnalyticAccount, self).unlink()
