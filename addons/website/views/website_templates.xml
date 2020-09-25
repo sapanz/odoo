@@ -2316,12 +2316,6 @@ Sitemap: <t t-esc="url_root"/>sitemap.xml
                 <img class="img-fluid" t-att-src="res_company.google_map_img()" alt="Google Maps"/>
             </a>
         </t>
-        <t t-elif="editable">
-            <div class="alert alert-warning">
-                <i class="fa fa-plus-circle"/>
-                The Google map option is enabled but <a href="/web#action=website.action_website_configuration">not properly configured</a>.
-            </div>
-        </t>
     </xpath>
 </template>
 
