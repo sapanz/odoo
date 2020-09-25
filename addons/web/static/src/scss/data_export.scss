@@ -50,4 +50,23 @@
             }
         }
     }
+
+    @include media-breakpoint-down(sm) {
+
+        .ui-sortable-handle {
+            display: none !important;
+        }
+
+        .col-6.o_left_panel, .col-6.o_right_panel {
+            height: 50%;
+            max-width: 100%;
+            flex: auto;
+            padding: 0;
+        }
+
+        .o_right_panel .o_export_format {
+            padding-top: 10px;
+        }
+
+    }
 }
