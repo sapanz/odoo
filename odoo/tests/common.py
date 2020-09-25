@@ -947,12 +947,14 @@ class ChromeBrowser():
                 self.take_screenshot()
                 self._save_screencast()
                 raise ChromeBrowserException(message)
-
-            self._logger.getChild('browser').log(
-                self._TO_LEVEL.get(log_type, logging.INFO),
-                "%s", message # might still have %<x> characters
-            )
-            res['success'] = 'test successful' in message
+            if message.startswith('<html>') and message.endswith('</html>'):
+                self._save_dom(message)
+            else:
+                self._logger.getChild('browser').log(
+                    self._TO_LEVEL.get(log_type, logging.INFO),
+                    "%s", message # might still have %<x> characters
+                )
+                res['success'] = 'test successful' in message
 
         if res.get('method') == 'Runtime.exceptionThrown':
             exception_details = res['params']['exceptionDetails']
@@ -1021,6 +1023,15 @@ class ChromeBrowser():
         with open(full_path, 'wb') as f:
             f.write(decoded)
         self._logger.runbot('Screenshot in: %s', full_path)
+
+    def _save_dom(self, message):
+        suffix = '_%s' % self.test_class
+
+        fname = '{}{:%Y%m%d_%H%M%S_%f}{}.png'.format('dom_', datetime.now(), suffix)
+        full_path = os.path.join(self.screenshots_dir, fname)
+        with open(full_path, 'w') as f:
+            f.write(message)
+        self._logger.runbot('Dom in: %s', full_path)
 
     def _save_screencast(self, prefix='failed'):
         # could be encododed with something like that
