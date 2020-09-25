@@ -4,172 +4,172 @@
 		<record id="partner_record_create_1" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_1"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_2" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_2"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_3" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_3"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_4" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_4"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_5" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_5"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_7" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_7"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_10" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_10"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_11" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_11"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_13" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_13"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_14" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_14"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_15" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_15"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_16" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_16"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_17" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_17"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_18" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_18"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_24" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_24"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_25" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_25"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_27" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_27"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_28" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_28"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_30" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_30"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_31" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_31"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_32" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_32"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_33" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_33"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_34" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_address_34"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_35" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_1"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_36" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_2"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_37" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_3"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_38" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_4"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_39" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_10"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_40" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_12"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_41" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_18"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_43" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.partner_demo_portal"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_44" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_main1"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_45" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.res_partner_main2"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 		<record id="partner_record_create_46" model="mail.message">
 		    <field name="model">res.partner</field>
 		    <field name="res_id" ref="base.partner_demo"/>
-		    <field name="body" type="html"><p>Record Created</p></field>
+		    <field name="body" type="html"><p>Record created</p></field>
 		</record>
 	</data>
 </odoo>
