@@ -66,6 +66,10 @@ class PickingType(models.Model):
         'Pre-fill Detailed Operations', default=True,
         help="If this checkbox is ticked, Odoo will automatically pre-fill the detailed "
         "operations with the corresponding products, locations and lot/serial numbers.")
+    confirm_with_demand = fields.Boolean(
+        'Pre-fill done quantity with demand', default=False,
+        help="If this checkbox is ticked, Odoo will automatically pre-fill the done "
+        "quantity with the demand when marking the pickings as todo.")
 
     count_picking_draft = fields.Integer(compute='_compute_picking_count')
     count_picking_ready = fields.Integer(compute='_compute_picking_count')

@@ -43,13 +43,14 @@
                                 <field name="sequence_id" groups="base.group_no_one"/>
                                 <field name="sequence_code"/>
                                 <field name="warehouse_id" groups="stock.group_stock_multi_warehouses" force_save="1"/>
+                                <field name="show_operations"/>
+                                <field name="show_reserved" attrs="{'invisible': [('code', '!=', 'incoming')]}"/>
                             </group>
                             <group>
                                 <field name="code"/>
                                 <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                                 <field attrs='{"invisible": [("code", "not in", ["incoming", "outgoing", "internal"])]}' name="return_picking_type_id"/>
-                                <field name="show_operations"/>
-                                <field name="show_reserved" attrs="{'invisible': [('code', '!=', 'incoming')]}"/>
+                                <field name="confirm_with_demand"/>
                             </group>
                         </group>
                         <group>
