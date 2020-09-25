@@ -1137,9 +1137,10 @@ class ChromeBrowser():
                     })
             elif res:
                 self._logger.debug('chrome devtools protocol event: %s', res)
+        message = 'Script timeout exceeded : %s' % (time.time() - start_time)  # save timeout message before _save_screencast
         self.take_screenshot()
         self._save_screencast()
-        raise ChromeBrowserException('Script timeout exceeded : %s' % (time.time() - start_time))
+        raise ChromeBrowserException(message)
 
 
     def navigate_to(self, url, wait_stop=False):
