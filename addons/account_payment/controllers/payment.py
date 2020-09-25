@@ -51,7 +51,7 @@ class PaymentPortal(http.Controller):
         # processing_values = {}  # The generic and acquirer-specific values to process the tx
         # if flow in ['redirect', 'direct']:  # Payment through (inline or redirect) form
         #     acquirer_sudo = request.env['payment.acquirer'].sudo().browse(payment_option_id)
-        #     tx_reference = request.env['payment.transaction']._compute_reference(
+        #     reference = request.env['payment.transaction']._compute_reference(
         #         acquirer_sudo.provider,
         #         prefix=reference,
         #         sale_order_ids=([order_id] if order_id else [])
@@ -64,7 +64,7 @@ class PaymentPortal(http.Controller):
         #     )
         #     tx_sudo = request.env['payment.transaction'].sudo().with_context(lang=None).create({
         #         'acquirer_id': acquirer_sudo.id,
-        #         'reference': tx_reference,
+        #         'reference': reference,
         #         'tokenize': tokenize,
         #         **create_tx_values,
         #     })
@@ -73,14 +73,14 @@ class PaymentPortal(http.Controller):
         #     token_sudo = request.env['payment.token'].sudo().browse(payment_option_id).exists()
         #     if not token_sudo:
         #         raise UserError(_("No token token with id %s could be found.", payment_option_id))
-        #     tx_reference = request.env['payment.transaction']._compute_reference(
+        #     reference = request.env['payment.transaction']._compute_reference(
         #         token_sudo.acquirer_id.provider,
         #         prefix=reference,
         #         sale_order_ids=([order_id] if order_id else [])
         #     )
         #     tx_sudo = request.env['payment.transaction'].sudo().with_context(lang=None).create({
         #         'acquirer_id': token_sudo.acquirer_id.id,
-        #         'reference': tx_reference,
+        #         'reference': reference,
         #         'token_id': payment_option_id,
         #         **create_tx_values,
         #     })  # Created in sudo to allowed writing on callback fields

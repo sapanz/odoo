@@ -202,9 +202,9 @@ class PaymentTransaction(models.Model):
         already exists, or follows the pattern `{computed_prefix}{separator}{sequence_number}` where
           - {computed_prefix} is:
             - The provided custom prefix, if any.
-            - 'tx', if neither the custom prefix nor the kwargs are filled.
             - The computation result of `_compute_reference_prefix` if the custom prefix is not
               filled but the kwargs are.
+            - 'tx-{datetime}', if neither the custom prefix nor the kwargs are filled.
           - {separator} is a custom string also used in `_compute_reference_prefix`.
           - {sequence_number} is the next integer in the sequence of references sharing the exact
             same prefix, '1' if there is only one matching reference (hence without sequence number)
@@ -231,8 +231,10 @@ class PaymentTransaction(models.Model):
         if prefix:
             # Replace special characters by their ASCII alternative (é -> e ; ä -> a ; ...)
             prefix = unicodedata.normalize('NFKD', prefix).encode('ascii', 'ignore').decode('utf-8')
-        else:  # No prefix provided, compute it based on the kwargs or fallback on 'tx'
-            prefix = self._compute_reference_prefix(provider, separator, kwargs) or 'tx'
+        if not prefix:  # Prefix not provided or voided above, compute it based on the kwargs
+            prefix = self._compute_reference_prefix(provider, separator, kwargs)
+        if not prefix:  # Prefix not computed from the kwargs, fallback on time-based value
+            prefix = payment_utils.singularize_reference_prefix()
 
         # Compute the sequence number
         reference = prefix  # The first reference of a sequence has no sequence number

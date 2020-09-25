@@ -166,7 +166,7 @@ class WebsitePayment(http.Controller):
             'tokens': _select_payment_tokens(acquirers_sudo, partner_id) if logged_in else [],
             'fees_by_acquirer': fees_by_acquirer,
             'show_tokenize_input': logged_in,  # Prevent saving payment methods on different partner
-            'reference_prefix': reference or 'tx',  # Use 'tx' to always have a ref if it was not provided # TODO ANV append timestamp to tx
+            'reference_prefix': reference,
             'amount': amount,
             'currency': currency,
             'partner_id': partner_id,
@@ -352,7 +352,7 @@ class WebsitePayment(http.Controller):
         tx_context = {
             'acquirers': acquirers,
             'tokens': tokens,
-            'reference_prefix': 'validation',  # TODO ANV append timestamp
+            'reference_prefix': payment_utils.singularize_reference_prefix(prefix='validation'),
             'partner_id': partner.id,
             'init_tx_route': '/website_payment/transaction',
             'landing_route': '/website_payment/validate',
