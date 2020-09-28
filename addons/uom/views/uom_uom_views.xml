@@ -93,6 +93,28 @@
                 <sheet>
                     <group>
                         <field name="name"/>
+                        <field name="locked" invisible="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Units of Measure" name="uom_lines">
+                            <field name="uom_ids" force_save="1" attrs="{'readonly':[('locked','=',True)]}" context="{'default_uom_type': 'smaller'}">
+                                <tree default_order="uom_type,factor" editable="bottom">
+                                    <field name="name"/>
+                                    <field name="category_id" invisible="1"/>
+                                    <field name="uom_type"/>
+                                    <field name="factor" invisible="1"/>
+                                    <field name="factor_inv" invisible="1"/>
+                                    <field name="ratio" string="Ratio" attrs="{'invisible':[('uom_type','=','reference')]}" digits="[42,5]"/>
+                                    <field name="active"/>
+                                    <field name="rounding" digits="[42, 5]"/>
+                                </tree>
+                            </field>
+                        </page>
+                    </notebook>
+                    <group>
+                        <span class="fa fa-exclamation-triangle" attrs="{'invisible':[('locked','=',False)]}">
+                            You're not allowed to make any further changes after changing the reference UoM
+                        </span>
                     </group>
                 </sheet>
             </form>
@@ -103,7 +125,7 @@
         <field name="name">uom.category.tree</field>
         <field name="model">uom.category</field>
         <field name="arch" type="xml">
-            <tree string="Units of Measure categories" editable="bottom">
+            <tree string="Units of Measure categories">
                 <field name="name"/>
             </tree>
         </field>
