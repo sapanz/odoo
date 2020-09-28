@@ -919,6 +919,7 @@ class WebsiteSale(http.Controller):
             'landing_route': '/shop/payment/validate',
             'operation': f'online_{kwargs.get("flow", "redirect")}',
             'tokenize': tokenize,
+            # TODO ANV build reference based on SO name
         }
 
         if token:

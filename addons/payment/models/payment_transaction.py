@@ -385,13 +385,12 @@ class PaymentTransaction(models.Model):
         """
         return dict()
 
-    def _send_payment_request(self, operation='online'):
+    def _send_payment_request(self):
         """ Request the provider of the acquirer handling the transactions to execute the payment.
 
         For an acquirer to support tokenization, it must override this method and call it to log the
         'sent' message, then request a money transfer to its provider.
 
-        :param str operation: The operation of the payment: 'online', 'offline' or 'validation'.
         :return: None
         """
         self._log_sent_message()
@@ -409,6 +408,7 @@ class PaymentTransaction(models.Model):
         tx = self._get_tx_from_data(provider, data)
         if tx:
             invalid_parameters = tx._get_invalid_parameters(data)
+            # TODO ANV check later if can be merged in _process_feedback_data (raise if needed)
             if invalid_parameters:
                 error_message = "received incorrect transaction data:"
                 for parameter in invalid_parameters:
@@ -564,7 +564,7 @@ class PaymentTransaction(models.Model):
             _logger.warning(
                 f"tried to write tx state with illegal value (ref: {tx.reference}, "
                 f"previous state {tx.state}, target state: {target_state}, "
-                f"expected previous state in: {allowed_states})")
+                f"expected previous state to be in: {allowed_states})")
         write_values = {
             'state': target_state,
             'last_state_change': fields.Datetime.now(),

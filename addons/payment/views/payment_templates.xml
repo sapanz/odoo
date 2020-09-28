@@ -94,7 +94,7 @@
                         <!-- === Inline form content (filled by acquirer) === -->
                         <div class="clearfix">
                             <t t-set="inline_form_xml_id"
-                               t-value="acquirer.sudo()._get_inline_template_view_xml_id()"/>
+                               t-value="acquirer.sudo().inline_template_view_id.xml_id"/>
                             <t t-if="inline_form_xml_id" t-call="{{inline_form_xml_id}}">
                                 <t t-set="acquirer_id" t-value="acquirer.id"/>
                             </t>
@@ -215,7 +215,7 @@
                         <!-- === Inline form content (filled by acquirer) === -->
                         <div class="clearfix">
                             <t t-set="inline_form_xml_id"
-                               t-value="acquirer.sudo()._get_inline_template_view_xml_id()"/>
+                               t-value="acquirer.sudo().inline_template_view_id.xml_id"/>
                             <t t-if="inline_form_xml_id" t-call="{{inline_form_xml_id}}">
                                 <t t-set="acquirer_id" t-value="acquirer.id"/>
                             </t>

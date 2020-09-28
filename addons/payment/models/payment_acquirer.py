@@ -234,6 +234,8 @@ class PaymentAcquirer(models.Model):
         company = company or self.env.company
         acquirers = self.env['payment.acquirer'].search([
             ('journal_id', '=', False),
+            # We rely on the provider rather than on the module_id because the later is not yet
+            # assigned nor can be computed when the acquirer is first created
             ('provider', 'in', providers),
             ('company_id', '=', company.id),
         ])
@@ -327,21 +329,6 @@ class PaymentAcquirer(models.Model):
             compatible_acquirers = self.env['payment.acquirer'].search(domain)
 
         return compatible_acquirers
-
-    def _get_inline_template_view_xml_id(self):
-        """ Get the xml id of the inline form template.
-
-        Note: self.ensure_one()
-
-        :return: The xml id of the inline form template
-        :rtype: str|None
-        """
-        if self.inline_template_view_id:
-            model_data = self.env['ir.model.data'].search(
-                [('model', '=', 'ir.ui.view'), ('res_id', '=', self.inline_template_view_id.id)]
-            )
-            return f'{model_data.module}.{model_data.name}'
-        return None
 
     def _get_base_url(self):
         """ Get the base url of the website on which the payment is made.

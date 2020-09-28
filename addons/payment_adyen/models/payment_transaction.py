@@ -48,13 +48,12 @@ class PaymentTransaction(models.Model):
             )
         }
 
-    def _send_payment_request(self, operation='online'):
+    def _send_payment_request(self):
         """ Request Adyen to execute the payment.
 
-        :param str operation: The operation of the payment: 'online', 'offline' or 'validation'.
         :return: None
         """
-        super()._send_payment_request(operation)  # Log the 'sent' message
+        super()._send_payment_request()  # Log the 'sent' message
 
         if self.acquirer_id.provider != 'adyen':
             return
