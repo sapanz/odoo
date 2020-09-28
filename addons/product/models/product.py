@@ -581,16 +581,17 @@ class ProductProduct(models.Model):
         return self.env['product.supplierinfo'].search([('product_tmpl_id', '=', self.product_tmpl_id.id),
                                                         ('name.active', '=', True)]).sorted(lambda s: (s.sequence, -s.min_qty, s.price, s.id))
 
-    def _select_seller(self, partner_id=False, quantity=0.0, date=None, uom_id=False, params=False):
+    def _select_seller(self, partner_id=False, quantity=0.0, date=None, uom_id=False, params=False, sellers=None):
         self.ensure_one()
         if date is None:
             date = fields.Date.context_today(self)
         precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
 
         res = self.env['product.supplierinfo']
-        sellers = self._prepare_sellers(params)
-        if self.env.context.get('force_company'):
-            sellers = sellers.filtered(lambda s: not s.company_id or s.company_id.id == self.env.context['force_company'])
+        if not sellers:
+            sellers = self._prepare_sellers(params)
+            if self.env.context.get('force_company'):
+                sellers = sellers.filtered(lambda s: not s.company_id or s.company_id.id == self.env.context['force_company'])
         for seller in sellers:
             # Set quantity in UoM of seller
             quantity_uom_seller = quantity
@@ -609,7 +610,7 @@ class ProductProduct(models.Model):
                 continue
             if not res or res.name == seller.name:
                 res |= seller
-        return res.sorted('price')[:1]
+        return res.sorted('price')[:1], sellers
 
     def price_compute(self, price_type, uom=False, currency=False, company=False):
         # TDE FIXME: delegate to template or not ? fields are reencoded here ...

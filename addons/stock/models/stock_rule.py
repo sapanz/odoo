@@ -562,6 +562,8 @@ class ProcurementGroup(models.Model):
         orderpoints_noprefetch = OrderPoint.with_context(prefetch_fields=False).search(
             domain, order=self._procurement_from_orderpoint_get_order()).ids
 
+        product_to_sellers = {}
+
         for orderpoints in split_every(1000, orderpoints_noprefetch):
             orderpoints = self.env['stock.warehouse.orderpoint'].browse(orderpoints)
             if use_new_cursor:
@@ -617,7 +619,8 @@ class ProcurementGroup(models.Model):
                                 qty_rounded = float_round(qty, precision_rounding=orderpoint.product_uom.rounding)
 
                                 if float_compare(qty_rounded, 0.0, precision_rounding=orderpoint.product_uom.rounding) == 1:
-                                    values = orderpoint._prepare_procurement_values(qty_rounded, **group['procurement_values'])
+                                    values, sellers = orderpoint._prepare_procurement_values(qty_rounded, **group['procurement_values'], sellers=product_to_sellers.get(orderpoint.product_id))
+                                    product_to_sellers[orderpoint.product_id] = sellers
                                     procurements.append(self.env['procurement.group'].Procurement(
                                         orderpoint.product_id, qty_rounded, orderpoint.product_uom,
                                         orderpoint.location_id, orderpoint.name, orderpoint.name,

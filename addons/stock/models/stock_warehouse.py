@@ -1076,26 +1076,30 @@ class Orderpoint(models.Model):
                     raise UserError(_("Changing the company of this record is forbidden at this point, you should rather archive it and create a new one."))
         return super(Orderpoint, self).write(vals)
 
-    def _get_date_planned(self, product_qty, start_date):
+    def _get_date_planned(self, product_qty, start_date, sellers=None):
         days = self.lead_days or 0.0
         if self.lead_type == 'supplier':
             # These days will be substracted when creating the PO
-            days += self.product_id._select_seller(
+            selected_seller, sellers = self.product_id._select_seller(
                 quantity=product_qty,
-                date=fields.Date.context_today(self,start_date),
-                uom_id=self.product_uom).delay or 0.0
+                date=fields.Date.context_today(self, start_date),
+                uom_id=self.product_uom,
+                sellers=sellers)
+            days += selected_seller.delay or 0.0
         date_planned = start_date + relativedelta.relativedelta(days=days)
-        return date_planned.strftime(DEFAULT_SERVER_DATETIME_FORMAT)
+        return date_planned.strftime(DEFAULT_SERVER_DATETIME_FORMAT), sellers
 
-    def _prepare_procurement_values(self, product_qty, date=False, group=False):
+    def _prepare_procurement_values(self, product_qty, date=False, group=False, sellers=None):
         """ Prepare specific key for moves or other components that will be created from a stock rule
         comming from an orderpoint. This method could be override in order to add other custom key that could
         be used in move/po creation.
         """
+        if not date:
+            date, sellers = self._get_date_planned(product_qty, datetime.today(), sellers)
         return {
-            'date_planned': date or self._get_date_planned(product_qty, datetime.today()),
+            'date_planned': date,
             'warehouse_id': self.warehouse_id,
             'orderpoint_id': self,
             'group_id': group or self.group_id,
-        }
+        }, sellers
 
