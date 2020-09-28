@@ -54,6 +54,18 @@ class ChatWindowHeader extends Component {
      * @private
      * @param {MouseEvent} ev
      */
+    _onClickChatHeaderName(ev) {
+        if (ev.currentTarget.classList.contains('o_Clickable_ChatWindowHeaderName')) {
+            this.chatWindow.thread.correspondent.openProfile();
+        } else {
+            this._onClick();
+        }
+    }
+
+    /**
+     * @private
+     * @param {MouseEvent} ev
+     */
     _onClickClose(ev) {
         ev.stopPropagation();
         this.chatWindow.close();

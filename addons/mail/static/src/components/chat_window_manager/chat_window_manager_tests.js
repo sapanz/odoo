@@ -378,7 +378,7 @@ QUnit.test('open chat from "new message" chat window should open chat in place o
 });
 
 QUnit.test('chat window: basic rendering', async function (assert) {
-    assert.expect(11);
+    assert.expect(12);
 
     // channel that is expected to be found in the messaging menu
     // with random unique id and name that will be asserted during the test
@@ -425,6 +425,10 @@ QUnit.test('chat window: basic rendering', async function (assert) {
         chatWindowHeader.querySelector(`:scope .o_ChatWindowHeader_name`).textContent,
         "General",
         "should have correct thread name in header part"
+    );
+    assert.ok(
+        chatWindowHeader.querySelector(`:scope .o_ChatWindowHeader_name:not(.o_Clickable_ChatWindowHeaderName)`),
+        "header of channel type thread should not be clickable"
     );
     assert.strictEqual(
         chatWindowHeader.querySelectorAll(`:scope .o_ChatWindowHeader_command`).length,
@@ -1866,6 +1870,40 @@ QUnit.test('chat window does not fetch messages if hidden', async function (asse
         ['rpc:message_fetch:12'],
         "messages should now be fetched for Channel #12"
     );
+});
+
+QUnit.test('chat window: click on chat header for channel type "chat", redirect to user form', async function (assert) {
+    assert.expect(4);
+
+    this.data['res.partner'].records.push({ id: 7, name: "Demo" });
+    const chat = {
+        channel_type: "chat",
+        is_minimized: true,
+        members: [this.data.currentPartnerId, 7],
+    };
+    this.data['mail.channel'].records.push(chat);
+    await this.start({
+        mockRPC(route, args) {
+            if (args.method === "search_read") {
+                assert.step('partner:search_read');
+                assert.deepEqual(
+                    args.kwargs.domain,
+                    [["user_partner_id", "=", 7]],
+                    'User partner id should be 7'
+                );
+            }
+            return this._super(...arguments);
+        },
+    });
+
+    const chatWindowHeaderName = document.querySelector(`:scope .o_ChatWindow_header .o_ChatWindowHeader_name`);
+    assert.ok(
+        chatWindowHeaderName.classList.contains('o_Clickable_ChatWindowHeaderName'),
+        "thread name should be clickable"
+    );
+    // click on chat window header name
+    chatWindowHeaderName.click();
+    assert.verifySteps(['partner:search_read']);
 });
 
 });
