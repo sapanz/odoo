@@ -1246,6 +1246,28 @@ QUnit.test('load single message from channel initially', async function (assert)
     );
 });
 
+QUnit.test('open channel from active_id as channel id', async function (assert) {
+    assert.expect(1);
+
+    this.data['mail.channel'].records.push({ id: 20 });
+    await this.start({
+        discuss: {
+            context: {
+                active_id: 20,
+            },
+        }
+    });
+    assert.containsOnce(
+        document.body,
+        `
+            .o_Discuss_thread[data-thread-local-id="${
+                this.env.models['mail.thread'].findFromIdentifyingData({ id: 20, model: 'mail.channel' }).localId
+            }"]
+        `,
+        "should have channel with ID 20 open in Discuss when providing active_id 20"
+    );
+});
+
 QUnit.test('basic rendering of message', async function (assert) {
     // AKU TODO: should be in message-only tests
     assert.expect(13);
@@ -1834,7 +1856,7 @@ QUnit.test('new messages separator [REQUIRE FOCUS]', async function (assert) {
 });
 
 QUnit.test('restore thread scroll position', async function (assert) {
-    assert.expect(5);
+    assert.expect(6);
     // channels expected to be rendered, with random unique id that will be referenced in the test
     this.data['mail.channel'].records.push({ id: 11 }, { id: 12 });
     for (let i = 1; i <= 25; i++) {
@@ -1871,6 +1893,15 @@ QUnit.test('restore thread scroll position', async function (assert) {
         `).length,
         25,
         "should have 25 messages in channel 11"
+    );
+    const initialMessageList = document.querySelector(`
+        .o_Discuss_thread
+        .o_ThreadView_messageList
+    `);
+    assert.strictEqual(
+        initialMessageList.scrollTop + initialMessageList.clientHeight,
+        initialMessageList.scrollHeight,
+        "should have scrolled to bottom of channel 11 initially"
     );
 
     await this.afterEvent({

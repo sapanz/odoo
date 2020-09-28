@@ -11,21 +11,15 @@ body.editor_enable.editor_has_snippets {
     }
 
     .modal:not(.o_technical_modal) {
+        top: 0 !important;
         // set z-index so customize options visible on dialog.
         z-index: $o-we-overlay-zindex - 1;
         // just for fake backdrop effect
         background-color: rgba(66, 66, 66, 0.4);
     }
     > .oe_overlay.ui-draggable {
-        .o_handle {
+        .o_handles {
             display: none;
-        }
-        .o_overlay_move_options {
-            margin-top: -24px;
-            text-align: center;
-        }
-        .o_move_handle {
-            height: 24px;
         }
     }
 }
