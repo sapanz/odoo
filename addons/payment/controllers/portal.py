@@ -148,15 +148,15 @@ class WebsitePayment(http.Controller):
         # Pick the company that is the most relevant given the tx context to filter the acquirers
         company_id = _pick_company(company_id, order_sudo, user_sudo)
 
-        # Select all acquirers that match the constraints
-        acquirers_sudo = request.env['payment.acquirer'].sudo()._get_compatible_acquirers(
-            company_id, partner_id, preferred_acquirer_id=acquirer_id
-        )  # In sudo mode to read on the partner fields if the user is not logged in
-
         # Make sure that the currency exists and is active
         currency = request.env['res.currency'].browse(currency_id).exists()
         if not currency or not currency.active:
             currency = user_sudo.company_id.currency_id
+
+        # Select all acquirers that match the constraints
+        acquirers_sudo = request.env['payment.acquirer'].sudo()._get_compatible_acquirers(
+            company_id, partner_id, currency_id=currency.id, preferred_acquirer_id=acquirer_id
+        )  # In sudo mode to read on the partner fields if the user is not logged in
 
         # Compute the fees taken by acquirers supporting the feature
         country_id = user_sudo.partner_id.country_id.id

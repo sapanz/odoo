@@ -16,7 +16,8 @@ class PortalAccount(PortalAccount):
         partner_id = invoice.partner_id.id if not logged_in else request.env.user.partner_id.id
         acquirers_sudo = request.env['payment.acquirer'].sudo()._get_compatible_acquirers(
             invoice.company_id.id or request.env.company.id,
-            invoice.partner_id.id or request.env.user.partner_id.id
+            invoice.partner_id.id or request.env.user.partner_id.id,
+            currency_id=invoice.currency_id.id,
         )  # In sudo mode to read on the partner fields if the user is not logged in
         tokens = request.env['payment.token'].search([
             ('acquirer_id', 'in', acquirers_sudo.ids),

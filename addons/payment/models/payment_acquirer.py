@@ -32,8 +32,7 @@ class PaymentAcquirer(models.Model):
     state = fields.Selection(
         string="State",
         help="In test mode, a fake payment is processed through a test payment interface.\n"
-             "This mode is advised when setting up the acquirer.\n"
-             "Note: test and production modes require different credentials.",
+             "This mode is advised when setting up the acquirer.",
         selection=[('disabled', "Disabled"), ('enabled', "Enabled"), ('test', "Test Mode")],
         default='disabled', required=True, copy=False)
     company_id = fields.Many2one(
@@ -66,7 +65,7 @@ class PaymentAcquirer(models.Model):
         string="Countries", comodel_name='res.country', relation='payment_country_rel',
         column1='payment_id', column2='country_id',
         help="The countries for which this payment acquirer is available.\n"
-             "If none is selected, it is available for all countries.")
+             "If none is set, it is available for all countries.")
     journal_id = fields.Many2one(
         string="Payment Journal", comodel_name='account.journal',
         help="The journal in which the successful transactions are posted",
@@ -282,7 +281,8 @@ class PaymentAcquirer(models.Model):
 
     @api.model
     def _get_compatible_acquirers(
-        self, company_id, partner_id, allow_tokenization=False, preferred_acquirer_id=None, **kwargs
+        self, company_id, partner_id, currency_id=None, allow_tokenization=False,
+        preferred_acquirer_id=None, **kwargs
     ):
         """ Select and return the acquirers matching the criteria.
 
@@ -295,6 +295,7 @@ class PaymentAcquirer(models.Model):
 
         :param int company_id: The company to which acquirers must belong, as a `res.company` id
         :param int partner_id: The partner making the payment, as a `res.partner` id
+        :param int currency_id: The payment currency if known beforehand, as a `res.currency` id
         :param bool allow_tokenization: Whether matching acquirers must allow tokenization
         :param int preferred_acquirer_id: The preferred acquirer, as a `payment.acquirer` id
         :param dict kwargs: Optional data. This parameter is not used here

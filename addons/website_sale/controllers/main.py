@@ -830,7 +830,11 @@ class WebsiteSale(http.Controller):
         )
 
         acquirers_sudo = request.env['payment.acquirer'].sudo()._get_compatible_acquirers(
-            order.company_id.id, order.partner_id.id, website_id=request.website.id, order=order
+            order.company_id.id,
+            order.partner_id.id,
+            currency_id=order.currency_id.id,
+            website_id=request.website.id,
+            order=order
         )  # In sudo mode to read on the partner and order fields if the user is not logged in
 
         values['acquirers'] = acquirers_sudo
