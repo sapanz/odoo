@@ -25,6 +25,7 @@ class PaypalPaymentAcquirer(models.Model):
 
     def _compute_fees(self, amount, currency_id, country_id):
         """
+        TODO It's seems it doesn't compure the correct amount, 100 becomes 716.67
         override method from payment
 
         Note: self.ensure_one();
