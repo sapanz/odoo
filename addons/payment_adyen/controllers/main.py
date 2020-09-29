@@ -11,7 +11,7 @@ from odoo.exceptions import ValidationError
 from odoo.http import request
 from odoo.tools.pycompat import to_text
 
-import odoo.addons.payment.utils as payment_utils
+from odoo.addons.payment import utils as payment_utils
 from odoo.addons.payment_adyen.models.payment_acquirer import CURRENCY_DECIMALS
 
 _logger = logging.getLogger(__name__)

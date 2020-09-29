@@ -15,7 +15,7 @@ from odoo.exceptions import ValidationError
 from odoo.tools import consteq, ustr
 from odoo.tools.misc import formatLang
 
-import odoo.addons.payment.utils as payment_utils
+from odoo.addons.payment import utils as payment_utils
 
 _logger = logging.getLogger(__name__)
 

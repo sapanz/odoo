@@ -12,7 +12,7 @@ from odoo.exceptions import UserError
 from odoo.http import request
 from odoo.tools.float_utils import float_repr
 
-import odoo.addons.payment.utils as payment_utils
+from odoo.addons.payment import utils as payment_utils
 
 _logger = logging.getLogger(__name__)
 
