@@ -1365,7 +1365,7 @@ class HttpCaseCommon(BaseCase):
 
         return session
 
-    def browser_js(self, url_path, code, ready='', login=None, timeout=60, **kw):
+    def browser_js(self, url_path, code, ready='', login=None, timeout=80, **kw):
         """ Test js code running in the browser
         - optionnally log as 'login'
         - load page given by url_path
