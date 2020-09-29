@@ -1027,7 +1027,7 @@ class ChromeBrowser():
     def _save_dom(self, message):
         suffix = '_%s' % self.test_class
 
-        fname = '{}{:%Y%m%d_%H%M%S_%f}{}.png'.format('dom_', datetime.now(), suffix)
+        fname = '{}{:%Y%m%d_%H%M%S_%f}{}.txt'.format('dom_', datetime.now(), suffix)
         full_path = os.path.join(self.screenshots_dir, fname)
         with open(full_path, 'w') as f:
             f.write(message)
