@@ -211,6 +211,20 @@ class AccountEdiFormat(models.Model):
         self.ensure_one()
         return self.env['account.move']
 
+    def _get_partner_bank_account_from_xml_tree(self, tree):
+        """ Returns the bank account present inside the xml.
+        This will only be called on the edi.format that succeeded in decoding the xml.
+        """
+        _logger.warning('EDI Format should implement \'_get_partner_bank_account\' in order to check the bank account saved in the database. If no bank account is present in the format, please override this method and return False.')
+        return False
+
+    def _get_partner_bank_account_from_pdf_reader(self, reader):
+        """ Returns the bank account present inside the xml.
+        This will only be called on the edi.format that succeeded in decoding the reader.
+        """
+        _logger.warning('EDI Format should implement \'_get_partner_bank_account\' in order to check the bank account saved in the database. If no bank account is present in the format, please override this method and return False.')
+        return False
+
     ####################################################
     # Export Internal methods (not meant to be overridden)
     ####################################################
@@ -343,9 +357,13 @@ class AccountEdiFormat(models.Model):
                 try:
                     if file_data['type'] == 'xml':
                         res = edi_format.with_company(self.env.company)._create_invoice_from_xml_tree(file_data['filename'], file_data['xml_tree'])
+                        if res:
+                            acc_number = edi_format._get_partner_bank_account_from_xml_tree(file_data['xml_tree'])
                     elif file_data['type'] == 'pdf':
                         res = edi_format.with_company(self.env.company)._create_invoice_from_pdf_reader(file_data['filename'], file_data['pdf_reader'])
-                        file_data['pdf_reader'].stream.close()
+                        if res:
+                            acc_number = edi_format._get_partner_bank_account_from_pdf_reader(file_data['pdf_reader'])
+                            file_data['pdf_reader'].stream.close()
                 except Exception as e:
                     _logger.exception("Error importing attachment \"%s\" as invoice with format \"%s\"", file_data['filename'], edi_format.name, str(e))
                 if res:
@@ -353,8 +371,8 @@ class AccountEdiFormat(models.Model):
                         # Bypass the OCR to prevent overwriting data when an EDI was succesfully imported.
                         # TODO : remove when we integrate the OCR to the EDI flow.
                         res.write({'extract_state': 'done'})
-                    return res
-        return self.env['account.move']
+                    return (res, {'acc_number': acc_number})
+        return (self.env['account.move'], {})
 
     def _update_invoice_from_attachment(self, attachment, invoice):
         """Decodes an ir.attachment to update an invoice.

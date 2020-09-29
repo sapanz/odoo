@@ -622,19 +622,14 @@ class AccountJournal(models.Model):
         # We simply call the setup bar function.
         return self.env['res.company'].setting_init_bank_account_action()
 
-    def create_invoice_from_attachment(self, attachment_ids=[]):
-        ''' Create the invoices from files.
-         :return: A action redirecting to account.move tree/form view.
-        '''
-        attachments = self.env['ir.attachment'].browse(attachment_ids)
-        if not attachments:
-            raise UserError(_("No attachment was provided"))
+    def _check_partners_bank_account(self, bank_accounts):
+        inconsistant_bank_accounts = []
+        for (partner, acc_number) in bank_accounts:
+            if acc_number not in [acc.acc_number for acc in partner.bank_ids]:
+                inconsistant_bank_accounts.append((partner, acc_number))
+        return inconsistant_bank_accounts
 
-        invoices = self.env['account.move']
-        for attachment in attachments:
-            attachment.write({'res_model': 'mail.compose.message'})
-            invoices += self._create_invoice_from_single_attachment(attachment)
-
+    def _redirect_to_generated_documents(self, invoices):
         action_vals = {
             'name': _('Generated Documents'),
             'domain': [('id', 'in', invoices.ids)],
@@ -649,15 +644,52 @@ class AccountJournal(models.Model):
             action_vals['view_mode'] = 'tree,form'
         return action_vals
 
+    def create_invoice_from_attachment(self, attachment_ids=[]):
+        ''' Create the invoices from files.
+         :return: A action redirecting to account.move tree/form view.
+        '''
+        attachments = self.env['ir.attachment'].browse(attachment_ids)
+        if not attachments:
+            raise UserError(_("No attachment was provided"))
+
+        invoices = self.env['account.move']
+        banks = []
+        for attachment in attachments:
+            attachment.write({'res_model': 'mail.compose.message'})
+            invoice, data = self._create_invoice_from_single_attachment(attachment)
+            invoices += invoice
+            if 'acc_number' in data:
+                banks.append((invoice.partner_id, data['acc_number']))
+
+        inconsistant_bank_accounts = self._check_partners_bank_account(banks)
+        if inconsistant_bank_accounts:
+            lines = [(0, 0, {
+                'partner_id': partner.id,
+                'acc_number': acc_number,
+            }) for partner, acc_number in inconsistant_bank_accounts]
+            return {
+                'name': _('Bank Accounts Inconsistencies'),
+                'type': 'ir.actions.act_window',
+                'view_type': 'form',
+                'view_mode': 'form',
+                'res_model': 'account.inconsistant.bank.wizard',
+                'views': [[False, "form"]],
+                'view_id': self.env.ref('account.account_inconsistant_bank_wizard_form'),
+                'target': 'new',
+                'context': {'default_inconsistant_banks_line_ids': lines, 'default_invoice_redirect_ids': invoices.ids}
+            }
+        else:
+            return self._redirect_to_generated_documents(invoices)
+
     def _create_invoice_from_single_attachment(self, attachment):
         """ Creates an invoice and post the attachment. If the related modules
-            are installed, it will trigger OCR or the import from the EDI.
+            are installed, it will trigger OCR or the import from the EDI (to OVERRIDE).
 
             :returns: the created invoice.
         """
         invoice = self.env['account.move'].create({})
         invoice.message_post(attachment_ids=[attachment.id])
-        return invoice
+        return (invoice, {})
 
     def _create_secure_sequence(self, sequence_fields):
         """This function creates a no_gap sequence on each journal in self that will ensure

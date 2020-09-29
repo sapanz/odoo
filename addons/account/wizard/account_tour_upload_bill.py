@@ -61,7 +61,7 @@ class AccountTourUploadBill(models.TransientModel):
                 'res_model': 'mail.compose.message',
                 'datas': self.sample_bill_preview,
             })
-            bill = purchase_journal.with_context(default_journal_id=purchase_journal.id, default_move_type='in_invoice')._create_invoice_from_single_attachment(attachment)
+            bill, data = purchase_journal.with_context(default_journal_id=purchase_journal.id, default_move_type='in_invoice')._create_invoice_from_single_attachment(attachment)
             if self.selection == 'sample':
                 bill.write({
                     'partner_id': self.env.ref('base.main_partner').id,

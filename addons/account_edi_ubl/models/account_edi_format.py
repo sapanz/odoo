@@ -16,6 +16,10 @@ _logger = logging.getLogger(__name__)
 class AccountEdiFormat(models.Model):
     _inherit = 'account.edi.format'
 
+    def _get_ubl_partner_bank_account(self, tree):
+        elements = tree.xpath('//cac:PayeeFinancialAccount/cbc:ID', namespaces=tree.nsmap)
+        return elements[0].text if elements else False
+
     def _import_ubl(self, tree, invoice):
         """ Decodes an UBL invoice into an invoice.
 

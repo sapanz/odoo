@@ -54,9 +54,9 @@ class AccountJournal(models.Model):
 
     def _create_invoice_from_single_attachment(self, attachment):
         # OVERRIDE
-        invoice = self.env['account.edi.format'].search([])._create_invoice_from_attachment(attachment)
+        invoice, data = self.env['account.edi.format'].search([])._create_invoice_from_attachment(attachment)
         if invoice:
             # with_context: we don't want to import the attachment since the invoice was just created from it.
             invoice.with_context(no_new_invoice=True).message_post(attachment_ids=attachment.ids)
-            return invoice
+            return invoice, data
         return super()._create_invoice_from_single_attachment(attachment)

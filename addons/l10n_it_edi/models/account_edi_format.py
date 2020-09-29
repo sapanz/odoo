@@ -31,6 +31,12 @@ class AccountEdiFormat(models.Model):
             return super()._is_compatible_with_journal(journal)
         return False  # edi does not support generic export
 
+    def _get_partner_bank_account_from_xml_tree(self, tree):
+        if self.code != 'fattura_pa':
+            return super()._get_partner_bank_account_from_xml_tree(tree)
+        elements = tree.xpath('//DettaglioPagamento/IBAN', namespaces=tree.nsmap)
+        return elements[0].text if elements else False
+
     def _check_filename_is_fattura_pa(self, filename):
         return re.search("([A-Z]{2}[A-Za-z0-9]{2,28}_[A-Za-z0-9]{0,5}.(xml.p7m|xml))", filename)
 

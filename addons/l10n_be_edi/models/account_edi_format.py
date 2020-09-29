@@ -9,6 +9,11 @@ import base64
 class AccountEdiFormat(models.Model):
     _inherit = 'account.edi.format'
 
+    def _get_partner_bank_account_from_xml_tree(self, tree):
+        if self.code != 'efff_1':
+            return super()._get_partner_bank_account_from_xml_tree(tree)
+        return self._get_ubl_partner_bank_account(tree)
+
     def _is_efff(self, filename, tree):
         return self.code == 'efff_1' and tree.tag == '{urn:oasis:names:specification:ubl:schema:xsd:Invoice-2}Invoice'
 

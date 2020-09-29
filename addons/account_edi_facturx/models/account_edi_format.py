@@ -108,6 +108,12 @@ class AccountEdiFormat(models.Model):
             'mimetype': 'application/xml'
         })
 
+    def _get_partner_bank_account_from_xml_tree(self, tree):
+        if self.code != 'facturx_1_0_05':
+            return super()._get_partner_bank_account_from_xml_tree(tree)
+        elements = tree.xpath('//ram:PayeePartyCreditorFinancialAccount/ram:IBANID', namespaces=tree.nsmap)
+        return elements[0].text if elements else False
+
     def _is_facturx(self, filename, tree):
         return self.code == 'facturx_1_0_05' and tree.tag == '{urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100}CrossIndustryInvoice'
 
