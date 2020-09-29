@@ -345,14 +345,14 @@ class WebsitePayment(http.Controller):
         :rtype: str
         """
         partner = request.env.user.partner_id
-        acquirers = request.env['payment.acquirer']._get_compatible_acquirers(
+        acquirers_sudo = request.env['payment.acquirer'].sudo()._get_compatible_acquirers(
             request.env.company.id, partner.id, allow_tokenization=True
         )
         tokens = set(partner.payment_token_ids).union(
             partner.commercial_partner_id.sudo().payment_token_ids
         )  # Show all partner's tokens, regardless of which acquirer is available
         tx_context = {
-            'acquirers': acquirers,
+            'acquirers': acquirers_sudo,
             'tokens': tokens,
             'reference_prefix': payment_utils.singularize_reference_prefix(prefix='validation'),
             'partner_id': partner.id,

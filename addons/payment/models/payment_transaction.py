@@ -238,14 +238,14 @@ class PaymentTransaction(models.Model):
 
         # Compute the sequence number
         reference = prefix  # The first reference of a sequence has no sequence number
-        if self.search([('reference', '=', prefix)]):  # The reference already has an exact match
+        if self.sudo().search([('reference', '=', prefix)]):  # The reference already has a match
             # We now execute a second search on `payment.transaction` to fetch all the references
             # starting with the given prefix. The load of these two searches is mitigated by the
             # index on `reference`. Although not ideal, this solution allows for quickly knowing
             # whether the sequence for a given prefix is already started or not, usually not. An SQL
             # query wouldn't help either as the selector is arbitrary and doing that would be an
             # open-door to SQL injections.
-            same_prefix_references = self.search(
+            same_prefix_references = self.sudo().search(
                 [('reference', 'like', f'{prefix}{separator}%')]
             ).with_context(prefetch_fields=False).mapped('reference')
 

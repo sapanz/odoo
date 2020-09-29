@@ -72,10 +72,11 @@ class PaymentToken(models.Model):
         # Let acquirers handle activation/deactivation requests
         if 'active' in values:
             for token in self:
+                # Call handlers in sudo mode because a RPC can be the caller of `write`
                 if values['active']:
-                    token._handle_activation_request()
+                    token.sudo()._handle_activation_request()
                 else:
-                    token._handle_deactivation_request()
+                    token.sudo()._handle_deactivation_request()
 
         # Proceed with the toggling of the active state
         return super().write(values)
