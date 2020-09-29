@@ -169,6 +169,15 @@ nav#oe_main_menu_navbar {
     }
 }
 
+.o_survey_quick_access {
+    .o_survey_error {
+        min-height: 2rem;
+    }
+    #session_code {
+        font-size: 4rem;
+    }
+}
+
 .o_survey_form, .o_survey_session_manage {
     .o_survey_question_matrix {
         th {

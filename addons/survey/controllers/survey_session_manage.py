@@ -27,7 +27,6 @@ class UserInputSession(http.Controller):
         if session_code:
             matching_survey = request.env['survey.survey'].sudo().search([
                 ('state', '=', 'open'),
-                ('session_state', 'in', ['ready', 'in_progress']),
                 ('session_start_time', '>', fields.Datetime.now() - relativedelta(days=7)),
                 ('session_code', '=', session_code),
             ], limit=1)
@@ -169,7 +168,7 @@ class UserInputSession(http.Controller):
         This route is used in survey sessions where we need short links for people to type. """
 
         survey = self._fetch_from_session_code(session_code)
-        if survey:
+        if survey and survey.session_state in ['ready', 'in_progress']:
             return werkzeug.utils.redirect("/survey/start/%s" % survey.access_token)
 
         return werkzeug.utils.redirect("/s")
@@ -181,7 +180,10 @@ class UserInputSession(http.Controller):
         If not, return error. The user is invited to type again the code. """
         survey = self._fetch_from_session_code(session_code)
         if survey:
-            return {"survey_url": "/survey/start/%s" % survey.access_token}
+            if survey.session_state in ['ready', 'in_progress']:
+                return {"survey_url": "/survey/start/%s" % survey.access_token}
+            else:
+                return {"error": "survey_session_closed"}
 
         return {"error": "survey_wrong"}
 

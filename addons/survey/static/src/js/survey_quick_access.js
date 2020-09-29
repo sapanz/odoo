@@ -49,7 +49,7 @@ publicWidget.registry.SurveyQuickAccessWidget = publicWidget.Widget.extend({
 
     _submitCode: function () {
         var self = this;
-        this.$('.o_survey_error').addClass("d-none");
+        this.$('.o_survey_error > span').addClass("d-none");
         var $sessionCodeInput = this.$('input#session_code');
         this._rpc({
             route: `/survey/check_session_code/${$sessionCodeInput.val()}`,
@@ -57,7 +57,11 @@ publicWidget.registry.SurveyQuickAccessWidget = publicWidget.Widget.extend({
             if (response.survey_url) {
                 window.location = response.survey_url;
             } else {
-                self.$('.o_survey_error').removeClass("d-none");
+                if (response.error && response.error === 'survey_session_closed') {
+                    self.$('.o_survey_session_close_error').removeClass("d-none");
+                } else {
+                    self.$('.o_survey_invalid_code_error').removeClass("d-none");
+                }
             }
         });
     },
