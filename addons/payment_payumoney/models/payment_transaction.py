@@ -71,10 +71,10 @@ class PaymentTransactionPayumoney(models.Model):
             self._set_done()
         elif status == 'pending':
             self._set_pending()
-            result['state_message'] = data.get('error_Message') or data.get('field9')
+            result['state_message'] = data.get('error_Message') or data.get('field9') or ''
         else:
             self._set_canceled()
-            result['state_message'] = data.get('field9')
+            result['state_message'] = data.get('field9') or ''
 
         return self.write(result)
 
