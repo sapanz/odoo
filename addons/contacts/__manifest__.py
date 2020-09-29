@@ -12,7 +12,6 @@ You can track your vendors, customers and other contacts.
 """,
     'depends': ['base', 'mail'],
     'data': [
-        'data/res_record_message_data.xml',
         'views/contact_views.xml',
     ],
     'demo': [
