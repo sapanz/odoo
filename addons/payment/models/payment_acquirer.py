@@ -279,6 +279,23 @@ class PaymentAcquirer(models.Model):
             'outbound_payment_method_ids': [],
         }
 
+    #=== ACTION METHODS ===#
+
+    def button_immediate_install(self):
+        """ Install the acquirer's module and reload the page.
+
+        Note: self.ensure_one()
+
+        :return: The action to reload the page
+        :rtype: dict
+        """
+        if self.module_id and self.module_state != 'installed':
+            self.module_id.button_immediate_install()
+            return {
+                'type': 'ir.actions.client',
+                'tag': 'reload',
+            }
+
     #=== BUSINESS METHODS ===#
 
     @api.model
@@ -414,12 +431,3 @@ class PaymentAcquirer(models.Model):
             method = getattr(self, cust_method_name)
             return method(data)
         return True
-
-    def button_immediate_install(self):
-        """ TODO. """
-        if self.module_id and self.module_state != 'installed':
-            self.module_id.button_immediate_install()
-            return {
-                'type': 'ir.actions.client',
-                'tag': 'reload',
-            }
