@@ -965,16 +965,12 @@ class ProductTemplate(models.Model):
         domain = [('product_tmpl_id', '=', self.id)]
         combination_indices_ids = filtered_combination._ids2str()
 
-<<<<<<< HEAD
         if combination_indices_ids:
             domain = expression.AND([domain, [('combination_indices', '=', combination_indices_ids)]])
         else:
             domain = expression.AND([domain, [('combination_indices', 'in', ['', False])]])
-=======
-        res = self.env['product.product'].with_context(active_test=False).search(domain, order='active DESC, id ASC')
->>>>>>> dd35e0f989e... temp
 
-        return self.env['product.product'].sudo().with_context(active_test=False).search(domain, order='active DESC', limit=1).id
+        return self.env['product.product'].sudo().with_context(active_test=False).search(domain, order='active DESC, id ASC', limit=1).id
 
     @tools.ormcache('self.id')
     def _get_first_possible_variant_id(self):
