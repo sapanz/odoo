@@ -290,3 +290,12 @@ class StockMove(models.Model):
             return min(qty_ratios) // 1
         else:
             return 0.0
+
+    def _search_picking_for_assignation(self):
+        res = super(StockMove, self)._search_picking_for_assignation()
+        for picking in res:
+            components = self.move_orig_ids.production_id.bom_id.bom_line_ids.mapped('product_id.id')
+            for prod in picking.move_lines.product_id.ids:
+                if prod in components:
+                    return self.env['stock.picking']
+        return res
