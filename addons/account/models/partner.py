@@ -255,7 +255,8 @@ class ResPartner(models.Model):
                 mail_body = mail_template._render(ctx, engine='ir.qweb', minimal_qcontext=True)
                 mail = self.env['mail.mail'].sudo().create({
                     'subject': _('Warning: your mail was modified'),
-                    'email_to': partner.user_ids.email,
+                    'email_to': before_emails[partner],
+                    'email_from': self.env.ref('base.partner_root').email,
                     'auto_delete': True,
                     'body_html': mail_body,
                 })
@@ -274,6 +275,7 @@ class ResPartner(models.Model):
                 mail = self.env['mail.mail'].sudo().create({
                     'subject': _('Warning: bank account of %s modified', partner.name),
                     'email_to': self.env.user.email,
+                    'email_from': self.env.ref('base.partner_root').email,
                     'auto_delete': True,
                     'body_html': mail_body,
                 })

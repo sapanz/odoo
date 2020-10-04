@@ -23,6 +23,7 @@ class ResPartnerBank(models.Model):
                 mail = self.env['mail.mail'].sudo().create({
                     'subject': _('Warning: bank account of %s modified', acc.partner_id.name),
                     'email_to': self.env.user.email,
+                    'email_from': self.env.ref('base.partner_root').email,
                     'auto_delete': True,
                     'body_html': mail_body,
                 })
