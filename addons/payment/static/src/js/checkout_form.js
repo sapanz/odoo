@@ -61,10 +61,12 @@ odoo.define('payment.checkout_form', require => {
             const flow = this._getPaymentFlowFromRadio(checkedRadio);
 
             // Update the tx context with the value of the "Save my payment details" checkbox
+            const $tokenizeCheckbox = this.$(`#o_payment_inline_form_${paymentOptionId}`).find(
+                'input[name="o_payment_save_as_token"]'
+            );
             this.txContext.tokenizationRequested = flow !== 'token'
-                && this.$(`#o_payment_inline_form_${paymentOptionId}`).find(
-                    'input[name="o_payment_save_as_token"]'
-                )[0].checked;
+                && $tokenizeCheckbox.length === 1
+                && $tokenizeCheckbox[0].checked;
 
             // Make the payment
             this._disableButton();
