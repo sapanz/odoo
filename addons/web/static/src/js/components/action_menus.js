@@ -7,6 +7,15 @@ odoo.define('web.ActionMenus', function (require) {
 
     const { Component } = owl;
 
+    const ItemGetterRegistry = Registry.extend({
+        add(key, value) {
+            if (typeof value !== "function") {
+                throw new Error(`Expected function and got ${typeof value}.`);
+            }
+            return this._super(...arguments);
+        },
+    });
+
     /**
      * Action menus (or Action/Print bar, previously called 'Sidebar')
      *
@@ -21,6 +30,16 @@ odoo.define('web.ActionMenus', function (require) {
      */
     class ActionMenus extends Component {
 
+        async willStart() {
+            this.actionItems = await this._setActionItems(this.props);
+            this.printItems = this._setPrintItems(this.props);
+        }
+
+        async willUpdateProps(nextProps) {
+            this.actionItems = await this._setActionItems(nextProps);
+            this.printItems = this._setPrintItems(nextProps);
+        }
+
         mounted() {
             this._addTooltips();
         }
@@ -30,57 +49,60 @@ odoo.define('web.ActionMenus', function (require) {
         }
 
         //---------------------------------------------------------------------
-        // Getters
-        //---------------------------------------------------------------------
-
-        /**
-         * @returns {Object[]}
-         */
-        get actionItems() {
-            // Callback based actions
-            const callbackActions = (this.props.items.other || []).map(
-                action => Object.assign({ key: `action-${action.description}` }, action)
-            );
-            // Action based actions
-            const actionActions = this.props.items.action || [];
-            const relateActions = this.props.items.relate || [];
-            const formattedActions = [...actionActions, ...relateActions].map(
-                action => ({ action, description: action.name, key: action.id })
-            );
-            // ActionMenus action registry components
-            const registryActions = this.constructor.registry.values().map(
-                ({ Component, getProps }, index) => ({
-                    key: `registry-action-${index}`,
-                    Component,
-                    props: getProps(this.props),
-                })
-            );
-            return [...callbackActions, ...formattedActions, ...registryActions];
-        }
-
-        /**
-         * @returns {Object[]}
-         */
-        get printItems() {
-            const printActions = this.props.items.print || [];
-            const printItems = printActions.map(
-                action => ({ action, description: action.name, key: action.id })
-            );
-            return printItems;
-        }
-
-        //---------------------------------------------------------------------
         // Private
         //---------------------------------------------------------------------
 
         /**
-         * Add teh tooltips to the items
+         * Add the tooltips to the items.
          * @private
          */
         _addTooltips() {
             $(this.el.querySelectorAll('[title]')).tooltip({
                 delay: { show: 500, hide: 0 }
             });
+        }
+
+        /**
+         * @private
+         * @param {Object} props
+         * @returns {Object[]}
+         */
+        async _setActionItems(props) {
+            // Callback based actions
+            const callbackActions = (props.items.other || []).map(
+                action => Object.assign({ key: `action-${action.description}` }, action)
+            );
+            // Action based actions
+            const actionActions = props.items.action || [];
+            const relateActions = props.items.relate || [];
+            const formattedActions = [...actionActions, ...relateActions].map(
+                action => ({ action, description: action.name, key: action.id })
+            );
+            // ActionMenus action registry components
+            const registryActions = [];
+            let registryActionId = 1;
+            for (const itemGetter of this.constructor.registry.values()) {
+                const rpc = this.rpc.bind(this);
+                for (const item of await itemGetter(this.env, props, rpc)) {
+                    registryActions.push(Object.assign(item, {
+                        key: item.id || `registry-action-${registryActionId++}`,
+                    }));
+                }
+            }
+            return [...callbackActions, ...formattedActions, ...registryActions];
+        }
+
+        /**
+         * @private
+         * @param {Object} props
+         * @returns {Object[]}
+         */
+        _setPrintItems(props) {
+            const printActions = props.items.print || [];
+            const printItems = printActions.map(
+                action => ({ action, description: action.name, key: action.id })
+            );
+            return printItems;
         }
 
         //---------------------------------------------------------------------
@@ -156,7 +178,7 @@ odoo.define('web.ActionMenus', function (require) {
         }
     }
 
-    ActionMenus.registry = new Registry();
+    ActionMenus.registry = new ItemGetterRegistry();
 
     ActionMenus.components = { DropdownMenu };
     ActionMenus.props = {

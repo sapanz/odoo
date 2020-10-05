@@ -25,7 +25,7 @@ odoo.define('google_drive.gdrive_integration', function (require) {
         QUnit.module('Google Drive ActionMenus');
 
         QUnit.test('rendering of the google drive attachments in action menus', async function (assert) {
-            assert.expect(3);
+            assert.expect(2);
 
             const form = await testUtils.createView({
                 actionMenusRegistry: true,
@@ -63,10 +63,6 @@ odoo.define('google_drive.gdrive_integration', function (require) {
                 },
             });
             await cpHelpers.toggleActionMenu(form);
-
-            assert.containsOnce(form, '.oe_share_gdoc_item',
-                "The button to the google action should be present");
-
             await cpHelpers.toggleMenuItem(form, "Cyberdyne Systems");
 
             form.destroy();
@@ -75,7 +71,7 @@ odoo.define('google_drive.gdrive_integration', function (require) {
         QUnit.test('click on the google drive attachments after switching records', async function (assert) {
             assert.expect(4);
 
-            let currentID;
+            let currentID = 1;
             const form = await testUtils.createView({
                 actionMenusRegistry: true,
                 arch:
@@ -113,13 +109,13 @@ odoo.define('google_drive.gdrive_integration', function (require) {
                     index: 0,
                 },
             });
-            currentID = 1;
+
             await cpHelpers.toggleActionMenu(form);
             await cpHelpers.toggleMenuItem(form, "Cyberdyne Systems");
 
+            currentID = 2;
             await cpHelpers.pagerNext(form);
 
-            currentID = 2;
             await cpHelpers.toggleActionMenu(form);
             await cpHelpers.toggleMenuItem(form, "Cyberdyne Systems");
 
