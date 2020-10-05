@@ -1,0 +1,51 @@
+.o_dropdown {
+  display: block;
+  float: left;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > a,
+  > button,
+  > .o_dropdown_link {
+    float: left;
+    height: 100%;
+    border: none;
+    padding: 0 $o-horizontal-padding - 4px 0 $o-horizontal-padding;
+    background-color: transparent;
+    text-align: center;
+    color: inherit;
+
+    font-size: 18px;
+    user-select: none;
+
+    &:hover,
+    &:focus {
+      background-color: $o-navbar-inverse-link-hover-bg;
+      color: inherit;
+    }
+    
+    &:focus,
+    &:active,
+    &:focus:active {
+      outline: none;
+    }
+  }
+
+  > .o_dropdown_menu {
+    // remove dropdown-menu default style as it is nested in another one
+    display: none;
+    background-color: $o-brand-odoo;
+    max-height: 90vh; // the dropdown should not overstep the viewport
+    min-width: 100%;
+    overflow: auto;
+    margin-top: 0;
+    position: static;
+    float: none;
+    padding:0;
+    
+    &.show {
+      display: block;
+    }
+  }
+}

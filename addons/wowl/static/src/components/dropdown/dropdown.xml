@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+<div t-name="wowl.Dropdown" class="o_dropdown" owl="1">
+  <a href="#" class="o_dropdown_link" t-on-click="toggleDropdown">
+    <t t-slot="default"/>
+  </a>
+  <ul class="o_dropdown_menu" t-att-class="state.showMe ? 'show' : ''">
+    <li t-if="props.items" t-foreach="props.items" t-as="item" t-key="item.id">
+      <a role="menuitem" href="#" class="o_dropdown_item" t-att-data-menu-id="item.id" t-att-data-menu-xmlid="item.xmlid" t-att-data-action-id="item.actionID" t-on-click.prevent="trigger('open-menu', { menuID: item.id })">
+        <t t-esc="item.name"/>
+      </a>
+    </li>
+  </ul>
+</div>
+
+</templates>
