@@ -1689,8 +1689,6 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
         wizard = self.env['account.automatic.entry.wizard']\
             .with_context(active_model='account.move.line', active_ids=move.invoice_line_ids.ids).create({
             'action': 'change_period',
-            'date': '2018-01-01',
-            'percentage': 60,
             'journal_id': self.company_data['default_journal_misc'].id,
             'expense_accrual_account': self.env['account.account'].create({
                 'name': 'Accrual Expense Account',
@@ -1704,6 +1702,10 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
                 'user_type_id': self.env.ref('account.data_account_type_expenses').id,
                 'reconcile': True,
             }).id,
+            'chg_period_line_ids': [
+                (0, 0, {'date': '2017-01-02', 'percentage': 60.0}),
+                (0, 0, {'date': '2017-01-03', 'percentage': 30.0}),
+            ],
         })
         wizard_res = wizard.do_action()
 
@@ -1752,12 +1754,16 @@ class TestAccountMoveInInvoiceOnchanges(AccountTestInvoicingCommon):
 
         accrual_lines = self.env['account.move'].browse(wizard_res['domain'][0][2]).line_ids.sorted('date')
         self.assertRecordValues(accrual_lines, [
-            {'amount_currency': -480.0, 'debit': 0.0,   'credit': 240.0,    'account_id': self.product_line_vals_1['account_id'],   'reconciled': False},
-            {'amount_currency': 480.0,  'debit': 240.0, 'credit': 0.0,      'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
-            {'amount_currency': -96.0,  'debit': 0.0,   'credit': 48.0,     'account_id': self.product_line_vals_2['account_id'],   'reconciled': False},
-            {'amount_currency': 96.0,   'debit': 48.0,  'credit': 0.0,      'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
+            {'amount_currency': -720.0, 'debit': 0.0,   'credit': 360.0,    'account_id': self.product_line_vals_1['account_id'],   'reconciled': False},
+            {'amount_currency': 720.0,  'debit': 360.0, 'credit': 0.0,      'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
+            {'amount_currency': -144.0, 'debit': 0.0,   'credit': 72.0,     'account_id': self.product_line_vals_2['account_id'],   'reconciled': False},
+            {'amount_currency': 144.0,  'debit': 72.0,  'credit': 0.0,      'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
             {'amount_currency': 480.0,  'debit': 240.0, 'credit': 0.0,      'account_id': self.product_line_vals_1['account_id'],   'reconciled': False},
             {'amount_currency': -480.0, 'debit': 0.0,   'credit': 240.0,    'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
             {'amount_currency': 96.0,   'debit': 48.0,  'credit': 0.0,      'account_id': self.product_line_vals_2['account_id'],   'reconciled': False},
             {'amount_currency': -96.0,  'debit': 0.0,   'credit': 48.0,     'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
+            {'amount_currency': 240.0,  'debit': 120.0, 'credit': 0.0,      'account_id': self.product_line_vals_1['account_id'],   'reconciled': False},
+            {'amount_currency': -240.0, 'debit': 0.0,   'credit': 120.0,    'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
+            {'amount_currency': 48.0,   'debit': 24.0,  'credit': 0.0,      'account_id': self.product_line_vals_2['account_id'],   'reconciled': False},
+            {'amount_currency': -48.0,  'debit': 0.0,   'credit': 24.0,     'account_id': wizard.expense_accrual_account.id,        'reconciled': True},
         ])
