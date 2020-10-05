@@ -125,6 +125,9 @@ class Inventory(models.Model):
         self.action_check()
         self.write({'state': 'done'})
         self.post_inventory()
+        if self.user_has_groups('stock.group_stock_multi_locations') and not self.product_ids and self.location_ids:
+            locations = self.env['stock.location'].with_context(active_test=False).search([('id', 'child_of', self.location_ids.ids), ('usage', 'in', ['internal', 'transit'])])
+            locations.last_inventory_date = fields.Datetime.now()
         return True
 
     def post_inventory(self):
@@ -318,6 +321,34 @@ class Inventory(models.Model):
         if self.exhausted:
             vals += self._get_exhausted_inventory_lines_vals({(l['product_id'], l['location_id']) for l in vals})
         return vals
+
+    @api.model
+    def _run_inventory_tasks(self, company_id=False):
+        """ Generate and clean up inventories when certain conditions are met.
+        Creation conditions include:
+            - A product has a negative on hand stock (Done daily)
+            - Duplicate serial numbers (SN) in multiple locations (Done daily)
+            - A location has a cyclic count set (i.e. inventory every XX days)
+        Deleting conditions include:
+            - Location's stock inventories not started before current day (i.e. still draft) [new one created]
+        """
+        domain = [('active', '=', True), ('next_inventory_date', '<=', fields.Date.today())]
+        if company_id:
+            # manually triggered => only apply to user's companies
+            domain = expression.AND([[('company_id', '=', company_id)], domain])
+        else:
+            # cron triggered => apply to all companies
+            domain = expression.AND([[('company_id', '!=', False)], domain])
+        locations = self.env['stock.location'].search(domain)
+        if locations:
+            self.search([('state', '=', 'draft'), ('location_ids', 'in', locations.ids), ('product_ids', '=', False), ('create_date', '<', fields.Datetime.today())]).unlink()
+            locations_w_inv = self.search([('state', 'in', ['draft', 'confirm']), ('location_ids', 'in', locations.ids), ('product_ids', '=', False)]).mapped('location_ids')
+            # Don't create overlapping inventories for a location + its children or new inventories when they've already been made
+            locations = locations.filtered(lambda l: l.location_id not in locations and l not in locations_w_inv)
+            for location in locations:
+                self.create({'name': "Reoccuring Inventory for: " + str(location.name),
+                             'company_id': location.company_id.id,
+                             'location_ids': location})
 
 
 class InventoryLine(models.Model):

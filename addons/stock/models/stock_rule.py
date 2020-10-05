@@ -503,6 +503,9 @@ class ProcurementGroup(models.Model):
         # Merge duplicated quants
         self.env['stock.quant']._quant_tasks()
 
+        # Run cyclic inventories
+        self.env['stock.inventory']._run_inventory_tasks(company_id)
+
         if use_new_cursor:
             self._cr.commit()
 
