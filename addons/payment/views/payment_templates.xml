@@ -92,13 +92,15 @@
                     <div t-attf-id="o_payment_inline_form_{{acquirer.id}}"
                          class="card-footer d-none">
                         <!-- === Inline form content (filled by acquirer) === -->
-                        <div class="clearfix">
-                            <t t-set="inline_form_xml_id"
-                               t-value="acquirer.sudo().inline_template_view_id.xml_id"/>
-                            <t t-if="inline_form_xml_id" t-call="{{inline_form_xml_id}}">
-                                <t t-set="acquirer_id" t-value="acquirer.id"/>
-                            </t>
-                        </div>
+                        <t t-set="inline_form_xml_id"
+                           t-value="acquirer.sudo().inline_template_view_id.xml_id"/>
+                        <t t-if="inline_form_xml_id">
+                            <div class="clearfix">
+                                <t t-call="{{inline_form_xml_id}}">
+                                    <t t-set="acquirer_id" t-value="acquirer.id"/>
+                                </t>
+                            </div>
+                        </t>
                         <!-- === "Save my payment details" checkbox === -->
                         <!-- Only included if partner is known and if the choice is given -->
                         <label t-if="show_tokenize_input and acquirer.allow_tokenization">
