@@ -3949,6 +3949,7 @@ class AccountMoveLine(models.Model):
                 'new_value': tracked_field.get('new_value_char', '')
             }
         else:
+<<<<<<< HEAD
             return {
                 'old_value': [val for key, val in tracked_field.items() if 'old_value' in key][0], # Get the first element because we create a list like ['Elem']
                 'new_value': [val for key, val in tracked_field.items() if 'new_value' in key][0], # Get the first element because we create a list like ['Elem']
@@ -4057,6 +4058,53 @@ class AccountMoveLine(models.Model):
                     debit_line.currency_id,
                     credit_line.company_id,
                     credit_line.date,
+=======
+            currency = list(currency)[0]
+        # Get the sum(debit, credit, amount_currency) of all amls involved
+        total_debit = 0
+        total_credit = 0
+        total_amount_currency = 0
+        maxdate = date.min
+        to_balance = {}
+        cash_basis_partial = self.env['account.partial.reconcile']
+        for aml in amls:
+            cash_basis_partial |= aml.move_id.tax_cash_basis_rec_id
+            total_debit += aml.debit
+            total_credit += aml.credit
+            maxdate = max(aml.date, maxdate)
+            total_amount_currency += aml.amount_currency
+            # Convert in currency if we only have one currency and no amount_currency
+            if not aml.amount_currency and currency:
+                multiple_currency = True
+                total_amount_currency += aml.company_id.currency_id._convert(aml.balance, currency, aml.company_id, aml.date)
+            # If we still have residual value, it means that this move might need to be balanced using an exchange rate entry
+            if aml.amount_residual != 0 or aml.amount_residual_currency != 0:
+                if not to_balance.get(aml.currency_id):
+                    to_balance[aml.currency_id] = [self.env['account.move.line'], 0]
+                to_balance[aml.currency_id][0] += aml
+                to_balance[aml.currency_id][1] += aml.amount_residual != 0 and aml.amount_residual or aml.amount_residual_currency
+
+        # Check if reconciliation is total
+        # To check if reconciliation is total we have 3 different use case:
+        # 1) There are multiple currency different than company currency, in that case we check using debit-credit
+        # 2) We only have one currency which is different than company currency, in that case we check using amount_currency
+        # 3) We have only one currency and some entries that don't have a secundary currency, in that case we check debit-credit
+        #   or amount_currency.
+        # 4) Cash basis full reconciliation
+        #     - either none of the moves are cash basis reconciled, and we proceed
+        #     - or some moves are cash basis reconciled and we make sure they are all fully reconciled
+
+        digits_rounding_precision = amls[0].company_id.currency_id.rounding
+        caba_reconciled_amls = cash_basis_partial.mapped('debit_move_id') + cash_basis_partial.mapped('credit_move_id')
+        caba_connected_amls = amls.filtered(lambda x: x.move_id.tax_cash_basis_rec_id) + caba_reconciled_amls
+        matched_percentages = caba_connected_amls._get_matched_percentage()
+        if (
+                (all(amls.mapped('tax_exigible')) or all(matched_percentages[aml.move_id.id] >= 1.0 for aml in caba_connected_amls))
+                and
+                (
+                    currency and float_is_zero(total_amount_currency, precision_rounding=currency.rounding) or
+                    multiple_currency and float_compare(total_debit, total_credit, precision_rounding=digits_rounding_precision) == 0
+>>>>>>> 2d50f0ec193... temp
                 )
                 min_credit_amount_residual_currency = debit_line.company_currency_id._convert(
                     min_amount_residual,
