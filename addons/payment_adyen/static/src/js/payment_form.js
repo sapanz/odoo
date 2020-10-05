@@ -22,6 +22,7 @@ odoo.define('payment_adyen.payment_form', require => {
          * @return {undefined}
          */
         _dropinOnAdditionalDetails: function (state, dropin) {
+            this._hideInputs(); // Only the inputs of the inline form should be used
             this._rpc({
                 route: '/payment/adyen/payment_details',
                 params: {

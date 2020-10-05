@@ -222,6 +222,23 @@ odoo.define('payment.payment_form_mixin', require => {
         _hideError: () => this.$('div[name="o_payment_error"]').remove(),
 
         /**
+         * Hide the "Save my payment details" label and checkbox, and the submit button.
+         *
+         * The inputs should typically be hidden when the customer has to perform additional actions
+         * in the inline form. All inputs are automatically shown again when the customer clicks on
+         * another inline form.
+         *
+         * @private
+         * @return {undefined}.
+         */
+        _hideInputs: function () {
+            const $submitButton = this.$('button[name="o_payment_submit_button"]');
+            const $tokenizeCheckboxes = this.$('input[name="o_payment_save_as_token"]');
+            $submitButton.addClass('d-none');
+            $tokenizeCheckboxes.closest('label').addClass('d-none');
+        },
+
+        /**
          * Verify that the submit button is ready to be enabled.
          *
          * For a module to support a custom behavior for the submit button, it must override this
@@ -343,6 +360,19 @@ odoo.define('payment.payment_form_mixin', require => {
             }
         },
 
+        /**
+         * Show the "Save my payment details" label and checkbox, and the submit button.
+         *
+         * @private
+         * @return {undefined}.
+         */
+        _showInputs: function () {
+            const $submitButton = this.$('button[name="o_payment_submit_button"]');
+            const $tokenizeCheckboxes = this.$('input[name="o_payment_save_as_token"]');
+            $submitButton.removeClass('d-none');
+            $tokenizeCheckboxes.closest('label').removeClass('d-none');
+        },
+
         //--------------------------------------------------------------------------
         // Handlers
         //--------------------------------------------------------------------------
@@ -400,6 +430,9 @@ odoo.define('payment.payment_form_mixin', require => {
             // Check radio button linked to selected payment option
             const checkedRadio = $(ev.currentTarget).find('input[type="radio"]')[0];
             $(checkedRadio).prop('checked', true);
+
+            // Show the inputs in case they had been hidden
+            this._showInputs();
 
             // Disable the submit button while building the content
             this._disableButton(false);

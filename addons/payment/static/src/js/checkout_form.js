@@ -69,7 +69,7 @@ odoo.define('payment.checkout_form', require => {
                 && $tokenizeCheckbox[0].checked;
 
             // Make the payment
-            this._disableButton();
+            this._disableButton(true);
             this._processTx(provider, paymentOptionId, flow);
             this._enableButton();
         },
