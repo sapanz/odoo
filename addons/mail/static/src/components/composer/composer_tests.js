@@ -1859,6 +1859,24 @@ QUnit.test("basic rendering when sending a message to the followers and thread d
     );
 });
 
+QUnit.test("basic rendering when sending a message to the followers and thread does have a name", async function (assert) {
+    assert.expect(1);
+
+    await this.start();
+    const thread = this.env.models['mail.thread'].create({
+        name: 'test name',
+        composer: [['create', { isLog: false }]],
+        id: 20,
+        model: 'res.partner',
+    });
+    await this.createComposerComponent(thread.composer, { hasFollowers: true });
+    assert.strictEqual(
+        document.querySelector('.o_Composer_followers').textContent.replace(/\s+/g, ''),
+        "To:Followersof\"testname\"",
+        "Composer should display \"To: Followers of this document\" if the thread as no name."
+    );
+});
+
 });
 });
 });

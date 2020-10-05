@@ -4,7 +4,7 @@
         <div class="o_ComposerSuggestedRecipient" t-att-title="ADD_AS_RECIPIENT_AND_FOLLOWER_REASON">
             <t t-if="suggestedRecipientInfo">
                 <div class="custom-control custom-checkbox">
-                    <input t-attf-id="{{ id }}_checkbox" class="custom-control-input" type="checkbox" t-att-checked="suggestedRecipientInfo.isSelected ? 'checked' : undefined" t-on-change="_onChangeCheckbox" t-ref="checkbox" />
+                    <input t-attf-id="{{ id }}_checkbox" class="custom-control-input" t-att-class="{'o-has-partner': suggestedRecipientInfo.partner}" type="checkbox" t-att-checked="suggestedRecipientInfo.isSelected ? 'checked' : undefined" t-on-change="_onChangeCheckbox" t-ref="checkbox" />
                     <label class="custom-control-label" t-attf-for="{{ id }}_checkbox">
                         <t t-if="suggestedRecipientInfo.name">
                             <t t-esc="suggestedRecipientInfo.name"/>
