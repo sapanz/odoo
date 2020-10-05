@@ -122,7 +122,7 @@ odoo.define('payment.payment_form_mixin', require => {
             // Prepare the inline form of the selected payment option and display it if not empty
             this._prepareInlineForm(provider, paymentOptionId, flow);
             const $inlineForm = this.$(`#o_payment_inline_form_${paymentOptionId}`);
-            if (!$inlineForm.is(':empty')) {
+            if ($inlineForm.children().length > 0) {
                 $inlineForm.removeClass('d-none');
             }
         },
