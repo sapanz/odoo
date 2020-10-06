@@ -174,6 +174,7 @@ class StockRule(models.Model):
                 return move._push_apply()[:1]
         else:
             new_move_vals = self._push_prepare_move_copy_values(move, new_date)
+            # TODO: maybe possible to create in batch and by return values of new record and not the record itself
             new_move = move.sudo().copy(new_move_vals)
             if new_move._should_bypass_reservation():
                 new_move.write({'procure_method': 'make_to_stock'})
