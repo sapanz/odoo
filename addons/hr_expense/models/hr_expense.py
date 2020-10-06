@@ -950,8 +950,33 @@ class HrExpenseSheet(models.Model):
                 raise UserError(_("You can only approve your department expenses"))
 
         responsible_id = self.user_id.id or self.env.user.id
+        notification = ''
+        if any(sheet.state == 'submit' for sheet in self):
+            notification = {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('The expense reports were successfully approved.'),
+                    'type':'success',  #types: success,warning,danger,info
+                    'sticky': False,  #True/False will display for few seconds if false
+                    'next': {'type': 'ir.actions.act_window_close'},
+                },
+            }
+        
+        if all(sheet.state == 'approve' for sheet in self):
+            notification = {
+                'type': 'ir.actions.client',
+                'tag': 'display_notification',
+                'params': {
+                    'title': _('There are no expense reports to approve.'),
+                    'type':'warning',  #types: success,warning,danger,info
+                    'sticky': False,  #True/False will display for few seconds if false
+                },
+            }
+                    
         self.write({'state': 'approve', 'user_id': responsible_id})
         self.activity_update()
+        return notification
 
     def paid_expense_sheets(self):
         self.write({'state': 'done'})
