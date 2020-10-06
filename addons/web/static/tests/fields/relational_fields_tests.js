@@ -681,7 +681,7 @@ QUnit.module('relational_fields', {
         readDefs[2].resolve();
         await testUtils.nextTick();
 
-        assert.strictEqual(form.$('.o_field_widget[name=turtles] .o_data_cell').text(), 'raphael');
+        assert.strictEqual(form.$('.o_field_widget[name=turtles] .o_data_cell').text(), 'donatello');
 
         form.destroy();
     });

@@ -1766,7 +1766,7 @@ QUnit.module('fields', {}, function () {
 
             // move to the second page of the o2m: 1 RPC should have been done to fetch
             // the 2 subrecords of page 2, and those records should now be displayed
-            await testUtils.dom.click(form.$('.o_x2m_control_panel .o_pager_next'));
+            await cpHelpers.pagerNext(form.$('.o_x2m_control_panel'));
             assert.strictEqual(count, 7, 'one RPC should have been done');
             assert.strictEqual(form.$('.o_kanban_record:not(".o_kanban_ghost")').length, 2,
                 'one2many kanban should contain 2 cards for record 1 at page 2');
@@ -1781,7 +1781,7 @@ QUnit.module('fields', {}, function () {
             // been correctly reloaded
             await cpHelpers.pagerPrevious(form);
             assert.strictEqual(count, 11, 'two RPCs should have been done');
-            await testUtils.dom.click(form.$('.o_x2m_control_panel .o_pager_next'));
+            await cpHelpers.pagerNext(form.$('.o_x2m_control_panel'));
             assert.strictEqual(count, 12, 'one RPC should have been done');
             assert.strictEqual(form.$('.o_kanban_record:not(".o_kanban_ghost")').length, 2,
                 'one2many kanban should contain 2 cards for record 1 at page 2');

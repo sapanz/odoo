@@ -2,9 +2,9 @@ odoo.define('web.Pager', function (require) {
     "use strict";
 
     const { useAutofocus } = require('web.custom_hooks');
+    const { confine } = require("web.utils");
 
-    const { Component, hooks } = owl;
-    const { useState } = hooks;
+    const { Component } = owl;
 
     /**
      * Pager
@@ -34,23 +34,8 @@ odoo.define('web.Pager', function (require) {
         constructor() {
             super(...arguments);
 
-            this.state = useState({
-                disabled: false,
-                editing: false,
-            });
-
             useAutofocus();
-        }
-
-        async willUpdateProps(nextProps) {
-            this.state.editing = false;
-            if (
-                this.props.currentMinimum !== nextProps.currentMinimum ||
-                this.props.limit !== nextProps.limit ||
-                this.props.size !== nextProps.size
-            ) {
-                this.state.disabled = false;
-            }
+            this.props.value.setRender();
         }
 
         //---------------------------------------------------------------------
@@ -61,22 +46,24 @@ odoo.define('web.Pager', function (require) {
          * @returns {number}
          */
         get maximum() {
-            return Math.min(this.props.currentMinimum + this.props.limit - 1, this.props.size);
+            const { currentMinimum, limit } = this.props.value.get();
+            return Math.min(currentMinimum + limit - 1, this.props.size);
         }
 
         /**
          * @returns {boolean} true iff there is only one page
          */
         get singlePage() {
-            const { currentMinimum, size } = this.props;
-            return (1 === currentMinimum) && (this.maximum === size);
+            const { currentMinimum } = this.props.value.get();
+            return (1 === currentMinimum) && (this.maximum === this.props.size);
         }
 
         /**
          * @returns {number}
          */
         get value() {
-            return this.props.currentMinimum + (this.props.limit > 1 ? `-${this.maximum}` : '');
+            const { currentMinimum, limit } = this.props.value.get();
+            return currentMinimum + (limit > 1 ? `-${this.maximum}` : '');
         }
 
         //---------------------------------------------------------------------
@@ -94,23 +81,19 @@ odoo.define('web.Pager', function (require) {
             } catch (err) {
                 return;
             }
-            const { limit, size } = this.props;
+            const { currentMinimum, limit } = this.props.value.get();
 
             // Compute the new currentMinimum
-            let currentMinimum = (this.props.currentMinimum + limit * direction);
-            if (currentMinimum > size) {
-                currentMinimum = 1;
-            } else if ((currentMinimum < 1) && (limit === 1)) {
-                currentMinimum = size;
-            } else if ((currentMinimum < 1) && (limit > 1)) {
-                currentMinimum = size - ((size % limit) || limit) + 1;
+            let newMinimum = currentMinimum + limit * direction;
+            if (newMinimum > this.props.size) {
+                newMinimum = 1;
+            } else if ((newMinimum < 1) && (limit === 1)) {
+                newMinimum = this.props.size;
+            } else if ((newMinimum < 1) && (limit > 1)) {
+                newMinimum = this.props.size - ((this.props.size % limit) || limit) + 1;
             }
 
-            // The re-rendering of the pager must be done before the trigger of
-            // event 'pager-changed' as the rendering may enable the pager
-            // (and a common use is to disable the pager when this event is
-            // triggered, and to re-enable it when the data have been reloaded).
-            this._updateAndDisable(currentMinimum, limit);
+            this.props.value.update({ currentMinimum: newMinimum, limit });
         }
 
         /**
@@ -125,49 +108,31 @@ odoo.define('web.Pager', function (require) {
             } catch (err) {
                 return;
             }
-            const [min, max] = value.trim().split(/\s*[\-\s,;]\s*/);
+            const { size } = this.props;
+            const [min, max] = value.trim()
+                .split(/\s*[\-\s,;]\s*/)
+                .map(val => parseInt(val, 10));
 
-            let currentMinimum = Math.max(Math.min(parseInt(min, 10), this.props.size), 1);
-            let maximum = max ? Math.max(Math.min(parseInt(max, 10), this.props.size), 1) : min;
-
-            if (
-                !isNaN(currentMinimum) &&
-                !isNaN(maximum) &&
-                currentMinimum <= maximum
-            ) {
-                const limit = Math.max(maximum - currentMinimum) + 1;
-                this._updateAndDisable(currentMinimum, limit);
+            if (isNaN(min) || (max !== undefined && isNaN(max))) {
+                return;
             }
-        }
 
-        /**
-         * @private
-         * @param {Object} payload
-         */
-        _updateAndDisable(currentMinimum, limit) {
-            if (
-                currentMinimum !== this.props.currentMinimum ||
-                limit !== this.props.limit
-            ) {
-                this.state.disabled = true;
-                this.trigger('pager-changed', { currentMinimum, limit });
-            }
+            const minimum = confine(min, 1, size);
+            const maximum = max ? confine(max, minimum, size) : minimum;
+
+            this.props.value.update({
+                currentMinimum: minimum,
+                limit: maximum - minimum + 1,
+            });
         }
 
         //---------------------------------------------------------------------
         // Handlers
         //---------------------------------------------------------------------
 
-        /**
-         * @private
-         */
         _onEdit() {
-            if (
-                this.props.editable && // editable
-                !this.state.editing && // not already editing
-                !this.state.disabled // not being changed already
-            ) {
-                this.state.editing = true;
+            if (this.props.editable && !this.props.value.isLocked) {
+                this.props.value.toggleEdit(true);
             }
         }
 
@@ -176,10 +141,8 @@ odoo.define('web.Pager', function (require) {
          * @param {InputEvent} ev
          */
         _onValueChange(ev) {
+            ev.preventDefault();
             this._saveValue(ev.currentTarget.value);
-            if (!this.state.disabled) {
-                ev.preventDefault();
-            }
         }
 
         /**
@@ -196,7 +159,7 @@ odoo.define('web.Pager', function (require) {
                 case 'Escape':
                     ev.preventDefault();
                     ev.stopPropagation();
-                    this.state.editing = false;
+                    this.props.value.toggleEdit(false);
                     break;
             }
         }
@@ -208,10 +171,20 @@ odoo.define('web.Pager', function (require) {
         withAccessKey: true,
     };
     Pager.props = {
-        currentMinimum: { type: Number, optional: 1 },
+        value: {
+            type: Object,
+            shape: {
+                get: Function,
+                isLocked: Boolean,
+                isEditing: Boolean,
+                set: Function,
+                setRender: Function,
+                toggleEdit: Function,
+                update: Function,
+            },
+        },
         editable: Boolean,
-        limit: { validate: l => !isNaN(l), optional: 1 },
-        size: { type: Number, optional: 1 },
+        size: Number,
         validate: Function,
         withAccessKey: Boolean,
     };

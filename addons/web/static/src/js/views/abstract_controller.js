@@ -18,6 +18,7 @@ var concurrency = require('web.concurrency');
 const { ComponentWrapper } = require('web.OwlCompatibility');
 var mvc = require('web.mvc');
 var session = require('web.session');
+const { useSharedValue } = require("web.custom_hooks");
 
 
 var AbstractController = mvc.Controller.extend(ActionMixin, {
@@ -267,19 +268,19 @@ var AbstractController = mvc.Controller.extend(ActionMixin, {
     /**
      * Meant to be overriden to return a proper object.
      * @private
-     * @param {Object} [state]
-     * @return {(Object|null)}
+     * @param {Object} state
+     * @return {(Object | null)}
      */
-    _getPagingInfo: function (state) {
+    _getPagingInfo: function () {
         return null;
     },
     /**
      * Meant to be overriden to return a proper object.
      * @private
      * @param {Object} [state]
-     * @return {(Object|null)}
+     * @return {(Object | null)}
      */
-    _getActionMenuItems: function (state) {
+    _getActionMenuItems: function () {
         return null;
     },
     /**
@@ -427,24 +428,35 @@ var AbstractController = mvc.Controller.extend(ActionMixin, {
         if (this.$buttons) {
             this.controlPanelProps.cp_content.$buttons = this.$buttons;
         }
-        Object.assign(this.controlPanelProps, {
+        const cpProps = {
             actionMenus: this._getActionMenuItems(state),
             pager: this._getPagingInfo(state),
             title: this.getTitle(),
-        });
+        };
+        if (cpProps.pager) {
+            const { currentMinimum, limit } = cpProps.pager;
+            const { pager: oldPager } = this.controlPanelProps;
+
+            delete cpProps.pager.currentMinimum;
+            delete cpProps.pager.limit;
+
+            if (oldPager) {
+                cpProps.pager.value = oldPager.value;
+                cpProps.pager.value.set({ currentMinimum, limit });
+            } else {
+                const process = this._updatePager.bind(this);
+                cpProps.pager.value = useSharedValue({ currentMinimum, limit }, process);
+            }
+        }
+        Object.assign(this.controlPanelProps, cpProps);
     },
     /**
      * @private
-     * @param {Object} state
-     * @param {Object} newProps
-     * @returns {Promise}
+     * @param {Object} newValue
+     * @returns {Promise<Object>}
      */
-    _updatePaging: async function (state, newProps) {
-        const pagingInfo = this._getPagingInfo(state);
-        if (pagingInfo) {
-            Object.assign(pagingInfo, newProps);
-            return this.updateControlPanel({ pager: pagingInfo });
-        }
+    async _updatePager(newValue) {
+        return newValue;
     },
     /**
      * Updates the state of the renderer (handle both Widget and Component

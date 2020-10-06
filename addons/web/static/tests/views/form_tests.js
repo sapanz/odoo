@@ -9621,7 +9621,7 @@ QUnit.module('Views', {
 
         form.destroy();
         delete fieldRegistryOwl.map.custom;
-        
+
         assert.verifySteps(['mounted', 'willUnmount']);
     });
 });

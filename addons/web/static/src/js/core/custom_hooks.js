@@ -2,7 +2,7 @@ odoo.define('web.custom_hooks', function () {
     "use strict";
 
     const { Component, hooks } = owl;
-    const { onMounted, onPatched, onWillUnmount } = hooks;
+    const { onMounted, onPatched, onWillUnmount, useState } = hooks;
 
     /**
      * Focus a given selector as soon as it appears in the DOM and if it was not
@@ -111,8 +111,94 @@ odoo.define('web.custom_hooks', function () {
         });
     }
 
+    /**
+     * @param {any} initialValue
+     * @param {(newValue: any) => any} [processFn] Called to process and return
+     *      the new value (can be async).
+     * @returns {Object}
+     */
+    function useSharedValue(initialValue, processFn) {
+        // Properties
+        let isEditing = false;
+        let isLocked = false;
+        let value = initialValue;
+
+        // Functions
+        let process = processFn || (x => x);
+        let render = () => {};
+
+        return {
+            /**
+             * @returns {Boolean}
+             */
+            get isEditing() {
+                return isEditing;
+            },
+            /**
+             * @returns {Boolean}
+             */
+            get isLocked() {
+                return isLocked;
+            },
+            /**
+             * @returns {any}
+             */
+            get() {
+                return value;
+            },
+            /**
+             * @param {any} value
+             */
+            set(newValue) {
+                value = newValue;
+            },
+            /**
+             * If no function is provided, this method will be a hook to render
+             * the current component.
+             * @param {() => any} [renderFn]
+             */
+            setRender(renderFn) {
+                if (renderFn) {
+                    render = renderFn;
+                } else {
+                    const state = useState({ rev: 0 });
+                    render = () => state.rev++;
+                }
+            },
+            /**
+             * @param {boolean} [shouldEdit=!isEditing]
+             */
+            toggleEdit(shouldEdit = !isEditing) {
+                if (shouldEdit !== isEditing) {
+                    isEditing = shouldEdit;
+                    render();
+                }
+            },
+            /**
+             * @param {any} newValue
+             * @returns {Promise}
+             */
+            async update(newValue) {
+                if (isLocked) {
+                    return;
+                }
+
+                isLocked = true;
+                isEditing = false;
+                render();
+
+                value = await process(newValue);
+
+                isLocked = false;
+                render();
+            },
+        };
+    }
+
     return {
+        // Hooks
         useAutofocus,
         useListener,
+        useSharedValue,
     };
 });
