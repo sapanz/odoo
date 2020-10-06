@@ -31,7 +31,7 @@ var KanbanController = BasicController.extend({
         kanban_column_delete: '_onDeleteColumn',
         kanban_column_add_record: '_onAddRecordToColumn',
         kanban_column_resequence: '_onColumnResequence',
-        kanban_load_more: '_onLoadMore',
+        kanban_load_column_records: '_onLoadColumnRecords',
         column_toggle_fold: '_onToggleColumn',
         kanban_column_records_toggle_active: '_onToggleActiveRecords',
     }),
@@ -387,16 +387,16 @@ var KanbanController = BasicController.extend({
             .then(this.update.bind(this, {}, {}));
     },
     /**
-     * @private
      * @param {OdooEvent} ev
+     * @param {Object} ev.data see model.reload options
      */
-    _onLoadMore: function (ev) {
-        var self = this;
-        var column = ev.target;
-        this.model.loadMore(column.db_id).then(function (db_id) {
-            var data = self.model.get(db_id);
-            self.renderer.updateColumn(db_id, data);
-        });
+    async _onLoadColumnRecords(ev) {
+        const column = ev.target;
+        const id = column.columnID || column.db_id;
+        const options = ev.data;
+        const dbID = await this.model.reload(id, options);
+        const data = this.model.get(dbID);
+        return this.renderer.updateColumn(dbID, data);
     },
     /**
      * @private
