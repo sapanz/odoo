@@ -167,6 +167,8 @@ class StockQuant(models.Model):
         res = super(StockQuant, self).create(vals)
         if self._is_inventory_mode():
             res._check_company()
+        elif 'quantity' in vals and vals['quantity'] < 0.0 and res.location_id.usage in ['internal', 'transit']:
+            self.env['stock.inventory']._create_neg_quant_inventory(res)
         return res
 
     @api.model
@@ -198,6 +200,11 @@ class StockQuant(models.Model):
                 raise UserError(_("Quant's editing is restricted, you can't do this operation."))
             self = self.sudo()
             return super(StockQuant, self).write(vals)
+        if 'quantity' in vals and self.company_id is not False and self.location_id.usage in ['internal', 'transit']:
+            if vals['quantity'] < 0.0 and self.quantity >= 0.0:
+                self.env['stock.inventory']._create_neg_quant_inventory(self)
+            elif vals['quantity'] >= 0.0 and self.quantity < 0.0:
+                self.env['stock.inventory']._unlink_neg_quant_inventory(self)
         return super(StockQuant, self).write(vals)
 
     def action_view_stock_moves(self):

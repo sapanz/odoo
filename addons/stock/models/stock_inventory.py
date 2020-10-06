@@ -330,8 +330,9 @@ class Inventory(models.Model):
             - Duplicate serial numbers (SN) in multiple locations (Done daily)
             - A location has a cyclic count set (i.e. inventory every XX days)
         Deleting conditions include:
-            - Location's stock inventories not started before current day (i.e. still draft) [new one created]
+            - Location's/negative stock inventories not started before current day (i.e. still draft) [new one created]
         """
+        # cyclic inventory check
         domain = [('active', '=', True), ('next_inventory_date', '<=', fields.Date.today())]
         if company_id:
             # manually triggered => only apply to user's companies
@@ -350,6 +351,34 @@ class Inventory(models.Model):
                              'company_id': location.company_id.id,
                              'location_ids': location})
 
+        # negative quantity check
+        domain = [('quantity', '<', 0.0), ('company_id', '!=', False), ('location_id.usage', 'in', ['internal', 'transit'])]
+        if company_id:
+            domain = expression.AND([[('company_id', '=', company_id)], domain])
+        quants = self.env['stock.quant'].search(domain)
+        for quant in quants:
+            self._create_neg_quant_inventory(quant)
+
+    @api.model
+    def _create_neg_quant_inventory(self, quant):
+        # ignore draft inventories w/ multiple products/locations because there isn't a good way to handle this case + they were probably manually created
+        if quant.company_id:
+            self._unlink_neg_quant_inventory(quant, only_before_today=True)
+            existing_inv = self.search([('state', '=', 'draft'), ('product_ids', '=', quant.product_id.id), ('location_ids', '=', quant.location_id.id), ('company_id', '=', quant.company_id.id)])
+            existing_inv = existing_inv.filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 1)
+            if not existing_inv:
+                self.create({'name': "Negative Inventory for: " + str(quant.product_id.name),
+                             'company_id': quant.company_id.id,
+                             'product_ids': quant.product_id,
+                             'location_ids': quant.location_id})
+
+    @api.model
+    def _unlink_neg_quant_inventory(self, quant, only_before_today=False):
+        if quant.company_id:
+            domain = [('state', '=', 'draft'), ('product_ids', '=', quant.product_id.id), ('location_ids', '=', quant.location_id.id), ('company_id', '=', quant.company_id.id)]
+            if only_before_today:
+                domain = expression.AND([[('create_date', '<', fields.Datetime.today())], domain])
+            self.search(domain).filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 1).unlink()
 
 class InventoryLine(models.Model):
     _name = "stock.inventory.line"
