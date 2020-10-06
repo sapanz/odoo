@@ -27,58 +27,63 @@
 </t>
 
 <t t-name="web_unsplash.dialog.error.credentials">
-    <h4><t t-esc="title"/></h4>
-    <div class="details">
-        <t t-esc="subtitle"/>
-        <div class="form-group mt-4 access_key_box">
-            <input type="text" class="form-control w-100" id="accessKeyInput" placeholder="Paste your access key here"/>
-        </div>
-        <a href="https://www.odoo.com/documentation/user/general/unsplash/unsplash_access_key.html" target="_blank"><i class="fa fa-arrow-right"/> Generate an access key</a>
-        <div class="form-group mt-4 access_key_box">
-            <input type="text" class="form-control w-100" id="appIdInput" placeholder="Paste your application ID here"/>
-        </div>
-        <a href="https://www.odoo.com/documentation/user/general/unsplash/unsplash_application_id.html" target="_blank"><i class="fa fa-arrow-right"/> How to find my Unsplash Application ID?</a>
-        <button type="button" class="btn btn-primary btn-block mt-4 save_unsplash">Apply</button>
+    <div class="alert alert-info w-100">
+        <h4><t t-esc="title"/></h4>
+        <p><t t-esc="subtitle"/></p>
+        <t t-if="showUnsplashSetup">
+            <a href="https://www.odoo.com/documentation/user/general/unsplash/unsplash_access_key.html" target="_blank">Get an Access key</a>
+            and paste it here:
+            <div class="form-group d-inline">
+                <input type="text" class="form-control w-auto d-inline" id="accessKeyInput" placeholder="Paste your access key here"/>
+            </div>
+            <div class="d-xl-inline my-3">
+                and paste
+                <a href="https://www.odoo.com/documentation/user/general/unsplash/unsplash_application_id.html" target="_blank">Application ID</a>
+                here:
+                <div class="form-group d-inline">
+                    <input type="text" class="form-control w-auto d-inline" id="appIdInput" placeholder="Paste your application ID here"/>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary btn-block w-auto d-xl-inline align-top ml-xl-2 save_unsplash">Apply</button>
+        </t>
     </div>
 </t>
 
 <t t-name="web_unsplash.dialog.error.content">
     <div class="d-flex mt-2 unsplash_error">
-        <div class="mx-auto text-center">
+        <t t-call="web_unsplash.dialog.error.credentials">
             <t t-if="status == 'key_not_found'">
-                <t t-call="web_unsplash.dialog.error.credentials">
-                    <t t-set="title">
-                        Unsplash requires an access key and an application ID
-                    </t>
+                <t t-set="title">
+                    Setup Unsplash to access royalty free photos.
                 </t>
+                <t t-set="showUnsplashSetup" t-value="true"/>
             </t>
             <t t-elif="status == 403">
-                <h4 class="text-muted">
+                <t t-set="title">
                     Search is temporarily unavailable
-                </h4>
-                <div class="details">
+                </t>
+                <t t-set="subtitle">
                     The max number of searches is exceeded. Please retry in an hour or extend to a better account.
-                </div>
-            </t>
-            <t t-elif="status == 401">
-                <t t-call="web_unsplash.dialog.error.credentials">
-                    <t t-set="title">
-                        Unauthorized Key
-                    </t>
-                    <t t-set="subtitle">
-                        Please check your Unsplash access key and application ID.
-                    </t>
                 </t>
             </t>
-            <t t-else="">
-                <h4 class="text-muted">
-                    Something went wrong
-                </h4>
-                <div class="details">
-                    Please check your internet connection or contact administrator.
-                </div>
+            <t t-elif="status == 401">
+                <t t-set="title">
+                    Unauthorized Key
+                </t>
+                <t t-set="subtitle">
+                    Please check your Unsplash access key and application ID.
+                </t>
+                <t t-set="showUnsplashSetup" t-value="true"/>
             </t>
-        </div>
+            <t t-else="">
+                <t t-set="title">
+                    Something went wrong
+                </t>
+                <t t-set="subtitle">
+                    Please check your internet connection or contact administrator.
+                </t>
+            </t>
+        </t>
     </div>
 </t>
 
