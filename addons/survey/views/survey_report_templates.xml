@@ -85,5 +85,18 @@
                 </t>
             </t>
         </template>
+
+        <template id="show_certification_report_view">
+                <html>
+                    <head>
+                        <title t-esc="title +' Preview'"></title>
+                    </head>
+                    <body>
+                        <iframe width="100%" height="100%" frameborder="0" t-att-src="url">
+                        </iframe>
+                    </body>
+                </html>
+        </template>
+
     </data>
 </odoo>

@@ -566,6 +566,11 @@ class Survey(http.Controller):
             'format_date': lambda date: format_date(request.env, date),
         })
 
+    @http.route(['/survey/<model("survey.survey"):survey>/show_certification_pdf'], type="http", auth="user", methods=['GET'], website=True)
+    def show_certification_pdf(self, survey, **kwargs):
+        url='/survey/%s/get_certification_preview'  % (survey.id)
+        return request.render('survey.show_certification_report_view',{'url':url ,'title':survey.title})
+
     @http.route(['/survey/<model("survey.survey"):survey>/get_certification_preview'], type="http", auth="user", methods=['GET'], website=True)
     def survey_get_certification_preview(self, survey, **kwargs):
         if not request.env.user.has_group('survey.group_survey_user'):
