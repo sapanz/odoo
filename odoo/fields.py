@@ -2015,20 +2015,21 @@ class Binary(Field):
         cache.update(records, self, [cache_value] * len(records))
 
         # retrieve the attachments that store the values, and adapt them
-        if self.store:
+        if self.store and any(records._ids):
+            real_records = records.filtered('id')
             atts = records.env['ir.attachment'].sudo()
             if not_null:
                 atts = atts.search([
                     ('res_model', '=', self.model_name),
                     ('res_field', '=', self.name),
-                    ('res_id', 'in', records.ids),
+                    ('res_id', 'in', real_records.ids),
                 ])
             if value:
                 # update the existing attachments
                 atts.write({'datas': value})
                 atts_records = records.browse(atts.mapped('res_id'))
                 # create the missing attachments
-                missing = (records - atts_records).filtered('id')
+                missing = (real_records - atts_records).filtered('id')
                 if missing:
                     atts.create([{
                             'name': self.name,
@@ -2081,7 +2082,14 @@ class Image(Binary):
         super(Image, self).create(new_record_values)
 
     def write(self, records, value):
-        new_value = self._image_process(value)
+        try:
+            new_value = self._image_process(value)
+        except UserError:
+            if any(records._ids):
+                raise
+            # value is not base64-encoded, but records are new (onchange)
+            new_value = value
+
         super(Image, self).write(records, new_value)
         cache_value = self.convert_to_cache(value if self.related else new_value, records)
         records.env.cache.update(records, self, [cache_value] * len(records))
