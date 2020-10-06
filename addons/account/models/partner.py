@@ -264,7 +264,7 @@ class ResPartner(models.Model):
 
             # bank account changed
             before = before_banks[partner]
-            if before['records'] != partner.bank_ids:
+            if before['records'] and before['records'] != partner.bank_ids:
                 mail_template = self.env.ref('account.partner_bank_account_changed_template')
                 ctx = {
                     'user_name': self.env.user.name,
