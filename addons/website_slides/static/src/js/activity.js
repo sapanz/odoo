@@ -1,45 +1,47 @@
 odoo.define('website_slides.Activity', function (require) {
-"use strict";
+    "use strict";
 
-var field_registry = require('web.field_registry');
+    const components = {
+        Activity: require('mail/static/src/components/activity/activity.js'),
+    };
 
-require('mail.Activity');
+    const { patch } = require('web.utils');
 
-var KanbanActivity = field_registry.get('kanban_activity');
+    patch(components.Activity, 'website_slides/static/src/components/activity/activity.js', {
 
-function applyInclude(Activity) {
-    Activity.include({
-        events: _.extend({}, Activity.prototype.events, {
-            'click .o_activity_action_grant_access': '_onGrantAccess',
-            'click .o_activity_action_refuse_access': '_onRefuseAccess',
-        }),
+        async willStart() {
+            await this._super(...arguments);
+            if (this.activity && this.activity.creator && !this.activity.creator.partner) {
+                await this.activity.creator.fetchPartner();
+            }
+        },
 
-        _onGrantAccess: function (event) {
-            var self = this;
-            var partnerId = $(event.currentTarget).data('partner-id');
-            this._rpc({
+        //--------------------------------------------------------------------------
+        // Handlers
+        //--------------------------------------------------------------------------
+
+        /**
+         * @private
+         */
+        async _onGrantAccess(ev) {
+            await this.env.services.rpc({
                 model: 'slide.channel',
                 method: 'action_grant_access',
-                args: [this.res_id, partnerId],
-            }).then(function (result) {
-                self.trigger_up('reload');
+                args: [this.activity.thread.id, parseInt(ev.currentTarget.dataset.partnerId)],
             });
+            this.trigger('reload');
         },
-
-        _onRefuseAccess: function (event) {
-            var self = this;
-            var partnerId = $(event.currentTarget).data('partner-id');
-            this._rpc({
+        /**
+         * @private
+         */
+        async _onRefuseAccess(ev) {
+            await this.env.services.rpc({
                 model: 'slide.channel',
                 method: 'action_refuse_access',
-                args: [this.res_id, partnerId],
-            }).then(function () {
-                self.trigger_up('reload');
+                args: [this.activity.thread.id, parseInt(ev.currentTarget.dataset.partnerId)],
             });
+            this.trigger('reload');
         },
     });
-}
-
-applyInclude(KanbanActivity);
 
 });
