@@ -2088,7 +2088,7 @@ class Image(Binary):
             if any(records._ids):
                 raise
             # value is not base64-encoded, but records are new (onchange)
-            new_value = value
+            value = new_value = False
 
         super(Image, self).write(records, new_value)
         cache_value = self.convert_to_cache(value if self.related else new_value, records)
