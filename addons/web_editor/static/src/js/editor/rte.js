@@ -730,7 +730,9 @@ var RTEWidget = Widget.extend({
         }
 
         if ($editable.length && (!this.$last || this.$last[0] !== $editable[0])) {
-            $editable.summernote(this._getConfig($editable));
+            if (!$editable.hasClass('oe_empty')) {
+                $editable.summernote(this._getConfig($editable));
+            }
 
             $editable.data('NoteHistory', history);
             this.$last = $editable;
