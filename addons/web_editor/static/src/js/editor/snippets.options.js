@@ -2630,6 +2630,7 @@ const SnippetOptionWidget = Widget.extend({
      */
     _select: async function (previewMode, widget) {
         let $applyTo = null;
+        const results = [];
 
         // Call each option method sequentially
         for (const methodName of widget.getMethodsNames()) {
@@ -2640,17 +2641,20 @@ const SnippetOptionWidget = Widget.extend({
                 if (!$applyTo) {
                     $applyTo = this.$(params.applyTo);
                 }
-                const proms = _.map($applyTo, subTargetEl => {
+                const proms = _.map($applyTo, async (subTargetEl) => {
                     const proxy = createPropertyProxy(this, '$target', $(subTargetEl));
-                    return this[methodName].call(proxy, previewMode, widgetValue, params);
+                    const result = await this[methodName].call(proxy, previewMode, widgetValue, params);
+                    if (result) results.push(result);
                 });
                 await Promise.all(proms);
             } else {
-                await this[methodName](previewMode, widgetValue, params);
+                const result = await this[methodName](previewMode, widgetValue, params);
+                if (result) results.push(result);
             }
-            if (previewMode === false) {
-                this.wysiwyg.snippetsMenu.activateLastSnippetBlock();
-            }
+        }
+        const preventReactivation = _.find(results, (result) => result.activateLastSnippetBlock === false );
+        if (previewMode === false && !preventReactivation) {
+            this.wysiwyg.snippetsMenu.activateLastSnippetBlock();
         }
 
         // We trigger the event on elements targeted by apply-to if any as

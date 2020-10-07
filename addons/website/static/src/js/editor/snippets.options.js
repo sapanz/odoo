@@ -2525,6 +2525,7 @@ snippetOptions.registry.SnippetMove = snippetOptions.SnippetOptionWidget.extend(
                 easing: 'linear',
             });
         }
+        return { activateLastSnippetBlock: false };
     },
 });
 
