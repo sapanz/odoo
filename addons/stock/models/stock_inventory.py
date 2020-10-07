@@ -351,34 +351,84 @@ class Inventory(models.Model):
                              'company_id': location.company_id.id,
                              'location_ids': location})
 
-        # negative quantity check
-        domain = [('quantity', '<', 0.0), ('company_id', '!=', False), ('location_id.usage', 'in', ['internal', 'transit'])]
+        # negative quantity check/update
+        domain = [('company_id', '!=', False), ('location_id.usage', 'in', ['internal', 'transit'])]
         if company_id:
             domain = expression.AND([[('company_id', '=', company_id)], domain])
-        quants = self.env['stock.quant'].search(domain)
+        negative_qty_domain = expression.AND([[('quantity', '<', 0.0)], domain])
+        quants = self.env['stock.quant'].search(negative_qty_domain)
+        self.with_context(inventory_type="negative")._unlink_product_inventory(quants, only_before_today=True)
         for quant in quants:
-            self._create_neg_quant_inventory(quant)
+            self.with_context(inventory_type="negative")._create_product_inventory(quant)
+
+        # duplicate SN check/update
+        dupe_sn_domain = expression.AND([[('product_id.tracking', '=', 'serial')], domain])
+        quants = self.env['stock.quant'].search(dupe_sn_domain)
+        if company_id:
+            company_ids = self.env['res.company'].search([('id', '=', company_id)])
+        else:
+            company_ids = quants.mapped('company_id')
+        for company in company_ids:
+            product_ids = quants.filtered(lambda q: q.company_id == company).mapped('product_id')
+            for product_id in product_ids:
+                product_quants = quants.filtered(lambda q: q.product_id == product_id)
+                if len(product_quants) > 1:
+                    self.with_context(inventory_type="sn")._unlink_product_inventory(product_quants, only_before_today=True)
+                    for quant in product_quants:
+                        self.with_context(inventory_type="negative")._create_product_inventory(quant)
 
     @api.model
-    def _create_neg_quant_inventory(self, quant):
-        # ignore draft inventories w/ multiple products/locations because there isn't a good way to handle this case + they were probably manually created
+    def _create_product_inventory(self, quant):
+        ''' Create a new inventory for product with a quant that causes an inconsistent inventory.
+        To ease re-use/unlinking of previously auto-generated inventories, we assume separate inventory
+        for each case. Cases (determined by a passed context value of 'inventory_type') include:
+        - Negative quantity value: negative value for a product by location
+        - Repeated SN: duplicated SN by company
+
+        !!! Do not change this function without changing _unlink_product_inventory accordingly !!!
+        '''
         if quant.company_id:
-            self._unlink_neg_quant_inventory(quant, only_before_today=True)
-            existing_inv = self.search([('state', '=', 'draft'), ('product_ids', '=', quant.product_id.id), ('location_ids', '=', quant.location_id.id), ('company_id', '=', quant.company_id.id)])
-            existing_inv = existing_inv.filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 1)
+            name = "Inconsistent"
+            domain = [('state', '=', 'draft'), ('product_ids', '=', quant.product_id.id), ('company_id', '=', quant.company_id.id)]
+            vals = {'company_id': quant.company_id.id,
+                    'product_ids': quant.product_id}
+            if self.env.context.get('inventory_type') == 'negative':
+                name = "Negative"
+                domain = expression.AND([[('location_ids', '=', quant.location_id.id)], domain])
+                vals['location_ids'] = quant.location_id
+                existing_inv = self.search(domain)
+                # try to get inventories that are most likely previously auto-generated (i.e. we expect 1 product and 1 location)
+                existing_inv = existing_inv.filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 1)
+            elif self.env.context.get('inventory_type') == 'sn':
+                name = "Repeat Serial Number"
+                existing_inv = self.search(domain)
+                # try to get inventories that are most likely previously auto-generated (i.e. we expect 1 product ad no location)
+                existing_inv = existing_inv.filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 0)
+            vals['name'] = name + " Inventory for: " + str(quant.product_id.name)
             if not existing_inv:
-                self.create({'name': "Negative Inventory for: " + str(quant.product_id.name),
-                             'company_id': quant.company_id.id,
-                             'product_ids': quant.product_id,
-                             'location_ids': quant.location_id})
+                self.create(vals)
 
     @api.model
-    def _unlink_neg_quant_inventory(self, quant, only_before_today=False):
-        if quant.company_id:
-            domain = [('state', '=', 'draft'), ('product_ids', '=', quant.product_id.id), ('location_ids', '=', quant.location_id.id), ('company_id', '=', quant.company_id.id)]
+    def _unlink_product_inventory(self, quants, only_before_today=False):
+        ''' Unlink a previously auto-generated inventory for product that used to cause an inconsistent inventory.
+        This looks for the inventories generated by _create_product_inventory that are expected to follow specific
+        field assignments based on the use case.
+
+        !!! Do not change this function without changing _create_product_inventory accordingly !!!
+        '''
+        quants = quants.filtered(lambda q: q.company_id)
+        inventories_to_unlink = self.env['stock.inventory']
+        for quant in quants:
+            domain = [('state', '=', 'draft'), ('product_ids', '=', quant.product_id.id), ('company_id', '=', quant.company_id.id)]
             if only_before_today:
                 domain = expression.AND([[('create_date', '<', fields.Datetime.today())], domain])
-            self.search(domain).filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 1).unlink()
+            if self.env.context.get('inventory_type') != 'negative':
+                inventories_to_unlink |= self.search(domain)
+            else:
+                domain = expression.AND([[('location_ids', '=', quant.location_id.id)], domain])
+                inventories_to_unlink |= self.search(domain).filtered(lambda l: len(l.product_ids) == 1 and len(l.location_ids) == 1)
+        inventories_to_unlink.unlink()
+
 
 class InventoryLine(models.Model):
     _name = "stock.inventory.line"

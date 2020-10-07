@@ -168,7 +168,12 @@ class StockQuant(models.Model):
         if self._is_inventory_mode():
             res._check_company()
         elif 'quantity' in vals and vals['quantity'] < 0.0 and res.location_id.usage in ['internal', 'transit']:
-            self.env['stock.inventory']._create_neg_quant_inventory(res)
+            self.env['stock.inventory'].with_context(inventory_type='negative')._create_product_inventory(res)
+        if 'lot_id' in vals and res.product_id.tracking == 'serial' and res.location_id.usage in ['internal', 'transit']:
+            serial_conflict = self.search([('company_id', '=', res.company_id.id), ('location_id.usage', 'in', ['internal', 'transit']),
+                                           ('product_id.tracking', '=', 'serial'), ('lot_id', '=', res.lot_id.id), ('id', '!=', res.id)])
+            if serial_conflict:
+                self.env['stock.inventory'].with_context(inventory_type='sn')._create_product_inventory(res)
         return res
 
     @api.model
@@ -202,9 +207,19 @@ class StockQuant(models.Model):
             return super(StockQuant, self).write(vals)
         if 'quantity' in vals and self.company_id is not False and self.location_id.usage in ['internal', 'transit']:
             if vals['quantity'] < 0.0 and self.quantity >= 0.0:
-                self.env['stock.inventory']._create_neg_quant_inventory(self)
+                self.env['stock.inventory'].with_context(inventory_type="negative")._create_product_inventory(self)
             elif vals['quantity'] >= 0.0 and self.quantity < 0.0:
-                self.env['stock.inventory']._unlink_neg_quant_inventory(self)
+                self.env['stock.inventory'].with_context(inventory_type="negative")._unlink_product_inventory(self)
+        # not sure if lot_id can currently be updated, but better safe than sorry
+        if 'lot_id' in vals and self.product_id.tracking == 'serial' and self.company_id is not False and self.location_id.usage in ['internal', 'transit']:
+            previous_serial_conflict = self.search([('company_id', '=', self.company_id.id), ('location_id.usage', 'in', ['internal', 'transit']),
+                                                    ('product_id.tracking', '=', 'serial'), ('lot_id', '=', self.lot_id)])
+            if previous_serial_conflict:
+                self.env['stock.inventory']._unlink_product_inventory(self, location_ids=previous_serial_conflict.mapped('location_id'))
+            serial_conflict = self.search([('company_id', '=', self.company_id.id), ('location_id.usage', 'in', ['internal', 'transit']),
+                                           ('product_id.tracking', '=', 'serial'), ('lot_id', '=', vals['lot_id'])])
+            if serial_conflict:
+                self.env['stock.inventory'].with_context(inventory_type="sn")._create_product_inventory(self)
         return super(StockQuant, self).write(vals)
 
     def action_view_stock_moves(self):
@@ -507,6 +522,8 @@ class StockQuant(models.Model):
         params = (precision_digits, precision_digits)
         self.env.cr.execute(query, params)
         quant_ids = self.env['stock.quant'].browse([quant['id'] for quant in self.env.cr.dictfetchall()])
+        quants_with_inv = quant_ids.filtered(lambda q: q.lot_id and q.location_id.usage in ['internal', 'transit'])
+        self.env['stock.inventory']._unlink_product_inventory(quants_with_inv)
         quant_ids.sudo().unlink()
 
     @api.model
