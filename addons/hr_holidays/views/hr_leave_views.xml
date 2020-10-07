@@ -245,7 +245,7 @@
                                     From
                                 </span>
                                 <field name="request_date_from" class="oe_inline" nolabel="1"
-                                    attrs="{'readonly': [('state', 'not in', ('draft', 'confirm'))]}"/>
+                                    attrs="{'readonly': [('state', 'not in', ('draft', 'confirm'))]}" required="1"/>
                                 <span class="oe_inline"
                                     attrs="{'invisible': ['|', ('request_unit_half', '=', True), ('request_unit_hours', '=', True)]}">
                                     To
@@ -253,7 +253,8 @@
                                 <field name="request_date_to" class="oe_inline"
                                     attrs="{
                                         'readonly': [('state', 'not in', ('draft', 'confirm'))],
-                                        'invisible': ['|', ('request_unit_half', '=', True), ('request_unit_hours', '=', True)]
+                                        'invisible': ['|', ('request_unit_half', '=', True), ('request_unit_hours', '=', True)],
+                                        'required': ['|', ('request_unit_half', '=', False), ('request_unit_hours', '=', False)]
                                     }"/>
                                 <field name="request_date_from_period" class="oe_inline"
                                     string="In"
