@@ -57,7 +57,7 @@ publicWidget.registry.websiteSaleDelivery = publicWidget.Widget.extend({
      * @param {jQuery} $carrierInput
      */
     _showLoading: function ($carrierInput) {
-        $carrierInput.siblings('.o_wsale_delivery_badge_price').html('<span class="fa fa-spinner fa-spin"/>');
+        $carrierInput.siblings('.o_wsale_delivery_badge_price').html('<span class="fa fa-circle-o-notch fa-spin"/>');
     },
     /**
      * @private
