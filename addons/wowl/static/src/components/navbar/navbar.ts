@@ -17,4 +17,7 @@ export class NavBar extends Component {
     this.actionManager.doAction(menu.actionID);
     this.state.showDropdownMenu = false;
   }
+  state = useState({
+    appMenuItems: this.menuRepo.getApps()
+  });
 }

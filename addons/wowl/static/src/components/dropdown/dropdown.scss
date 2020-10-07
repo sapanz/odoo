@@ -1,17 +1,12 @@
 .o_dropdown {
-  display: block;
-  float: left;
-  margin: 0;
-  padding: 0;
-  list-style: none;
 
   > a,
-  > button,
-  > .o_dropdown_link {
+  > button {
     float: left;
     height: 100%;
     border: none;
     padding: 0 $o-horizontal-padding - 4px 0 $o-horizontal-padding;
+    line-height: 100%;
     background-color: transparent;
     text-align: center;
     color: inherit;

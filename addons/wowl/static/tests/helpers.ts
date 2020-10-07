@@ -160,6 +160,9 @@ export function makeFakeMenusService(menuData?: MenuData): typeof menusService {
         getApps() {
           return this.getMenu("root").children.map((mid) => this.getMenu(mid));
         },
+        getAppsAsTree() {
+          return this.getMenuAsTree("root");
+        },
         getAll() {
           return Object.values(_menuData);
         },

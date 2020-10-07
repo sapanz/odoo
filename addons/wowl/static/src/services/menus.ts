@@ -4,6 +4,10 @@ export interface Menu {
   id: number | string;
   children: number[];
   name: string;
+  xmlid?: string;
+  appID?: number | false;
+  actionID?: number | false;
+  actionModel?: string | false;
 }
 
 export interface MenuTree extends Menu {
@@ -18,6 +22,7 @@ export interface MenuData {
 export interface MenuService {
   getAll(): Menu[];
   getApps(): Menu[];
+  getAppsAsTree(): MenuTree;
   getMenu(menuID: keyof MenuData): Menu;
   getMenuAsTree(menuID: keyof MenuData): MenuTree;
 }
@@ -39,6 +44,9 @@ function makeMenus(env: OdooEnv, menusData: MenuData): MenuService {
     },
     getApps(): Menu[] {
       return this.getMenu("root").children.map((mid: Menu["id"]) => this.getMenu(mid));
+    },
+    getAppsAsTree(): MenuTree {
+      return this.getMenuAsTree("root");
     },
     getMenu(menuID: keyof MenuData): Menu {
       return menusData[menuID];

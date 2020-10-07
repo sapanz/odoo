@@ -5,13 +5,18 @@
   <a href="#" class="o_dropdown_link" t-on-click="toggleDropdown">
     <t t-slot="default"/>
   </a>
-  <ul class="o_dropdown_menu" t-att-class="state.showMe ? 'show' : ''">
-    <li t-if="props.items" t-foreach="props.items" t-as="item" t-key="item.id">
-      <a role="menuitem" href="#" class="o_dropdown_item" t-att-data-menu-id="item.id" t-att-data-menu-xmlid="item.xmlid" t-att-data-action-id="item.actionID" t-on-click.prevent="trigger('open-menu', { menuID: item.id })">
-        <t t-esc="item.name"/>
+  <div class="dropdown-menu" role="menu" t-att-class="{ show: state.showMe }">
+    <t t-foreach="props.items" t-as="item" t-key="item.id">
+      <a role="menuitem" t-attf-href="#menu_id={{item.menuID}}"
+        class="dropdown-item"
+        t-att-data-menu-id="item.id"
+        t-att-data-menu-xmlid="item.xmlid"
+        t-att-data-action-id="item.actionID"
+        t-on-click.prevent="trigger('open-menu', { menuID: item.id })">
+          <t t-esc="item.name"/>
       </a>
-    </li>
-  </ul>
+    </t>
+  </div>
 </div>
 
 </templates>
