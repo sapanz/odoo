@@ -1531,7 +1531,9 @@ function factory(dependencies) {
                 'model',
             ],
         }),
-        id: attr(),
+        id: attr({
+            required: true,
+        }),
         /**
          * States whether this thread is a `mail.channel` qualified as chat.
          *
