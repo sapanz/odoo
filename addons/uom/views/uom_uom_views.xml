@@ -104,7 +104,7 @@
                                     <field name="uom_type"/>
                                     <field name="factor" invisible="1"/>
                                     <field name="factor_inv" invisible="1"/>
-                                    <field name="ratio" string="Ratio" attrs="{'invisible':[('uom_type','=','reference')]}" digits="[42,5]"/>
+                                    <field name="ratio" string="Ratio" digits="[42,5]"/>
                                     <field name="active"/>
                                     <field name="rounding" digits="[42, 5]"/>
                                 </tree>
@@ -127,7 +127,19 @@
         <field name="arch" type="xml">
             <tree string="Units of Measure categories">
                 <field name="name"/>
+                <field name="uom_ids" widget="many2many_tags" options="{'color_field': 'color'}"/>
             </tree>
+        </field>
+    </record>
+
+    <record id="uom_categ_view_search" model="ir.ui.view">
+        <field name="name">uom.category.view.search</field>
+        <field name="model">uom.category</field>
+        <field name="arch" type="xml">
+            <search string="Search UoM Category">
+                <field name="name"/>
+                <field name="uom_ids"/>
+            </search>
         </field>
     </record>
 

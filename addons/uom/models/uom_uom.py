@@ -4,12 +4,6 @@
 from odoo import api, fields, tools, models, _
 from odoo.exceptions import UserError, ValidationError
 
-def _check_category_reference_uniqueness(cat):
-    cnt=sum(uom.uom_type=='reference' and uom.active for uom in cat.uom_ids)
-    if cnt > 1:
-        raise ValidationError(_("UoM category %s should only have one reference unit of measure.") % cat.name)
-    elif cnt==0:
-        raise ValidationError(_("UoM category %s should have a reference unit of measure.") % cat.name)
 
 class UoMCategory(models.Model):
     _name = 'uom.category'
@@ -23,14 +17,14 @@ class UoMCategory(models.Model):
     @api.model
     def create(self, values):
         rec = super(UoMCategory, self.with_context(no_unique_reference_check=True)).create(values)
-        if len(rec.uom_ids)>1:
-            _check_category_reference_uniqueness(rec)
+        if len(rec.uom_ids) > 1:
+            rec._check_category_reference_uniqueness()
         return rec
  
     def write(self, values):
         super(UoMCategory, self.with_context(no_unique_reference_check=True)).write(values)
-        if len(self.uom_ids)>1:
-            _check_category_reference_uniqueness(self)
+        if len(self.uom_ids) > 1:
+            self._check_category_reference_uniqueness()
 
     def unlink(self):
         uom_categ_unit = self.env.ref('uom.product_uom_categ_unit')
@@ -39,40 +33,42 @@ class UoMCategory(models.Model):
             raise UserError(_("You cannot delete this UoM Category as it is used by the system."))
         return super(UoMCategory, self).unlink()
 
+    def _check_category_reference_uniqueness(self):
+        reference_count = sum(uom.uom_type == 'reference' and uom.active for uom in self.uom_ids)
+        if reference_count > 1:
+            raise ValidationError(_("UoM category %s should only have one reference unit of measure.") % self.name)
+        elif reference_count == 0:
+            raise ValidationError(_("UoM category %s should have a reference unit of measure.") % self.name)
+
     @api.onchange('uom_ids')
     def _onchange_uom_ids(self):
         if len(self.uom_ids) == 1:
             self.uom_ids[0].uom_type = 'reference'
             self.uom_ids[0].factor = 1
         elif len(self.uom_ids) > 1:
-            cnt=sum(uom.uom_type=='reference' and uom.active for uom in self.uom_ids)
-            if cnt==0:
-                warning = {
+            reference_count = sum(uom.uom_type == 'reference' and uom.active for uom in self.uom_ids)
+            if reference_count == 0:
+                return {
                     'title': _('Warning!'),
                     'message': _("UoM category %s should have a reference unit of measure.") % self.name
                 }
-                return {'warning': warning}
-            if cnt > 1:
-                newref = self.uom_ids.filtered(lambda o : o.uom_type == 'reference' and o.active and o._origin.uom_type != 'reference')
-                if newref:
-                    others = self.uom_ids - newref
-                    for o in others:
-                        v = {}
-                        v['factor'] = o.factor / (newref._origin.factor or 1)
-                        if v['factor'] > 1:
-                            v['uom_type'] = 'smaller'
+            if reference_count > 1:
+                new_reference = self.uom_ids.filtered(lambda o: o.uom_type == 'reference' and o.active and o._origin.uom_type != 'reference')
+                if new_reference:
+                    other_uoms = self.uom_ids - new_reference
+                    for uom in other_uoms:
+                        uom.factor = uom._origin.factor / (new_reference._origin.factor or 1)
+                        if uom.factor > 1:
+                            uom.uom_type = 'smaller'
                         else:
-                            v['uom_type'] = 'bigger'
-                        o.update({'uom_type': v['uom_type']})
-                        o.update({'factor': v['factor']})
-                        o.update({'factor_inv': 1/v['factor']})
-                    self.update({'locked': True})
+                            uom.uom_type = 'bigger'
+                    #self.update({'locked': True})
 
 
 class UoM(models.Model):
     _name = 'uom.uom'
     _description = 'Product Unit of Measure'
-    _order = "name"
+    _order = "factor"
 
     name = fields.Char('Unit of Measure', required=True, translate=True)
     category_id = fields.Many2one(
@@ -96,6 +92,7 @@ class UoM(models.Model):
         ('smaller', 'Smaller than the reference Unit of Measure')], 'Type',
         default='reference', required=1)
     ratio = fields.Float('Combined Ratio', compute='_compute_ratio', inverse='_set_ratio', stored=False)
+    color = fields.Integer('Color', compute='_compute_color')
 
     _sql_constraints = [
         ('factor_gt_zero', 'CHECK (factor!=0)', 'The conversion ratio for a unit of measure cannot be 0!'),
@@ -122,7 +119,7 @@ class UoM(models.Model):
         res = super(UoM, self).create(vals_list)
         if self.env.context.get("no_unique_reference_check") != True:
             for rec in res:
-                _check_category_reference_uniqueness(rec.category_id)
+                rec.category_id._check_category_reference_uniqueness()
         return res
 
     def write(self, values):
@@ -130,14 +127,14 @@ class UoM(models.Model):
             factor_inv = values.pop('factor_inv')
             values['factor'] = factor_inv and (1.0 / factor_inv) or 0.0
         if 'category_id' in values:
-            prvcat = self.category_id
+            previous_category = self.category_id
         else:
-            prvcat = None
+            previous_category = None
         super(UoM, self).write(values)
         if self.env.context.get("no_unique_reference_check") != True:
-            _check_category_reference_uniqueness(self.category_id)
-            if prvcat:
-                _check_category_reference_uniqueness(prvcat)
+            self.category_id._check_category_reference_uniqueness()
+            if previous_category:
+                previous_category._check_category_reference_uniqueness()
 
     def unlink(self):
         uom_categ_unit = self.env.ref('uom.product_uom_categ_unit')
@@ -217,3 +214,11 @@ class UoM(models.Model):
             self.factor = 1 / self.ratio
         else:
             self.factor = self.ratio
+
+    @api.depends('uom_type')
+    def _compute_color(self):
+        for uom in self:
+            if uom.uom_type == 'reference':
+                uom.color = 7
+            else:
+                uom.color = 0
