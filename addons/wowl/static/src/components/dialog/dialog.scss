@@ -1,0 +1,12 @@
+.o_dialog {
+  > .modal {
+    display: block;
+  }
+}
+
+.modal-open {
+  overflow: hidden;
+  // .modal {
+  //     @include o-scrollbar-overlay;
+  // }
+}
