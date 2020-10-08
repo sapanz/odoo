@@ -1,7 +1,7 @@
 import * as QUnit from "qunit";
 import { Registry } from "../../src/core/registry";
 import { actionManagerService } from "../../src/services/action_manager/action_manager";
-import { makeFakeRPCService, makeTestEnv, nextTick } from "../helpers";
+import { makeFakeRPCService, makeTestEnv, nextTick } from "../helpers/index";
 import { ComponentAction, FunctionAction, OdooEnv, Service } from "../../src/types";
 import { RPC } from "../../src/services/rpc";
 
