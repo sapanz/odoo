@@ -30,7 +30,7 @@ class Meeting(models.Model):
 
     @api.model
     def _get_google_synced_fields(self):
-        return {'name', 'description', 'allday', 'start', 'date_end', 'stop',
+        return {'name', 'description', 'allday', 'start', 'date_end', 'stop', 'partner_ids',
                 'attendee_ids', 'alarm_ids', 'location', 'privacy', 'active'}
 
     @api.model_create_multi
@@ -93,6 +93,9 @@ class Meeting(models.Model):
         if google_event.exists(self.env):
             existing_attendees = self.browse(google_event.odoo_id(self.env)).attendee_ids
         attendees_by_emails = {a.email: a for a in existing_attendees}
+        if not google_attendees and not existing_attendees:
+            event = google_event._events[google_event.ids[0]]
+            google_attendees.append(dict(**event.get('organizer'), **{'responseStatus': 'accepted'})) if event.get('organizer', False) else None
         for attendee in google_attendees:
             email = attendee.get('email')
 
@@ -167,7 +170,7 @@ class Meeting(models.Model):
             'method': "email" if alarm.alarm_type == "email" else "popup",
             'minutes': alarm.duration_minutes
         } for alarm in self.alarm_ids]
-        attendee_ids = self.attendee_ids.filtered(lambda a: a.partner_id != self.env.user.partner_id)
+        # attendee_ids = self.attendee_ids.filtered(lambda a: a.partner_id != self.env.user.partner_id)
         values = {
             'id': self.google_id,
             'start': start,
@@ -177,7 +180,7 @@ class Meeting(models.Model):
             'location': self.location or '',
             'guestsCanModify': True,
             'organizer': {'email': self.user_id.email, 'self': self.user_id == self.env.user},
-            'attendees': [{'email': attendee.email, 'responseStatus': attendee.state} for attendee in attendee_ids],
+            'attendees': [{'email': attendee.email, 'responseStatus': attendee.state} for attendee in self.attendee_ids],
             'extendedProperties': {
                 'shared': {
                     '%s_odoo_id' % self.env.cr.dbname: self.id,
@@ -204,3 +207,13 @@ class Meeting(models.Model):
         super(Meeting, my_cancelled_records)._cancel()
         attendees = (self - my_cancelled_records).attendee_ids.filtered(lambda a: a.partner_id == user.partner_id)
         attendees.state = 'declined'
+
+
+class Attendee(models.Model):
+    _name = 'calendar.attendee'
+    _inherit = ['calendar.attendee']
+
+    def write(self, vals):
+        super().write(vals)
+        if 'state' in vals:
+            self.event_id.write({'need_sync': True})

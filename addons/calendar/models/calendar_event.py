@@ -636,7 +636,7 @@ class Meeting(models.Model):
         update_recurrence = recurrence_update_setting in ('all_events', 'future_events') and len(self) == 1
         break_recurrence = values.get('recurrency') is False
 
-        if 'partner_ids' in values:
+        if 'partner_ids' in values and (values.get('partner_ids') or False):
             values['attendee_ids'] = self._attendees_values(values['partner_ids'])
 
         if (not recurrence_update_setting or recurrence_update_setting == 'self_only' and len(self) == 1) and 'follow_recurrence' not in values:
