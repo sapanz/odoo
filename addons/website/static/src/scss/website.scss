@@ -348,6 +348,7 @@ font[class*='bg-'] {
 .oe_img_bg {
     background-size: cover;
     background-repeat: no-repeat;
+    background-position: center;
 
     &.o_bg_img_opt_repeat {
         background-size: auto;
