@@ -45,7 +45,7 @@ const ImageCropWidget = Widget.extend({
     async willStart() {
         await this._super.apply(this, arguments);
         await loadImageInfo(this.media, this._rpc.bind(this));
-        if (this.media.dataset.originalSrc) {
+        if (this.media.dataset.originalSrc && this.media.dataset.mimetype !== 'image/svg+xml') {
             this.originalSrc = this.media.dataset.originalSrc;
             this.originalId = this.media.dataset.originalId;
             return;
