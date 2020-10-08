@@ -101,4 +101,8 @@ class WowlClient(http.Controller):
 
     @http.route('/wowl/tests', type='http', auth="user")
     def test_suite(self, **kw):
-        return request.render('wowl.qunit_suite', {'live_reload': 'all' in config['dev_mode']})
+        context = {
+            "scssFiles": get_files('style'),
+            'live_reload': 'all' in config['dev_mode']
+        }
+        return request.render('wowl.qunit_suite', context)
