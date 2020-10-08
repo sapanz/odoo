@@ -63,11 +63,18 @@ class StockPutawayRule(models.Model):
     location_out_id = fields.Many2one(
         'stock.location', 'Store to', check_company=True,
         domain="[('id', 'child_of', location_in_id), ('id', '!=', location_in_id), '|', ('company_id', '=', False), ('company_id', '=', company_id)]",
-        required=True, ondelete='cascade')
+        ondelete='cascade')
     sequence = fields.Integer('Priority', help="Give to the more specialized category, a higher priority to have them in top of the list.")
     company_id = fields.Many2one(
         'res.company', 'Company', required=True,
         default=lambda s: s.env.company.id, index=True)
+
+    automatic = fields.Boolean('Automatic')
+
+    @api.onchange('automatic')
+    def _onchange_automatic(self):
+        if self.automatic:
+            self.location_out_id = None
 
     @api.onchange('location_in_id')
     def _onchange_location_in(self):
@@ -81,8 +88,29 @@ class StockPutawayRule(models.Model):
                 self.location_out_id = None
 
     def write(self, vals):
+        self._location_category_check(vals)
         if 'company_id' in vals:
             for rule in self:
                 if rule.company_id.id != vals['company_id']:
                     raise UserError(_("Changing the company of this record is forbidden at this point, you should rather archive it and create a new one."))
         return super(StockPutawayRule, self).write(vals)
+
+    @api.model
+    def create(self, vals):
+        self._location_category_check(vals)
+        return super().create(vals)
+
+    def _location_category_check(self, vals):
+        if vals.get('automatic'):
+            if vals.get('product_id'):
+                product = self.env['product.product'].browse(vals.get('product_id'))
+                if not product.product_tmpl_id.product_location_category_ids:
+                    raise UserError(_("This putway rule be ignored because there is no location category defined for this product."))
+            elif vals.get('category_id'):
+                category = self.env['product.category'].browse(vals.get('category_id'))
+                if not category.product_category_location_category_ids:
+                    raise UserError(_("This putway rule be ignored because there is no location category defined for this product category."))
+
+    def _get_auto_putaway_location(self, product):
+        self.ensure_one()
+        

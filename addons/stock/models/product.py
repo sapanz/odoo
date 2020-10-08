@@ -20,6 +20,46 @@ OPERATORS = {
     '!=': py_operator.ne
 }
 
+
+class ProductCategory(models.Model):
+    _inherit = "product.category"
+
+    product_category_location_category_ids = fields.One2many('product.category.location.category', 'product_category_id', "Location Categories")
+
+
+class ProductLocationCategory(models.Model):
+    _name = 'product.location.category'
+    _description = "Allowed location categories for each product variant"
+    _order = 'product_id, sequence'
+
+    product_id = fields.Many2one('product.product', 'Product', domain="[('type', '=', 'product')]", required=True, ondelete="cascade")
+    location_category_id = fields.Many2one('stock.location.category', 'Location Category', required=True, ondelete="cascade",
+        help="Allowed location category for this product.")
+    sequence = fields.Integer('Sequence')
+    max_quantity = fields.Integer('Max Quantity', help="The maximum allowed quantity for this product in this location category.")
+    product_uom_id = fields.Many2one(related='product_id.uom_id', readonly=True)
+
+    _sql_constraints = [
+        ('positive_max_quantity', 'CHECK(max_quantity >= 0)', 'Max Quantity should be a positive number.'),
+        ('unique_location_category_per_product', 'UNIQUE(product_id, location_category_id)', 'The location category for the product is already existed.')
+    ]
+
+
+class ProductCategoryLocationCategory(models.Model):
+    _name = 'product.category.location.category'
+    _description = "Allowed location categories for each product template"
+    _order = 'product_category_id, sequence'
+
+    product_category_id = fields.Many2one('product.category', 'Product Category', required=True)
+    location_category_id = fields.Many2one('stock.location.category', 'Location Category', required=True,
+        help="Allowed location category for this product.")
+    sequence = fields.Integer('Sequence')
+
+    _sql_constraints = [
+        ('unique_location_category_per_product_category', 'UNIQUE(product_category_id, location_category_id)', 'The location category for the product category is already existed.')
+    ]
+
+
 class Product(models.Model):
     _inherit = "product.product"
 
@@ -93,6 +133,8 @@ class Product(models.Model):
     reordering_max_qty = fields.Float(
         compute='_compute_nbr_reordering_rules', compute_sudo=False)
     putaway_rule_ids = fields.One2many('stock.putaway.rule', 'product_id', 'Putaway Rules')
+
+    product_loc_cat_ids = fields.One2many('product.location.category', 'product_id', 'Location Categories')
 
     @api.depends('stock_move_ids.product_qty', 'stock_move_ids.state')
     @api.depends_context(
@@ -603,6 +645,7 @@ class ProductTemplate(models.Model):
     route_from_categ_ids = fields.Many2many(
         relation="stock.location.route", string="Category Routes",
         related='categ_id.total_route_ids', readonly=False)
+    product_loc_cat_ids = fields.One2many(related='product_variant_ids.product_loc_cat_ids', readonly=False)
 
     @api.depends('type')
     def _compute_has_available_route_ids(self):

@@ -60,8 +60,22 @@ class Location(models.Model):
     putaway_rule_ids = fields.One2many('stock.putaway.rule', 'location_in_id', 'Putaway Rules')
     barcode = fields.Char('Barcode', copy=False)
     quant_ids = fields.One2many('stock.quant', 'location_id')
+    location_category_id = fields.Many2one('stock.location.category', string='Location Category')
+
+    capacity_usage = fields.Float("Capacity Usage", compute='_compute_usage', store=True)
 
     _sql_constraints = [('barcode_company_uniq', 'unique (barcode,company_id)', 'The barcode for a location must be unique per company !')]
+
+    @api.depends('quant_ids')
+    def _compute_usage(self):
+        for location in self.filtered(lambda l: l.usage == 'internal'):
+            capacity_usage = 0
+            for quant in location.quant_ids:
+                product = quant.product_id
+                product_loc_cat = product.product_loc_cat_ids.filtered(lambda plc: plc.location_category_id == location.location_category_id)
+                if product_loc_cat and product_loc_cat.max_quantity:
+                    capacity_usage += quant.quantity / product_loc_cat.max_quantity
+            location.capacity_usage = capacity_usage * 100
 
     @api.depends('name', 'location_id.complete_name')
     def _compute_complete_name(self):
@@ -212,3 +226,13 @@ class Route(models.Model):
         for route in self:
             route.with_context(active_test=False).rule_ids.filtered(lambda ru: ru.active == route.active).toggle_active()
         super(Route, self).toggle_active()
+
+
+class LocationCategory(models.Model):
+    _name = 'stock.location.category'
+    _description = "Inventory Location Category"
+
+    name = fields.Char('Location Category', required=True)
+    active = fields.Boolean('Active', default=True)
+    max_weight = fields.Float('Max Weight', digits='Stock Weight')
+    description = fields.Text('Description')
