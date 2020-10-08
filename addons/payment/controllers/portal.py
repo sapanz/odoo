@@ -109,13 +109,14 @@ class WebsitePayment(http.Controller):
         amount, = self.cast_as_numeric([amount], numeric_type='float')
 
         # Raise an HTTP 404 if a partner is provided with an invalid access token
-        if partner_id:
-            db_secret = request.env['ir.config_parameter'].sudo().get_param('database.secret')
-            access_token_values = [partner_id, amount]
-            if currency_id:
-                access_token_values.append(currency_id)
-            if not payment_utils.check_access_token(access_token, db_secret, *access_token_values):
-                raise werkzeug.exceptions.NotFound  # Don't leak info about existence of an id
+        db_secret = request.env['ir.config_parameter'].sudo().get_param('database.secret')
+        access_token_values = [partner_id, amount]
+        if currency_id:
+            access_token_values.append(currency_id)
+        if partner_id and not payment_utils.check_access_token(
+            access_token, db_secret, *access_token_values
+        ):
+            raise werkzeug.exceptions.NotFound  # Don't leak info about existence of an id
 
         user_sudo = request.env.user.sudo()
         logged_in = not user_sudo._is_public()
@@ -128,6 +129,8 @@ class WebsitePayment(http.Controller):
         if logged_in:
             partner_is_different = partner_id != user_sudo.partner_id.id
             partner_id = user_sudo.partner_id.id
+            access_token_values = [partner_id] + access_token_values[1:]
+            access_token = payment_utils.generate_access_token(db_secret, *access_token_values)
         elif not partner_id:
             return request.redirect(
                 # Escape special characters to avoid loosing original params when redirected
@@ -136,7 +139,7 @@ class WebsitePayment(http.Controller):
 
         # Instantiate transaction values to their default if not set in parameters
         reference = reference or payment_utils.singularize_reference_prefix(prefix='tx')
-        amount = amount or 0.0
+        amount = amount or 0.0  # If the amount is invalid, set it to 0 to stop the payment flow
         currency_id = currency_id or user_sudo.company_id.currency_id.id
 
         # If a sale order is provided, its currency and amount overwrite any value set before. For
