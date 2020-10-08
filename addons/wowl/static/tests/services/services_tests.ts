@@ -76,7 +76,7 @@ QUnit.test("can deploy two sequentially dependant asynchronous services", async 
   def1.resolve();
   await nextTick();
   assert.verifySteps(["test2", "test3"]);
-  return promise;
+  await promise;
 });
 
 QUnit.test("can deploy two independant asynchronous services in parallel", async (assert) => {
@@ -115,7 +115,7 @@ QUnit.test("can deploy two independant asynchronous services in parallel", async
   def2.resolve();
   await nextTick();
   assert.verifySteps(["test3"]);
-  return promise;
+  await promise;
 });
 
 QUnit.test("can deploy a service with a dependency", async (assert) => {
