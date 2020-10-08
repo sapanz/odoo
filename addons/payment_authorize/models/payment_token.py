@@ -9,7 +9,9 @@ class AuthorizePaymentToken(models.Model):
     authorize_profile = fields.Char(string='Authorize.net Profile ID', help='This contains the unique reference '
                                     'for this partner/payment token combination in the Authorize.net backend')
     provider = fields.Selection(string='Provider', related='acquirer_id.provider', readonly=False)
-    save_token = fields.Selection(string='Save Cards', related='acquirer_id.save_token', readonly=False)
+    # TODO this field doesn't exist on the acquirer anymore
+    #  Do I need to migrate or can I get rid of this field ?
+    # save_token = fields.Selection(string='Save Cards', related='acquirer_id.save_token', readonly=False)
 
     @api.model
     def authorize_create(self, values):
