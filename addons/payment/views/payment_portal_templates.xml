@@ -43,12 +43,14 @@
                     <div class="row">
                         <div class="col-lg-7">
                             <t t-if="amount and currency">
+                                <div t-if="partner_is_different" class="alert alert-warning">
+                                    <strong>Warning</strong> Make sure your are logged in as the right partner before making this payment.
+                                </div>
                                 <t t-if="reference_prefix">
                                     <b>Reference:</b> <t t-esc="reference_prefix"/><br/>
                                 </t>
                                 <b>Amount:</b> <t t-esc="amount"
-                                                  t-options="{'widget': 'monetary',
-                                                              'display_currency': currency}"/>
+                                                  t-options="{'widget': 'monetary', 'display_currency': currency}"/>
                                 <div t-if="not partner_id" class="alert alert-danger" role="alert">
                                     <p>You must be logged in to pay.</p>
                                 </div>
@@ -67,7 +69,7 @@
                             </t>
                             <t t-elif="not currency">
                                 <div class="alert alert-warning">
-                                    <strong>Warning!</strong> The currency is missing or incorrect.
+                                    <strong>Warning</strong> The currency is missing or incorrect.
                                 </div>
                             </t>
                         </div>

@@ -124,7 +124,9 @@ class WebsitePayment(http.Controller):
         # tokens should not be assigned to the public user. This should have no impact on the
         # transaction itself besides making reconciliation possibly more difficult (e.g. The
         # transaction and invoice partners are different).
+        partner_is_different = False
         if logged_in:
+            partner_is_different = partner_id != user_sudo.partner_id.id
             partner_id = user_sudo.partner_id.id
         elif not partner_id:
             return request.redirect(
@@ -176,6 +178,7 @@ class WebsitePayment(http.Controller):
             'access_token': access_token,
             'init_tx_route': '/website_payment/transaction',
             'landing_route': '/website_payment/confirm',
+            'partner_is_different': partner_is_different,
         }
         return request.render('payment.pay', tx_context)
 
