@@ -32,7 +32,7 @@ odoo.define('web.weekly_recurrent_task', function (require) {
                 }
             }else {
                 const today = new Date();
-                let weekday = this.week_day_list[today.getDay()];
+                const weekday = this.week_day_list[today.getDay()];
                 this.checked_list[weekday] = true;
             }
         }
