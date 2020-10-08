@@ -122,9 +122,11 @@ const CountdownWidget = publicWidget.Widget.extend({
     _initTimeDiff: function () {
         const delta = this._getDelta();
         this.diff = [];
+        // apply css for well displayed on mobile view if countdown canvas size is large (medium size = 120)
+        let displayClass = this.size > 120 ? 's_countdown_canvas s_countdown_canvas_large_' + this.layout : 's_countdown_canvas';
         if (this._isUnitVisible('d') && !(this.onlyOneUnit && delta < 86400)) {
             this.diff.push({
-                canvas: $('<canvas/>').appendTo(this.$wrapper)[0],
+                canvas: $('<canvas/>', {class: displayClass}).appendTo(this.$wrapper)[0],
                 // There is no logical number of unit (total) on which day units
                 //  can be compared against, so we use an arbitrary number.
                 total: 15,
@@ -134,7 +136,7 @@ const CountdownWidget = publicWidget.Widget.extend({
         }
         if (this._isUnitVisible('h') || (this.onlyOneUnit && delta < 86400 && delta > 3600)) {
             this.diff.push({
-                canvas: $('<canvas/>').appendTo(this.$wrapper)[0],
+                canvas: $('<canvas/>', {class: displayClass}).appendTo(this.$wrapper)[0],
                 total: 24,
                 label: _t("Hours"),
                 nbSeconds: 3600,
@@ -142,7 +144,7 @@ const CountdownWidget = publicWidget.Widget.extend({
         }
         if (this._isUnitVisible('m') || (this.onlyOneUnit && delta < 3600 && delta > 60)) {
             this.diff.push({
-                canvas: $('<canvas/>').appendTo(this.$wrapper)[0],
+                canvas: $('<canvas/>', {class: displayClass}).appendTo(this.$wrapper)[0],
                 total: 60,
                 label: _t("Minutes"),
                 nbSeconds: 60,
@@ -150,7 +152,7 @@ const CountdownWidget = publicWidget.Widget.extend({
         }
         if (this._isUnitVisible('s') || (this.onlyOneUnit && delta < 60)) {
             this.diff.push({
-                canvas: $('<canvas/>').appendTo(this.$wrapper)[0],
+                canvas: $('<canvas/>', {class: displayClass}).appendTo(this.$wrapper)[0],
                 total: 60,
                 label: _t("Seconds"),
                 nbSeconds: 1,

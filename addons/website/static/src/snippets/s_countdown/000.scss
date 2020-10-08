@@ -1,0 +1,12 @@
+.s_countdown {
+    .s_countdown_canvas_wrapper {
+        canvas {
+            &.s_countdown_canvas_large_circle, &.s_countdown_canvas_large_clean {
+                // applied for only large layout of the countdown
+                @media (max-width: 475px) {
+                    width: 45%;
+                }
+            }
+        }
+    }
+}
