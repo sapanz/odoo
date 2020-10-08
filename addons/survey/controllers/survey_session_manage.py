@@ -173,7 +173,7 @@ class UserInputSession(http.Controller):
 
         return werkzeug.utils.redirect("/s")
 
-    @http.route('/survey/check_session_code/<string:session_code>', type='json', auth='public', website=True)
+    @http.route('/survey/check_session_code/', type='json', auth='public', website=True)
     def survey_check_session_code(self, session_code):
         """ Checks if the given code is matching a survey session_code.
         If yes, redirect to /s/code route.
