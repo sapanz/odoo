@@ -28,7 +28,7 @@ class AuthorizePaymentAcquirer(models.Model):
                 'title': _("Warning"),
                 'message': ('This option is not supported for Authorize.net')}}
 
-    def _authorize_action_client_secret(self):
+    def authorize_action_client_secret(self):
         # TODO check that when I can boot odoo on this branch
         api = AuthorizeAPI(self)
         if not api.test_authenticate():
