@@ -209,7 +209,7 @@ class AccountJournal(models.Model):
         readonly=True, copy=False)
 
     _sql_constraints = [
-        ('code_company_uniq', 'unique (code, name, company_id)', 'The code and name of the journal must be unique per company !'),
+        ('code_company_uniq', 'unique (code, company_id)', 'Journal codes must be unique per company.'),
     ]
 
     @api.depends('type')
