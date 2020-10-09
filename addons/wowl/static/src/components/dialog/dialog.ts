@@ -2,35 +2,7 @@ import { Component, hooks, misc } from "@odoo/owl";
 const { useRef, useExternalListener } = hooks;
 const { Portal } = misc;
 
-const displayed: Dialog[] = [];
-
-function display(dialog: Dialog) {
-  const activeDialog = displayed[displayed.length - 1];
-  // Deactivate previous dialog (if any)
-  activeDialog?.modalRef.el?.classList.add("o_inactive_modal");
-  displayed.push(dialog);
-  // Update container class
-  const dialogContainer = document.body.querySelector(".o_dialog_container");
-  dialogContainer?.classList.add("modal-open");
-}
-
-function hide(dialog: Dialog) {
-  // Remove given dialog from the list
-  displayed.splice(displayed.indexOf(dialog), 1);
-  const lastDialog = displayed[displayed.length - 1];
-  if (lastDialog) {
-    // Activate last dialog
-    lastDialog.el?.focus();
-    lastDialog.modalRef.el?.classList.remove("o_inactive_modal");
-  } else {
-    debugger
-    // Update container class
-    const dialogContainer = document.body.querySelector(".o_dialog_container");
-    dialogContainer?.classList.remove("modal-open");
-  }
-}
-
-export class Dialog extends Component  {
+export class Dialog extends Component {
   static components = { Portal };
   static defaultProps = {
     fullscreen: false,
@@ -40,31 +12,49 @@ export class Dialog extends Component  {
     title: "Odoo",
   };
   static props: {
-      fullscreen: boolean,
-      renderFooter: boolean,
-      renderHeader: boolean,
-      size: {
-        type: String,
-        validate: (s: string) => true,
-        // validate: (s: string) => ["modal-xl", "modal-lg", "modal-sm"].includes(s),
-      },
-      title: string,
+    fullscreen: boolean;
+    renderFooter: boolean;
+    renderHeader: boolean;
+    size: {
+      type: String;
+      validate: (s: string) => true;
+      // validate: (s: string) => ["modal-xl", "modal-lg", "modal-sm"].includes(s),
+    };
+    title: string;
   };
   static template = "wowl.Dialog";
 
   modalRef = useRef("modal");
-  
+
   constructor() {
-      super(...arguments);
-      useExternalListener(window, 'keydown', this._onKeydown);
+    super(...arguments);
+    useExternalListener(window, "keydown", this._onKeydown);
   }
 
   mounted() {
-    display(this);
+    const dialogContainer = document.querySelector(".o_dialog_container") as HTMLElement;
+    const modals = dialogContainer.querySelectorAll(".o_dialog .modal");
+    const len = modals.length;
+    for (let i = 0; i < len - 1; i++) {
+      const modal = modals[i] as HTMLElement;
+      modal.classList.add("o_inactive_modal");
+    }
+    dialogContainer.classList.add("modal-open");
   }
 
   willUnmount() {
-    hide(this);
+    const dialogContainer = document.querySelector(".o_dialog_container") as HTMLElement;
+    const modals = dialogContainer.querySelectorAll(".o_dialog .modal");
+    const len = modals.length;
+    if (len >= 2) {
+      const modal = (this.modalRef.el === modals[len - 1]
+        ? modals[len - 2]
+        : modals[len - 1]) as HTMLElement;
+      modal.focus();
+      modal.classList.remove("o_inactive_modal");
+    } else {
+      dialogContainer.classList.remove("modal-open");
+    }
   }
 
   /**
@@ -76,14 +66,12 @@ export class Dialog extends Component  {
   }
 
   _onKeydown(ev: KeyboardEvent) {
-    if (
-        ev.key === 'Escape' &&
-        displayed[displayed.length - 1] === this
-    ) {
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        ev.stopPropagation();
-        this._close();
+    if (ev.key === "Escape" && !this.modalRef.el?.classList.contains("o_inactive_modal")) {
+      console.log("escape");
+      ev.preventDefault();
+      ev.stopImmediatePropagation();
+      ev.stopPropagation();
+      this._close();
     }
   }
 }

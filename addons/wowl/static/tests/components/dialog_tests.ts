@@ -209,32 +209,33 @@ QUnit.test("dialog can be rendered on fullscreen", async function (assert) {
   assert.hasClass(target.querySelector(".o_dialog .modal") as HTMLElement, "o_modal_full");
 });
 
-QUnit.debug("Interactions between multiple dialogs", async function (assert) {
+QUnit.test("Interactions between multiple dialogs", async function (assert) {
   assert.expect(14);
+  interface Ids {
+    [key: number]: 1;
+  }
   class Parent extends owl.Component {
     static components = { Dialog };
     static template = owl.tags.xml`
             <div>
-                <Dialog t-foreach="dialogIds" t-as="dialogId" t-key="dialogId"
+                <Dialog t-foreach="Object.keys(dialogIds)" t-as="dialogId" t-key="dialogId"
                     t-on-dialog-closed="_onDialogClosed(dialogId)"
                 />
             </div>
         `;
-    dialogIds = useState([] as number[]);
+    dialogIds = useState({}) as Ids;
     _onDialogClosed(id: number) {
-      assert.step(`dialog_${id}_closed`);
-      this.dialogIds.splice(
-        this.dialogIds.findIndex((d) => d === id),
-        1
-      );
+      console.log(id);
+      assert.step(`dialog_id=${id}_closed`);
+      delete this.dialogIds[id];
     }
   }
   const parent = await mount(Parent, { env, target });
-  parent.dialogIds.push(1);
+  parent.dialogIds[0] = 1;
   await nextTick();
-  parent.dialogIds.push(2);
+  parent.dialogIds[1] = 1;
   await nextTick();
-  parent.dialogIds.push(3);
+  parent.dialogIds[2] = 1;
   await nextTick();
 
   function activity(modals: NodeListOf<Element>) {
@@ -268,8 +269,8 @@ QUnit.debug("Interactions between multiple dialogs", async function (assert) {
   assert.hasClass(target.querySelector(".o_dialog_container") as HTMLElement, "modal-open");
 
   parent.unmount();
-  // dialog 1 is closed through the removal of its parent => no callback
+  // dialog 0 is closed through the removal of its parent => no callback
   assert.containsNone(target, ".o_dialog_container .modal");
   assert.doesNotHaveClass(target.querySelector(".o_dialog_container") as HTMLElement, "modal-open");
-  assert.verifySteps(["dialog_3_closed", "dialog_2_closed"]);
+  assert.verifySteps(["dialog_id=2_closed", "dialog_id=1_closed"]);
 });
