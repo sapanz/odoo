@@ -10,8 +10,6 @@ class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
 
     def setUp(self):
         super(TestUi, self).setUp()
-        pricelists = self.env.ref('product.list0')
-        self._create_pricelist(pricelists)
 
     def test_01_product_configurator(self):
         # To be able to test the product configurator, admin user must have access to "variants" feature, so we give him the right group for that
@@ -139,6 +137,8 @@ class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
         # Remove tax from Conference Chair and Chair floor protection
         self.product_product_conf_chair.taxes_id = None
         self.product_product_conf_chair_floor_protect.taxes_id = None
+        pricelists = self.env.ref('product.list0')
+        self._create_pricelist(pricelists)
         self.start_tour("/web", 'sale_product_configurator_pricelist_tour', login="admin")
 
     def test_06_product_configurator_optional_products(self):
@@ -157,6 +157,7 @@ class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
             'optional_product_ids': [(6, 0, [self.product_product_conf_chair_floor_protect.id])]
         })
         custo_desk.update({
-            'optional_product_ids': [(6, 0, [office_chair.product_tmpl_id.id, self.product_product_conf_chair_floor_protect.id])]
+            'optional_product_ids': [(6, 0, [office_chair.product_tmpl_id.id, self.product_product_conf_chair.id])]
         })
+        self.product_product_custo_desk.optional_product_ids = [(4, self.product_product_conf_chair.id)]
         self.start_tour("/web", 'sale_product_configurator_optional_products_tour', login="admin")

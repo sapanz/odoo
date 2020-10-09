@@ -12,6 +12,7 @@ class TestUi(HttpSavepointCase, TestProductConfiguratorCommon):
     def setUp(self):
         super(TestUi, self).setUp()
         # # create a template
+        # arj fixmme: remove this brol
         product_template = self.env['product.template'].create({
             'name': 'Test Product',
             'is_published': True,
