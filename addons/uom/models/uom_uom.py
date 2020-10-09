@@ -12,7 +12,7 @@ class UoMCategory(models.Model):
     name = fields.Char('Unit of Measure Category', required=True, translate=True)
 
     uom_ids = fields.One2many('uom.uom', 'category_id')
-    locked = fields.Boolean("Locked", store=False)
+    reference_uom_id = fields.Many2one('uom.uom', "Reference UoM", store=False, help="Dummy field to keep track of reference uom change")
 
     @api.model
     def create(self, values):
@@ -53,7 +53,10 @@ class UoMCategory(models.Model):
                     'message': _("UoM category %s should have a reference unit of measure.") % self.name
                 }
             if reference_count > 1:
-                new_reference = self.uom_ids.filtered(lambda o: o.uom_type == 'reference' and o.active and o._origin.uom_type != 'reference')
+                if self.reference_uom_id:
+                    new_reference = self.uom_ids.filtered(lambda o: o.uom_type == 'reference' and o.active and o._origin.id != self.reference_uom_id.id)
+                else:
+                    new_reference = self.uom_ids.filtered(lambda o: o.uom_type == 'reference' and o.active and o._origin.uom_type != 'reference')
                 if new_reference:
                     other_uoms = self.uom_ids - new_reference
                     for uom in other_uoms:
@@ -62,7 +65,7 @@ class UoMCategory(models.Model):
                             uom.uom_type = 'smaller'
                         else:
                             uom.uom_type = 'bigger'
-                    #self.update({'locked': True})
+                    self.reference_uom_id = new_reference._origin.id
 
 
 class UoM(models.Model):
