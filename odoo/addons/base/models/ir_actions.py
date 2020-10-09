@@ -276,7 +276,7 @@ class IrActionsActWindow(models.Model):
         return super()._get_readable_fields() | {
             "context", "domain", "filter", "groups_id", "limit", "res_id",
             "res_model", "search_view", "search_view_id", "target", "view_id",
-            "view_mode", "views",
+            "view_mode", "views", "flags"
         }
 
 
