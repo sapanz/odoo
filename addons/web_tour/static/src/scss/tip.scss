@@ -58,7 +58,7 @@
     width: $o-tip-size !important;
     height: $o-tip-size !important;
     margin: 0 !important;
-    border: $o-tip-border-width solid $o-tip-color !important;
+    border: $o-tip-border-width solid $o-tip-color;
     border-radius: 50% !important;
     padding: 0 !important; // ! Cannot be changed ! Javascript rely on this.
     z-index: $zindex-tooltip !important; // See comment on 'o_tooltip_parent' class
@@ -69,12 +69,13 @@
         width $o-tip-size-duration-out ease $o-tip-size-delay-out,
         height $o-tip-size-duration-out ease $o-tip-size-delay-out,
         margin $o-tip-size-duration-out ease $o-tip-size-delay-out,
+        border-width $o-tip-border-radius-duration-out ease $o-tip-border-radius-delay-out,
         border-radius $o-tip-border-radius-duration-out ease $o-tip-border-radius-delay-out !important;
 
     &.o_animated {
-        animation: move-bottom-top 500ms ease-in 0ms infinite alternate !important;
+        animation: attract-vertical 500ms ease-in 0ms infinite alternate !important;
         &.right, &.left {
-            animation-name: move-left-right !important;
+            animation-name: attract-horizontal !important;
         }
     }
 

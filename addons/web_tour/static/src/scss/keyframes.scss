@@ -47,3 +47,36 @@
         transform: translate(0, 3px);
     }
 }
+
+$o-tip-border-width: 2px; // from tip.scss
+$o-tip-border-animated-width: 8px;
+$o-tip-border-width-correction: $o-tip-border-animated-width - $o-tip-border-width;
+$o-tip-border-color-light: #F9F9F9; // Odoo brand asset/Light gray
+$o-tip-border-color-dark: #8F8F8F; // Odoo brand asset/Gray
+
+@keyframes attract-horizontal {
+    0% {
+        transform: translate(-3px - $o-tip-border-width-correction, -$o-tip-border-width-correction);
+        border-color: $o-tip-border-color-light;
+        border-width: $o-tip-border-animated-width;
+    }
+    100% {
+        transform: translate(3px - $o-tip-border-width-correction, -$o-tip-border-width-correction);
+        border-color: $o-tip-border-color-dark;
+        border-width: $o-tip-border-animated-width;
+    }
+}
+
+@keyframes attract-vertical {
+    0% {
+        transform: translate(-$o-tip-border-width-correction, -3px - $o-tip-border-width-correction);
+        border-color: $o-tip-border-color-light;
+        border-width: $o-tip-border-animated-width;
+    }
+    100% {
+        transform: translate(-$o-tip-border-width-correction, 3px - $o-tip-border-width-correction);
+        border-color: $o-tip-border-color-dark;
+        border-width: $o-tip-border-animated-width;
+    }
+}
+
