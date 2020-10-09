@@ -48,7 +48,7 @@ tour.stepUtils.showAppsMenuItem(),
         $input.trigger(keyDownEvent);
     }
 }, {
-    trigger: 'ul.ui-autocomplete a:contains("Customizable Sofa (TEST)")',
+    trigger: 'ul.ui-autocomplete a:contains("Customizable Desk (TEST)")',
     run: 'click'
 }, {
     content: "check price is correct (USD)",
@@ -66,7 +66,7 @@ tour.stepUtils.showAppsMenuItem(),
     trigger: '.o_sale_product_configurator_add:not(.disabled)'
 }, {
     content: "check we are on the add modal",
-    trigger: '.td-product_name:contains("Customizable Sofa (TEST) (Steel, White)")',
+    trigger: '.td-product_name:contains("Customizable Desk (TEST) (Steel, White)")',
     extra_trigger: '.oe_optional_products_modal',
     run: 'click'
 }, {
@@ -92,7 +92,7 @@ tour.stepUtils.showAppsMenuItem(),
     trigger: 'span[name="amount_untaxed"]:contains("1,257.00")',
 }, {
     content: "verify SO final price included",
-    trigger: 'span[name="amount_total"]:contains("1,437.00")',
+    trigger: 'span[name="amount_total"]:contains("1,441.95")',
 }
 ]);
 

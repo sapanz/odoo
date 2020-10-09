@@ -6,24 +6,10 @@ from .common import TestProductConfiguratorCommon
 
 # arj fixme: remove this tag
 @odoo.tests.tagged('post_install', '-at_install', 'arj')
-class TestUi(odoo.tests.HttpCase, TestProductConfiguratorCommon):
+class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
 
     def setUp(self):
         super(TestUi, self).setUp()
-
-        self.product_product_44_product_template = self.env['product.template'].create({
-            'name': 'Customizable Sofa (TEST)',
-            'standard_price': 500.0,
-            'list_price': 750.0,
-        })
-        self.product_attribute_11 = self.env['product.attribute'].create({
-            'name': 'Legs',
-            'sequence': 10,
-        })
-        self.product_product_1_product_template = self.env['product.template'].create({
-            'name': 'Carpet',
-            'list_price': 12.0,
-        })
 
     def test_01_product_configurator(self):
         # To be able to test the product configurator, admin user must have access to "variants" feature, so we give him the right group for that
@@ -82,23 +68,13 @@ class TestUi(odoo.tests.HttpCase, TestProductConfiguratorCommon):
             'attribute_id': product_attribute.id
         } for i in range(1, 11) for product_attribute in product_attributes])
 
-        product_template = self.product_product_44_product_template
+        product_template = self.product_product_4_product_template
 
         self.env['product.template.attribute.line'].create([{
             'attribute_id': product_attribute.id,
             'product_tmpl_id': product_template.id,
             'value_ids': [(6, 0, product_attribute.value_ids.ids)],
         } for product_attribute in product_attributes])
-
-        # Add a Custom attribute
-        product_attribute_value_7 = self.env['product.attribute.value'].create({
-            'name': 'Custom',
-            'attribute_id': self.product_attribute_1.id,
-            'sequence': 3,
-            'is_custom': True
-        })
-        self.product_product_44_product_template.attribute_line_ids[0].write(
-            {'value_ids': [(4, product_attribute_value_7.id)]})
 
         self.start_tour("/web", 'sale_product_configurator_advanced_tour', login="admin")
 
@@ -133,7 +109,7 @@ class TestUi(odoo.tests.HttpCase, TestProductConfiguratorCommon):
             'attribute_id': product_attributes[0].id
         }])
 
-        product_template = self.product_product_44_product_template
+        product_template = self.product_product_custo_desk
 
         self.env['product.template.attribute.line'].create([{
             'attribute_id': product_attributes[0].id,
@@ -160,14 +136,14 @@ class TestUi(odoo.tests.HttpCase, TestProductConfiguratorCommon):
 
         # Add a 15% tax on desk
         tax = self.env['account.tax'].create({'name': "Test tax", 'amount': 15})
-        self.product_product_44_product_template.taxes_id = tax
+        self.product_product_custo_desk.taxes_id = tax
 
         # Remove tax from Conference Chair and Chair floor protection
         self.product_product_1_product_template.taxes_id = None
-        self.product_product_11_product_template.taxes_id = None
+        self.product_product_1_product_template.taxes_id = None
 
         # Make sure pricelist rule exist
-        product_template = self.product_product_44_product_template
+        product_template = self.product_product_4_product_template
         pricelist = self.env.ref('product.list0')
 
         if not pricelist.item_ids.filtered(lambda i: i.product_tmpl_id == product_template and i.applied_on == '1_product' and i.price_discount == 20):
@@ -194,11 +170,11 @@ class TestUi(odoo.tests.HttpCase, TestProductConfiguratorCommon):
             'name': 'Office Chair Black',
         })
 
-        custo_desk = self.product_product_44_product_template.product_variant_ids[0]
+        custo_desk = self.product_product_custo_desk.product_variant_ids[0]
         office_chair.update({
-            'optional_product_ids': [(6, 0, [self.product_product_1_product_template.id])]
+            'optional_product_ids': [(6, 0, [self.product_product_conf_chair_floor_protect.id])]
         })
         custo_desk.update({
-            'optional_product_ids': [(6, 0, [office_chair.product_tmpl_id.id, self.product_product_11_product_template.id])]
+            'optional_product_ids': [(6, 0, [office_chair.product_tmpl_id.id, self.product_product_conf_chair_floor_protect.id])]
         })
         self.start_tour("/web", 'sale_product_configurator_optional_products_tour', login="admin")

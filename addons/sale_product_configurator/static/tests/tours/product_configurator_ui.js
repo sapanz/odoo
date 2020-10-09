@@ -32,7 +32,7 @@ tour.register('sale_product_configurator_tour', {
         $input.trigger(keyDownEvent);
     }
 }, {
-    trigger: 'ul.ui-autocomplete a:contains("Customizable Sofa (TEST)")',
+    trigger: 'ul.ui-autocomplete a:contains("Customizable Desk (TEST)")',
     run: 'click'
 }, {
     trigger: '.configurator_container span:contains("Steel")',
