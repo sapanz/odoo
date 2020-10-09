@@ -21,23 +21,11 @@ declare const odoo: Odoo;
     console: window.console,
   });
 
-  // load templates
-  const templatesUrl = `/wowl/templates/${odoo.session_info.qweb}`;
+  // load templates and localization
   let [templates, { localization, _t }] = await Promise.all([
-    loadFile(templatesUrl),
+    loadTemplates(),
     fetchLocalization(browser, odoo),
   ]);
-  // as we currently have two qweb engines (owl and legacy), owl templates are
-  // flagged with attribute `owl="1"`. The following lines removes the 'owl'
-  // attribute from the templates, so that it doesn't appear in the DOM. For now,
-  // we make the assumption that 'templates' only contains owl templates. We
-  // might need at some point to handle the case where we have both owl and
-  // legacy templates. At the end, we'll get rid of all this.
-  const doc = new DOMParser().parseFromString(templates, "text/xml");
-  for (let child of doc.querySelectorAll("templates > [owl]")) {
-    child.removeAttribute("owl");
-  }
-  templates = new XMLSerializer().serializeToString(doc);
 
   // setup environment
   const env = await makeEnv({
@@ -69,3 +57,20 @@ declare const odoo: Odoo;
     server_version_info: sessionInfo.server_version_info,
   };
 })();
+
+async function loadTemplates(): Promise<string> {
+  const templatesUrl = `/wowl/templates/${odoo.session_info.qweb}`;
+  const templates = await loadFile(templatesUrl);
+
+  // as we currently have two qweb engines (owl and legacy), owl templates are
+  // flagged with attribute `owl="1"`. The following lines removes the 'owl'
+  // attribute from the templates, so that it doesn't appear in the DOM. For now,
+  // we make the assumption that 'templates' only contains owl templates. We
+  // might need at some point to handle the case where we have both owl and
+  // legacy templates. At the end, we'll get rid of all this.
+  const doc = new DOMParser().parseFromString(templates, "text/xml");
+  for (let child of doc.querySelectorAll("templates > [owl]")) {
+    child.removeAttribute("owl");
+  }
+  return new XMLSerializer().serializeToString(doc);
+}
