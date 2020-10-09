@@ -88,6 +88,12 @@ class Meeting(models.Model):
         attendee_commands = []
         partner_commands = []
         google_attendees = google_event.attendees or []
+        if google_event.organizer.get('self'):
+            user = google_event.owner(self.env)
+            google_attendees += [{
+                'email': user.partner_id.email,
+                'status': {'response': 'accepted'}
+            }]
         emails = [a.get('email') for a in google_attendees]
         existing_attendees = self.env['calendar.attendee']
         if google_event.exists(self.env):
