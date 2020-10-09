@@ -487,7 +487,7 @@ function factory(dependencies) {
          */
         _computeMentionedPartners() {
             const inputMentions = this.textInputContent.match(
-                new RegExp("@[^ ]+(?= |&nbsp;|$)", 'g')
+                new RegExp("@[^ @]+(?= |&nbsp;|$)", 'g')
             ) || [];
             const unmentionedPartners = [];
             for (const partner of this.mentionedPartners) {
@@ -556,7 +556,9 @@ function factory(dependencies) {
             if (this.mentionedPartners.length === 0 && this.mentionedChannels.length === 0) {
                 return body;
             }
-            const inputMentions = body.match(new RegExp("(@|#)" + '[^ ]+(?= |&nbsp;|$)', 'g'));
+            const mentionsPartnersRegex = new RegExp('@[^ @]+(?= |&nbsp;|$)', 'g');
+            const mentionsChannelsRegex = new RegExp('#[^ ]+(?= |&nbsp;|$)', 'g');
+            const inputMentions = body.match(new RegExp(mentionsPartnersRegex.source + '|' + mentionsChannelsRegex.source, 'g'));
             const substrings = [];
             let startIndex = 0;
             for (const match of inputMentions) {
