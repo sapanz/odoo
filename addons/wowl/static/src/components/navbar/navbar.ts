@@ -17,6 +17,7 @@ export class NavBar extends Component<{}, OdooEnv> {
 
   onMenuClicked(ev: any) {
     const { payload } = ev.detail;
+    console.log("onMenuClicked called with ", payload)
     if (payload) {
           this.actionManager.doAction(payload.actionID);
     }
