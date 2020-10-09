@@ -82,12 +82,25 @@ export function makeFakeMenusService(menuData?: MenuData): Service<MenuService> 
   };
 }
 
-export function makeFakeRPCService(mockRpc?: (...params: Parameters<RPC>) => any): Service<RPC> {
+type MockedRoute = (params: Parameters<RPC>[1]) => any;
+export interface MockedRoutes {
+  [route: string]: MockedRoute,
+}
+export const standardMockedRoutes: MockedRoutes = {};
+export function makeFakeRPCService(mockedRoutes?: MockedRoutes): Service<RPC> {
   return {
     name: "rpc",
     deploy() {
       return async (...args: Parameters<RPC>) => {
-        return mockRpc ? mockRpc(...args) : undefined;
+        const [route, routeArgs] = args;
+        let res;
+        if (mockedRoutes && route in mockedRoutes) {
+          res = mockedRoutes[route](routeArgs);
+        }
+        if (res === undefined && route in standardMockedRoutes) {
+          res = standardMockedRoutes[route](routeArgs);
+        }
+        return res;
       };
     },
   };
