@@ -6112,7 +6112,10 @@ Fields:
                 cache = self.env.cache
                 for fname in fnames:
                     field = lines._fields[fname]
-                    cache.update(new_lines, field, cache.get_values(lines, field))
+                    cache.update(new_lines, field, [
+                        field.convert_to_cache(value, new_line, validate=False)
+                        for new_line, value in zip(new_lines, cache.get_values(lines, field))
+                    ])
 
         # Isolate changed values, to handle inconsistent data sent from the
         # client side: when a form view contains two one2many fields that
