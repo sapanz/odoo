@@ -6090,20 +6090,29 @@ Fields:
 
         nametree = PrefixTree(self.browse(), field_onchange)
 
-        # prefetch x2many lines without data (for the initial snapshot)
+        # prefetch x2many lines: this speeds up the initial snapshot by avoiding
+        # to compute stored fields on new records
         for name, subnames in nametree.items():
             if subnames and values.get(name):
-                # retrieve all ids in commands
+                # retrieve all line ids in commands
                 line_ids = set()
                 for cmd in values[name]:
                     if cmd[0] in (1, 4):
                         line_ids.add(cmd[1])
                     elif cmd[0] == 6:
                         line_ids.update(cmd[2])
-                # build corresponding new lines, and prefetch fields
-                new_lines = self[name].browse(NewId(id_) for id_ in line_ids)
-                for subname in subnames:
-                    new_lines.mapped(subname)
+                # prefetch stored fields on lines
+                lines = self[name].browse(line_ids)
+                fnames = [subname
+                          for subname in subnames
+                          if lines._fields[subname].base_field.store]
+                lines._read(fnames)
+                # copy the cache of lines to their corresponding new records
+                new_lines = lines.browse(map(NewId, line_ids))
+                cache = self.env.cache
+                for fname in fnames:
+                    field = lines._fields[fname]
+                    cache.update(new_lines, field, cache.get_values(lines, field))
 
         # Isolate changed values, to handle inconsistent data sent from the
         # client side: when a form view contains two one2many fields that
