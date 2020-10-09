@@ -2,7 +2,7 @@ import { Component } from "@odoo/owl";
 import { Service, OdooEnv } from "../types";
 import { RPC } from "./rpc";
 
-interface DBRecord {
+export interface DBRecord {
   id: number;
   [field: string]: any;
 }
@@ -66,7 +66,7 @@ export interface Model {
   call(method: string, args?: any[], kwargs?: KWargs): Promise<any>;
 }
 
-type ModelBuilder = (model: string) => Model;
+export type ModelBuilder = (model: string) => Model;
 
 function read(rpc: RPC, env: OdooEnv, model: string): Model["read"] {
   return (ids, fields, ctx) => callModel(rpc, env, model)("read", [ids, fields], { context: ctx });

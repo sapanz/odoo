@@ -4,6 +4,7 @@ import { actionManagerService } from "../../src/services/action_manager/action_m
 import { makeFakeRPCService, makeTestEnv, nextTick } from "../helpers/index";
 import { ComponentAction, FunctionAction, OdooEnv, Service } from "../../src/types";
 import { RPC } from "../../src/services/rpc";
+import { makeFakeModelService } from '../mock_server';
 
 let env: OdooEnv;
 let services: Registry<Service>;
@@ -39,6 +40,12 @@ QUnit.module("Action Manager Service", {
       })
     );
     services.add("action_manager", actionManagerService);
+    services.add('model', makeFakeModelService({
+      partner: {
+        fields: {id: {type: 'char', string: 'id'}},
+        records: [],
+      }
+    }));
     env = await makeTestEnv({ actions: actionsRegistry, services });
   },
 });
@@ -61,4 +68,9 @@ QUnit.test("action_manager service loads actions", async (assert) => {
   assert.verifySteps([
     'client_action_object',
   ]);*/
+});
+
+QUnit.debug("FakeModelServiceUsage", async (assert) => {
+  const model = env.services.model('partner');
+  model.call('load_views');
 });
