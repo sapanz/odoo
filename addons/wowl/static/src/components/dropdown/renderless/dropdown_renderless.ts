@@ -9,10 +9,6 @@ export class DropdownRenderless extends Component {
             type: Boolean,
             optional: true,
         },
-        depth: {
-            type: Number,
-            optional: true,
-        },
         collapseMode: {
             type: String, // 'all', 'level', 'none'
             optional: true,
@@ -21,7 +17,6 @@ export class DropdownRenderless extends Component {
 
     static defaultProps = {
         openedByDefault: false,
-        depth: 0,
         collapseMode: 'all',
     };
 
@@ -31,8 +26,7 @@ export class DropdownRenderless extends Component {
 
     /**
      * Toggle the items of the dropdown.
-     * If the dropdown has multiple depth, will toggle all the levels.
-     * This is because of the recursive DOM elements firing events.
+     * If it has several levels, only the current one is toggled
      */
     _toggle() {
         this.state.open = !this.state.open;
@@ -40,13 +34,12 @@ export class DropdownRenderless extends Component {
 
     /**
      * Toggle the items of the dropdown.
-     * If the dropdown has multiple depth, will only toggle the *depth* level.
+     * If it has several levels, all the levels are toggled
      */
-    _toggleCurrent(depth: Number) {
-        if (this.props.depth == depth) {
-            this._toggle();
-        }
-    }
+     _closeAll() {
+        this.state.open = false;
+        this.trigger('should-toggle-all');
+     }
 
     /**
      * Handlers
@@ -57,7 +50,7 @@ export class DropdownRenderless extends Component {
      * If the dropdown has multiple depth, toggle only the depth that has been clicked.
      */
     dropdownButtonClicked(ev: any) {
-        this._toggleCurrent(ev.detail.depth)
+        this._toggle()
     }
 
     /**
@@ -69,14 +62,14 @@ export class DropdownRenderless extends Component {
 
         if (!ev.detail.payload) return; // this is not a leaf.
 
-        this.trigger('item-selected', { payload: ev.detail.payload, depth: ev.detail.depth})
+        this.trigger('item-selected', { payload: ev.detail.payload})
 
         if (this.props.collapseMode === 'all') {
-            this._toggle();
+            this._closeAll();
         }
 
         if (this.props.collapseMode === 'level') {
-            this._toggleCurrent(ev.detail.depth)
+            this._toggle()
         }
 
     }

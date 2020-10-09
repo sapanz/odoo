@@ -15,17 +15,12 @@ export class DropdownRenderlessItem extends Component {
             type: Object,
             optional: true
         },
-        depth: {
-            type: Number,
-            optional: true
-        }
     };
 
     static defaultProps = {
         emitClick: true,
         emitHover: false,
         payload: null,
-        depth: 0,
     };
 
     /**
@@ -34,12 +29,12 @@ export class DropdownRenderlessItem extends Component {
 
     onClick() {
         if (!this.props.emitClick) return;
-        this.trigger('dropdownItemClicked', {payload: this.props.payload, depth: this.props.depth})
+        this.trigger('dropdownItemClicked', {payload: this.props.payload})
     }
 
     onHover() {
         if (!this.props.emitHover) return;
-        this.trigger('dropdownItemHovered', {payload: this.props.payload, depth: this.props.depth})
+        this.trigger('dropdownItemHovered', {payload: this.props.payload})
     }
 
 }

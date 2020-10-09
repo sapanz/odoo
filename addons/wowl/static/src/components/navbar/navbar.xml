@@ -7,7 +7,6 @@
      <t t-call="wowl.NavBar.AppsMenu">
         <t t-set="icon" t-value="'fa fa-th-large'"/>
         <t t-set="items" t-value="state.menuItems"/>
-        <t t-set="depth" t-value="0"/>
      </t>
 
       <a class="o_menu_brand" role="button"/>
@@ -20,30 +19,26 @@
     </nav>
   </header>
 
-    <DropdownRenderless t-on-item-selected="onMenuClicked" depth="depth" t-name="wowl.NavBar.AppsMenu">
+    <DropdownRenderless t-on-item-selected="onMenuClicked" t-name="wowl.NavBar.AppsMenu">
 
         <t t-set-slot="toggler">
-            <DropdownRenderlessButton depth="depth">
-                <DropdownRenderlessItem depth="depth">
+                            <DropdownRenderlessItem>
+
+            <DropdownRenderlessButton>
                     <div style="color:white; background-color: red; padding: 2px; border: 1px white solid; opacity: 50%">
-                        <t t-foreach="Array(depth)">
-                            <pre style="display: inline">    </pre>
-                        </t>
                         <i t-if="icon" t-att-class="icon"/>
                         <t t-if="name" t-esc="name"/>
                     </div>
+                                </DropdownRenderlessButton>
+
                 </DropdownRenderlessItem>
-            </DropdownRenderlessButton>
         </t>
 
         <t t-foreach="items" t-as="item" t-key="item.id">
 
             <t  t-if="!item.childrenTree.length">
-                <DropdownRenderlessItem payload="item" depth="depth">
+                <DropdownRenderlessItem payload="item">
                     <div style="color:white; background-color: blue; padding: 2px;border: 1px white solid;  opacity: 50%;">
-                        <t t-foreach="Array(depth)">
-                            <pre style="display: inline">    </pre>
-                        </t>
                         <t t-esc="item.name"/>
                     </div>
                 </DropdownRenderlessItem>
@@ -53,7 +48,6 @@
                 <t t-set="name" t-value="item.name"/>
                 <t t-set="icon" t-value="null"/>
                 <t t-set="items" t-value="item.childrenTree"/>
-                <t t-set="depth" t-value="depth + 1"/>
             </t>
 
         </t>
