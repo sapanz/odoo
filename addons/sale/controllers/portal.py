@@ -271,6 +271,8 @@ class CustomerPortal(CustomerPortal):
         :param int acquirer_id: id of a payment.acquirer record. If not set the
                                 user is redirected to the checkout page
         """
+        # TODO ANV handle unlogged user, missing access token, etc.
+
         # Ensure a payment acquirer is selected
         if not acquirer_id:
             return False
@@ -283,8 +285,8 @@ class CustomerPortal(CustomerPortal):
             and tokenization_requested and acquirer_sudo.allow_tokenization
         )
 
-        order = request.env['sale.order'].sudo().browse(order_id)
-        if not order or not order.order_line or not order.has_to_be_paid():
+        order_sudo = request.env['sale.order'].sudo().browse(order_id)
+        if not order_sudo or not order_sudo.order_line or not order_sudo.has_to_be_paid():
             return False
 
         # Create transaction
@@ -292,12 +294,12 @@ class CustomerPortal(CustomerPortal):
             'acquirer_id': acquirer_id,
             'operation': f'online_{flow}',
             'tokenize': tokenize,
-            'landing_route': order.get_portal_url(),
+            'landing_route': order_sudo.get_portal_url(),
         }
 
-        transaction = order._create_payment_transaction(vals)  # TODO ANV use order._get_vals_...
+        transaction = order_sudo._create_payment_transaction(vals)  # TODO ANV use order._get_vals_...
         PaymentPostProcessing.monitor_transactions(transaction)
-        return transaction.render_sale_button(order)
+        return transaction.render_sale_button(order_sudo)
 
     @http.route('/my/orders/<int:order_id>/transaction/token', type='http', auth='public', website=True)
     def payment_token(self, order_id, pm_id=None, **kwargs):

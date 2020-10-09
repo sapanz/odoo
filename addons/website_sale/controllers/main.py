@@ -835,7 +835,7 @@ class WebsiteSale(http.Controller):
             currency_id=order.currency_id.id,
             website_id=request.website.id,
             order=order
-        )  # In sudo mode to read on the partner and order fields if the user is not logged in
+        )  # In sudo mode to read the fields of partner and of order if the user is not logged in
 
         values['acquirers'] = acquirers_sudo
         # Fasten loading time for internal users by searching tokens based on the partner hierarchy
@@ -888,6 +888,7 @@ class WebsiteSale(http.Controller):
         :param int acquirer_id: id of a payment.acquirer record. If not set the
                                 user is redirected to the checkout page
         """
+        # TODO ANV handle unlogged user, missing access token, etc.
         acquirer_sudo = request.env['payment.acquirer'].browse(payment_option_id).sudo()
         tokenize = bool(
             # Public users are not allowed to save tokens as their partner is unknown

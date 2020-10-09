@@ -6,11 +6,12 @@ import werkzeug
 from odoo import http, _
 from odoo.addons.portal.controllers.portal import _build_url_w_params
 from odoo.addons.payment.controllers.portal import PaymentPostProcessing
-from odoo.exceptions import AccessError, MissingError
+from odoo.addons.portal.controllers.portal import CustomerPortal
+from odoo.exceptions import AccessError, MissingError, ValidationError
 from odoo.http import request, route
 
 
-class PaymentPortal(http.Controller):
+class PaymentPortal(CustomerPortal):
 
     @route('/invoice/pay/<int:invoice_id>', type='json', auth='public', website=True)
     def invoice_pay(
@@ -28,14 +29,12 @@ class PaymentPortal(http.Controller):
         :param dict kwargs: Optional data. Locally processed keys: order_id
         :return: The mandatory values for the processing of the transaction
         :rtype: dict
-        :raise: werkzeug.exceptions.NotFound if the invoice id or the access token is invalid
+        :raise: ValidationError if the invoice id or the access token is invalid
         """
-        # Raise an HTTP 404 if the invoice id or the access token is incorrect to avoid leaking
-        # information about (non-)existing ids
         try:
             invoice_sudo = self._document_check_access('account.move', invoice_id, access_token)
         except (AccessError, MissingError):
-            raise werkzeug.exceptions.NotFound
+            raise ValidationError("The access token is missing or invalid.")
 
         # TODO ANV continue from here
         # Prepare the create values that are common to all online payment flows

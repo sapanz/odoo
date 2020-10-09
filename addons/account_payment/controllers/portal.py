@@ -10,7 +10,7 @@ class PortalAccount(PortalAccount):
     def _invoice_get_page_view_values(self, invoice, access_token, **kwargs):
         values = super()._invoice_get_page_view_values(invoice, access_token, **kwargs)
         logged_in = not request.env.user._is_public()
-        # If the current user is connected we set partner_id to his partner otherwise we set it as
+        # If the current user is logged in we set partner_id to his partner otherwise we set it as
         # the invoice partner. We do this to force the creation of payment tokens to the correct
         # partner and avoid linking tokens to the public user.
         partner_id = invoice.partner_id.id if not logged_in else request.env.user.partner_id.id
@@ -18,7 +18,7 @@ class PortalAccount(PortalAccount):
             invoice.company_id.id or request.env.company.id,
             invoice.partner_id.id or request.env.user.partner_id.id,
             currency_id=invoice.currency_id.id,
-        )  # In sudo mode to read on the partner fields if the user is not logged in
+        )  # In sudo mode to read the fields of the partner if the user is not logged in
         tokens = request.env['payment.token'].search([
             ('acquirer_id', 'in', acquirers_sudo.ids),
             ('partner_id', '=', invoice.partner_id.id or request.env.user.partner_id.id),
@@ -39,7 +39,7 @@ class PortalAccount(PortalAccount):
             'init_tx_route': f'/invoice/pay/{invoice.id}/',
         })
         if not logged_in:
-            # we should not display payment tokens owned by the public user
+            # Don't display payment tokens owned by the public user
             values.update({
                 'existing_token': bool(tokens),
                 'tokens': [],

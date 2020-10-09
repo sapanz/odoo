@@ -8,7 +8,7 @@ import psycopg2
 import werkzeug
 
 from odoo import _, fields, http
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.http import request
 from odoo.tools.float_utils import float_repr
 
@@ -161,7 +161,7 @@ class WebsitePayment(http.Controller):
         # Select all acquirers that match the constraints
         acquirers_sudo = request.env['payment.acquirer'].sudo()._get_compatible_acquirers(
             company_id, partner_id, currency_id=currency.id, preferred_acquirer_id=acquirer_id
-        )  # In sudo mode to read on the partner fields if the user is not logged in
+        )  # In sudo mode to read the fields of the partner if the user is not logged in
 
         # Compute the fees taken by acquirers supporting the feature
         country_id = user_sudo.partner_id.country_id.id
@@ -208,16 +208,15 @@ class WebsitePayment(http.Controller):
         :param dict kwargs: Optional data. Locally processed keys: order_id
         :return: The mandatory values for the processing of the transaction
         :rtype: dict
-        :raise: werkzeug.exceptions.NotFound if the access token is invalid
+        :raise: ValidationError if the access token is invalid
         """
-        # Raise an HTTP 404 if the access token is provided but incorrect for the associated partner
-        # or if it is not provided and the partner of the user is different that that of the param
+        # Check the access token if it is provided, or if the partner is not that of the logged user
         if access_token or request.env.user.partner_id.id != partner_id:
             db_secret = request.env['ir.config_parameter'].sudo().get_param('database.secret')
             if not payment_utils.check_access_token(
                 access_token, db_secret, partner_id, amount, currency_id
             ):
-                raise werkzeug.exceptions.NotFound
+                raise ValidationError("The access token is missing or invalid.")
 
         # Get the amount and currency from the acquirer if the transaction is a validation
         if is_validation:
