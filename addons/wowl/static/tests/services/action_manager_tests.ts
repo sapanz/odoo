@@ -3,7 +3,7 @@ import { Registry } from "../../src/core/registry";
 import { actionManagerService } from "../../src/services/action_manager/action_manager";
 import { makeTestEnv, nextTick } from "../helpers/index";
 import { ComponentAction, FunctionAction, OdooEnv, Service } from "../../src/types";
-import { makeMockServer } from '../helpers/mock_server';
+import { makeMockServer } from "../helpers/mock_server";
 
 let env: OdooEnv;
 let services: Registry<Service>;
@@ -24,9 +24,9 @@ const serverSideActions: any = {
 
 const models: any = {
   partner: {
-    fields: {id: {type: 'char', string: 'id'}},
+    fields: { id: { type: "char", string: "id" } },
     records: [],
-  }
+  },
 };
 
 QUnit.module("Action Manager Service", {
@@ -36,10 +36,7 @@ QUnit.module("Action Manager Service", {
     actionsRegistry.add("client_action_by_xml_id", () => assert.step("client_action_xml_id"));
     actionsRegistry.add("client_action_by_object", () => assert.step("client_action_object"));
     services = new Registry<Service>();
-    makeMockServer(
-      services,
-      {models, actions: serverSideActions, views: {}}
-    );
+    makeMockServer(services, { models, actions: serverSideActions, views: {} });
 
     services.add("action_manager", actionManagerService);
     env = await makeTestEnv({ actions: actionsRegistry, services });
@@ -56,11 +53,9 @@ QUnit.test("action_manager service loads actions", async (assert) => {
   await nextTick();
   assert.verifySteps(["client_action_xml_id"]);
   env.services.action_manager.doAction({
-    tag: 'client_action_by_object',
-    type: 'ir.actions.client',
+    tag: "client_action_by_object",
+    type: "ir.actions.client",
   });
   await nextTick();
-  assert.verifySteps([
-    'client_action_object',
-  ]);
+  assert.verifySteps(["client_action_object"]);
 });

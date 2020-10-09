@@ -1,10 +1,11 @@
 import { Component } from "@odoo/owl";
-import { Model, ModelBuilder } from '../../src/services/model';
-import { Action } from '../../src/services/action_manager/helpers';
-import { ModelData, ModelMethods, Service } from '../../src/types';
-import { OdooEnv, makeFakeRPCService } from './index';
-import { Registry } from '../../src/core/registry';
-import { MockedRoutes } from './mocks';
+import { Model, ModelBuilder } from "../../src/services/model";
+import { Action } from "../../src/services/action_manager/helpers";
+import { ModelData, ModelMethods, Service } from "../../src/types";
+import { OdooEnv, makeFakeRPCService } from "./index";
+import { Registry } from "../../src/core/registry";
+import { MockRPC } from "./mocks";
+import { MenuData } from '../../src/services/menus';
 
 // Aims:
 // - Mock service model high level
@@ -14,17 +15,17 @@ import { MockedRoutes } from './mocks';
 // Can be passed data
 // returns at least model service
 
-
-interface ServerData {
-  models: {
-    [modelName: string]: ModelData,
-  },
-  actions: {
-    [key: string]: Action,
-  },
-  views: {
-    [key: string]: string,
-  }
+export interface ServerData {
+  models?: {
+    [modelName: string]: ModelData;
+  };
+  actions?: {
+    [key: string]: Action;
+  };
+  views?: {
+    [key: string]: string;
+  };
+  menus?: MenuData
 }
 
 /**
@@ -37,19 +38,20 @@ export const standardModelMethodsRegistry: ModelMethods = {
  * BASIC MODEL METHODS
  */
 function loadViews(this: ModelData) {
-  console.log('loadViews', this);
+  console.log("loadViews", this);
 }
 
 // TODO: implement all methods of Model and remove Partial
 export function makeFakeModelService(
   serverData?: ServerData,
-  mockCallModel?: ModelMethods
+  mockCallModel?: ModelMethods,
 ): Service<Partial<ModelBuilder>> {
-  const localData: ServerData = serverData || {} as ServerData;
+  const localData: ServerData = serverData || ({} as ServerData);
   function callModel(model: string) {
     return async (method: string, args = [], kwargs = {}) => {
       let res;
-      const modelMethod = serverData &&
+      const modelMethod =
+        serverData &&
         serverData.models &&
         serverData.models[model] &&
         serverData.models[model].methods &&
@@ -73,26 +75,38 @@ export function makeFakeModelService(
         return {
           get call() {
             return callModel(model);
-          }
+          },
         };
       };
     },
   };
 }
-
+function loadAction(this: ServerData, route: string, routeArgs?: any) {
+  const { action_id } = routeArgs || {};
+  return (action_id && this.actions && this.actions[action_id]) || {};
+}
+const defaultRoutes: any = {
+  "/web/action/load": loadAction,
+};
 export function makeMockServer(
   servicesRegistry: Registry<Service>,
   serverData?: ServerData,
   mockCallModel?: ModelMethods,
-  mockedRoutes?: MockedRoutes,
+  mockRPC?: MockRPC
 ): Registry<Service> {
-  const routes: MockedRoutes = {
-    '/web/action/load': ({action_id}: any) => {
-      return serverData && serverData.actions && serverData.actions[action_id] || {};
+  const mockedRPCs: MockRPC[] = [];
+  const _mockRPC: MockRPC = (...params: Parameters<MockRPC>) => {
+    const [route, routeArgs] = params;
+    if (route in defaultRoutes) {
+      return defaultRoutes[route].call(serverData, route, routeArgs);
     }
   };
-  const rpcService = makeFakeRPCService(Object.assign(routes, mockedRoutes));
+  if (mockRPC) {
+    mockedRPCs.push(mockRPC.bind(serverData));
+  }
+  mockedRPCs.push(_mockRPC);
+  const rpcService = makeFakeRPCService(mockedRPCs);
   const modelService = makeFakeModelService(serverData, mockCallModel);
-  servicesRegistry.add('model', modelService).add('rpc', rpcService);
+  servicesRegistry.add("model", modelService).add("rpc", rpcService);
   return servicesRegistry;
 }

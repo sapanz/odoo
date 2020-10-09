@@ -160,29 +160,26 @@ export interface SystrayItem {
  *  MODELS AND FIELDS DEFINITION
  */
 
-export type FieldType =
-  | "char"
-  | "one2many"
-  | "many2many"
-  | "number"
-;
+export type FieldType = "char" | "one2many" | "many2many" | "number";
 
 export interface FieldDefiniton {
-  relation?: string,
-  relation_field?: string,
-  string: string,
-  type: FieldType,
+  relation?: string;
+  relation_field?: string;
+  string: string;
+  type: FieldType;
 }
 
 export interface ModelFields {
-  id: FieldDefiniton,
-  [fieldName: string]: FieldDefiniton,
+  id: FieldDefiniton;
+  [fieldName: string]: FieldDefiniton;
 }
 export interface ModelData {
-  defaults?: keyof ModelFields,
-  fields: ModelFields,
-  records: DBRecord[],
-  methods?: ModelMethods,
+  defaults?: keyof ModelFields;
+  fields: ModelFields;
+  records: DBRecord[];
+  methods?: ModelMethods;
 }
 type Method = (args: any[], kwargs: any) => any;
-export interface ModelMethods {[methodName: string]: Method}
+export interface ModelMethods {
+  [methodName: string]: Method;
+}

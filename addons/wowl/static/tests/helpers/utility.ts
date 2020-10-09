@@ -25,7 +25,7 @@ export async function mount<T extends Type<Component>>(
   return component as any;
 }
 
-type TestConfig = Partial<
+export type TestConfig = Partial<
   {
     [K in keyof OdooConfig]: OdooConfig[K] extends Registry<any>
       ? OdooConfig[K]
