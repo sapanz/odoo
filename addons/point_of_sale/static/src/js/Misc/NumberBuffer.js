@@ -226,13 +226,13 @@ odoo.define('point_of_sale.NumberBuffer', function(require) {
             };
             if (input === undefined || input === null) return;
             let isFirstInput = isEmpty(this.state.buffer);
-            if (input === this.decimalPoint) {
+            if (input === this.decimalPoint || input === '.') {
                 if (isFirstInput) {
                     this.state.buffer = '0.';
                 } else if (!this.state.buffer.length || this.state.buffer === '-') {
                     this.state.buffer += '0.';
-                } else if (this.state.buffer.indexOf(this.decimalPoint) < 0) {
-                    this.state.buffer = this.state.buffer + this.decimalPoint;
+                } else if (this.state.buffer.indexOf(input) < 0) {
+                    this.state.buffer = this.state.buffer + input;
                 }
             } else if (input === 'Delete') {
                 if (this.isReset) {
@@ -251,7 +251,7 @@ odoo.define('point_of_sale.NumberBuffer', function(require) {
                 if (isEmpty(buffer)) {
                     this.state.buffer = null;
                 } else {
-                    const nCharToRemove = buffer[buffer.length - 1] === this.decimalPoint ? 2 : 1;
+                    const nCharToRemove = buffer[buffer.length - 1] === this.decimalPoint || buffer[buffer.length - 1] === '.' ? 2 : 1;
                     this.state.buffer = buffer.substring(0, buffer.length - nCharToRemove);
                 }
             } else if (input === '+') {
