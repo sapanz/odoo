@@ -122,7 +122,7 @@ export function makeTestOdoo(): Odoo {
   };
 }
 
-export function createMockXHR(
+export function makeMockXHR(
   response?: any,
   sendCb?: (data: any) => void,
   def?: Deferred<any>
@@ -165,7 +165,7 @@ interface MockFetchParams {
   mockFetch?: MockFetchFn;
 }
 
-export function createMockedFetch(params: MockFetchParams): typeof fetch {
+export function makeMockFetch(params: MockFetchParams): typeof fetch {
   const mockFetch: MockFetchFn = (route) => {
     if (route.includes("load_menus")) {
       return {};

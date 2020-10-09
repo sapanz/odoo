@@ -5,7 +5,7 @@ import { Service } from "../../src/types";
 import { useService } from "../../src/core/hooks";
 import { rpcService } from "../../src/services/rpc";
 import {
-  createMockXHR,
+  makeMockXHR,
   getFixture,
   makeDeferred,
   makeTestEnv,
@@ -26,7 +26,7 @@ interface RPCInfo {
 async function testRPC(route: string, params?: any): Promise<RPCInfo> {
   let url: string = "";
   let request: any;
-  let MockXHR = createMockXHR({ test: true }, function (this: any, data) {
+  let MockXHR = makeMockXHR({ test: true }, function (this: any, data) {
     request = data;
     url = this.url;
   });
@@ -52,7 +52,7 @@ QUnit.module("RPC", {
 
 QUnit.test("can perform a simple rpc", async (assert) => {
   assert.expect(4);
-  let MockXHR = createMockXHR({ result: { action_id: 123 } }, (request) => {
+  let MockXHR = makeMockXHR({ result: { action_id: 123 } }, (request) => {
     assert.strictEqual(request.jsonrpc, "2.0");
     assert.strictEqual(request.method, "call");
     assert.ok(typeof request.id === "number");
@@ -76,7 +76,7 @@ QUnit.test("trigger an error on bus when response has 'error' key", async (asser
       message: "data_message",
     },
   };
-  let MockXHR = createMockXHR({ error });
+  let MockXHR = makeMockXHR({ error });
 
   const env = await makeTestEnv({
     services: serviceRegistry,
@@ -116,7 +116,7 @@ QUnit.test("rpc coming from destroyed components are left pending", async (asser
     rpc = useService("rpc");
   }
   const def = makeDeferred();
-  let MockXHR = createMockXHR({ result: "1" }, () => {}, def);
+  let MockXHR = makeMockXHR({ result: "1" }, () => {}, def);
 
   const env = await makeTestEnv({
     services: serviceRegistry,

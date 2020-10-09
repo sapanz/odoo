@@ -2,7 +2,7 @@ import { NavBar } from "../../src/components/navbar/navbar";
 import * as QUnit from "qunit";
 import {
   click,
-  createMockedFetch,
+  makeMockFetch,
   mount,
   makeFakeRPCService,
   makeTestEnv,
@@ -34,7 +34,7 @@ QUnit.module("Navbar", {
     };
     target = getFixture();
     browser = {
-      fetch: createMockedFetch({
+      fetch: makeMockFetch({
         mockFetch(route: string): MenuData | undefined {
           if (route.includes("load_menus")) {
             return menus;
