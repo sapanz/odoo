@@ -387,6 +387,7 @@ var KanbanController = BasicController.extend({
             .then(this.update.bind(this, {}, {}));
     },
     /**
+     * @private
      * @param {OdooEvent} ev
      * @param {Object} ev.data see model.reload options
      */
@@ -520,9 +521,11 @@ var KanbanController = BasicController.extend({
               this.model.actionArchive(recordIds, column.db_id) :
               this.model.actionUnarchive(recordIds, column.db_id);
             prom.then(function (dbID) {
-                var data = self.model.get(dbID);
+                let data = self.model.get(dbID);
                 if (data) {  // Could be null if a wizard is returned for example
                     self.model.reload(self.handle).then(function () {
+                        // Retrieve fresher data as the reload may have changed it.
+                        data = self.model.get(dbID);
                         const state = self.model.get(self.handle);
                         self.renderer.updateColumn(dbID, data, { state });
                     });

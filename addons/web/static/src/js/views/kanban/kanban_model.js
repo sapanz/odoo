@@ -280,13 +280,13 @@ var KanbanModel = BasicModel.extend({
     },
     /**
      * @override
-     * @param {Array[]} options.activeFilter
+     * @param {Object} options.activeFilter
      */
     reload: function (id, options) {
         const element = this.localData[id];
         // Reset the limit right before reloading a group as a reload
         // of a kanban view may update the limit of a group. @see BasicModel._readGroup()
-        // (e.g. if we are coming back to the kanban view from a a form view)
+        // (e.g. if we are coming back to the kanban view from a form view)
         // As this mechanism may only affect grouped kanban views, only reset
         // the limit if the current element is a group (and thus, has a parent).
         if (element.parentID) {
@@ -472,56 +472,39 @@ var KanbanModel = BasicModel.extend({
         }
         return Promise.resolve();
     },
-    _reloadProgressBarFromRecord: function (recordID, def) {
-        const self = this;
-        let element = this.localData[recordID];
-        while (element) {
-            if (element.progressBar) {
-                return def.then(data => {
-                    return self._readProgressBar(element).then(() => data);
-                });
-            }
-            element = this.localData[element.parentID];
-        }
-        return def;
-    },
     /**
      * Reloads all progressbar data. This is done after given promise and
-     * insures that the given promise's result is not lost.
+     * ensures that the given promise's result is not lost.
      *
      * @private
      * @param {string} recordID
      * @param {Promise} def
      * @returns {Promise}
      */
-    _reloadProgressBarGroupFromRecord: function (recordID, def) {
-        let element = this.localData[recordID];
-        if (element.type === 'list') {
-            if (!element.parentID) {
-                // we are reloading the whole view, so there is no need to manually
-                // reload the progressbars
-                return def;
-            }
-            if (element.activeFilter) {
-                // We must not read_group when an active filter (and thus
-                // a domain extension) is applied to the list datapoint.
-                return def;
-            }
-        }
-
+   async  _reloadProgressBarGroupFromRecord(recordID, def) {
+       let element = this.localData[recordID];
+       if (element.type === 'list') {
+           if (!element.parentID) {
+               // we are reloading the whole view, so there is no need to manually
+               // reload the progressbars
+               return def;
+           }
+           if (element.activeFilter) {
+               // We must not read_group when an active filter (and thus
+               // a domain extension) is applied to the list datapoint.
+               return def;
+           }
+       }
         // If we updated a record, then we must potentially update columns'
         // progressbars, so we need to load groups info again
-        const self = this;
         while (element) {
             if (element.progressBar) {
-                return def.then(function (data) {
-                    return self._load(element, {
-                        keepEmptyGroups: true,
-                        onlyGroups: true,
-                    }).then(function () {
-                        return data;
-                    });
+                const data = await def;
+                await this._load(element, {
+                    keepEmptyGroups: true,
+                    onlyGroups: true,
                 });
+                return data;
             }
             element = this.localData[element.parentID];
         }
