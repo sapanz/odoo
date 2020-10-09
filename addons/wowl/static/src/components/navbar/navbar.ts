@@ -15,7 +15,7 @@ export class NavBar extends Component<{}, OdooEnv> {
   }
 
   _onMenuClicked(menu: any) {
-    this.actionManager.doAction(menu.actionID, { clear_breadcrumbs: true });
+    this.actionManager.doAction(menu.actionID, { clearBreadcrumbs: true });
     this.state.showDropdownMenu = false;
   }
 }

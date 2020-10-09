@@ -84,7 +84,7 @@ export function makeFakeMenusService(menuData?: MenuData): Service<MenuService> 
 
 type MockedRoute = (params: Parameters<RPC>[1]) => any;
 export interface MockedRoutes {
-  [route: string]: MockedRoute,
+  [route: string]: MockedRoute;
 }
 export const standardMockedRoutes: MockedRoutes = {};
 export function makeFakeRPCService(mockedRoutes?: MockedRoutes): Service<RPC> {

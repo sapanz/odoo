@@ -4,11 +4,11 @@ import { ControlPanel } from "../components/control_panel/control_panel";
 
 const { xml } = tags;
 
-class FormRenderer extends Component<{}, OdooEnv> {
+class GraphRenderer extends Component<{}, OdooEnv> {
   static template = xml`
     <div>
         <ControlPanel/>
-        <h2>Form view</h2>
+        <h2>Graph view</h2>
 
         <span>Model: <b><t t-esc="props.action.res_model"/></b></span>
     </div>
@@ -16,10 +16,10 @@ class FormRenderer extends Component<{}, OdooEnv> {
   static components = { ControlPanel };
 }
 
-export const FormView: View = {
-  name: "form",
-  icon: "fa-edit",
-  multiRecord: false,
-  type: "form",
-  Component: FormRenderer,
+export const GraphView: View = {
+  name: "graph",
+  icon: "fa-bar-chart",
+  multiRecord: true,
+  type: "graph",
+  Component: GraphRenderer,
 };
