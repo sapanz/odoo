@@ -1,21 +1,24 @@
 import { Component, useState } from "@odoo/owl";
 import { useService } from "../../core/hooks";
 import { OdooEnv } from "../../types";
+import {DropdownRenderless} from "../dropdown/renderless/dropdown_renderless";
+import {DropdownRenderlessItem} from "../dropdown/renderless/dropdown_item_renderless";
+import {DropdownRenderlessButton} from "../dropdown/renderless/dropdown_button_renderless";
 
 export class NavBar extends Component<{}, OdooEnv> {
   static template = "wowl.NavBar";
+  static components = { DropdownRenderless, DropdownRenderlessItem, DropdownRenderlessButton }
+
   actionManager = useService("action_manager");
   menuRepo = useService("menus");
-  state = useState({ showDropdownMenu: false });
+  state = useState({ menuItems: this.menuRepo.getApps() });
 
   systrayItems = this.env.registries.systray.getAll();
 
-  toggleDropdownMenu() {
-    this.state.showDropdownMenu = !this.state.showDropdownMenu;
-  }
-
-  _onMenuClicked(menu: any) {
-    this.actionManager.doAction(menu.actionID, { clear_breadcrumbs: true });
-    this.state.showDropdownMenu = false;
+  onMenuClicked(ev: any) {
+    const { payload } = ev.detail;
+    if (payload) {
+          this.actionManager.doAction(payload.actionID);
+    }
   }
 }

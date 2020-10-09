@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+  <div t-name="wowl.DropdownRenderless" t-on-dropdownItemClicked="dropdownItemClicked" t-on-dropdown-button-clicked="dropdownButtonClicked" owl="1">
+    <t t-slot="toggler"/>
+    <t t-if="state.open" t-slot="default"/>
+  </div>
+
+</templates>
