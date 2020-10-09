@@ -13,6 +13,9 @@ var discoverTalkSteps = function (talkName, fromList, reminderOn, toggleReminder
         steps = [{
             content: 'Go on "' + talkName + '" talk in List',
             trigger: 'a:contains("' + talkName + '")',
+        },{
+            content: 'Browse Talks',
+            trigger: 'a:contains("Talks")',
         }];
     }
     else {
@@ -113,7 +116,12 @@ var registerSteps = [{
     content: "Click on 'register favorites talks' button",
     trigger: 'a:contains("register to your favorites talks now")',
     run: 'click',
-}];
+},{
+    content: "Click on 'favorites' ",
+    trigger: 'a.dropdown-toggle:contains("Favorites")',
+    run: function () {} 
+}
+];
 
 /**
  * MAIN STEPS
@@ -144,7 +152,7 @@ var browseMeetSteps = [{
 
 tour.register('wevent_register', {
     url: '/event',
-    test: true
+    test: true,
 }, [].concat(
         initTourSteps('Online Reveal'),
         browseTalksSteps,

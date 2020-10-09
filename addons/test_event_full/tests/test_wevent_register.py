@@ -5,7 +5,6 @@ from odoo import tests
 from odoo.addons.test_event_full.tests.common import TestWEventCommon
 from odoo.tests.common import HOST
 
-
 @tests.common.tagged('post_install', '-at_install')
 class TestWEventRegister(TestWEventCommon):
 
@@ -14,8 +13,10 @@ class TestWEventRegister(TestWEventCommon):
             '/event',
             'odoo.__DEBUG__.services["web_tour.tour"].run("wevent_register")',
             'odoo.__DEBUG__.services["web_tour.tour"].tours.wevent_register.ready',
-            login=None
+            login=None,
+            timeout=600
         )
+
         new_registrations = self.event.registration_ids
         visitor = new_registrations.visitor_id
 
