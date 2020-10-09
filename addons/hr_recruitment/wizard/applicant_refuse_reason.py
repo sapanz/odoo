@@ -70,8 +70,6 @@ class ApplicantGetRefuseReason(models.TransientModel):
                 })
             self.template_id = self.composer_id.template_id = self.refuse_reason_id.template_id
             self.composer_id.onchange_template_id_wrapper()
-            self.partner_ids = self.applicant_ids.partner_id
-
 
     def action_refuse_reason_apply(self):
         return self.applicant_ids.write({'refuse_reason_id': self.refuse_reason_id.id, 'active': False})
@@ -84,10 +82,10 @@ class ApplicantGetRefuseReason(models.TransientModel):
         self.ensure_one()
         if self.composition_mode == 'mass_mail' and self.template_id:
             active_records = self.applicant_ids
-            langs = active_records.mapped('partner_id.lang')
+            langs = active_records.mapped('user_id.lang')
             default_lang = get_lang(self.env)
             for lang in (set(langs) or [default_lang]):
-                active_ids_lang = active_records.filtered(lambda r: r.partner_id.lang == lang).ids
+                active_ids_lang = active_records.filtered(lambda r: r.user_id.lang == lang).ids
                 self_lang = self.with_context(active_ids=active_ids_lang, lang=lang)
                 self_lang.onchange_template_id()
                 self_lang._send_email()
