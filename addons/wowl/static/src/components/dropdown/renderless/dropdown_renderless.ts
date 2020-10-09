@@ -1,4 +1,10 @@
-import {Component, useState} from "@odoo/owl";
+import { Component, useState } from "@odoo/owl";
+import { ClientAction } from "../../../services/action_manager/helpers";
+
+export enum DropdownToggleMode {
+    Click = 'click',
+    Hover = 'hover'
+}
 
 export class DropdownRenderless extends Component {
     static template = "wowl.DropdownRenderless";
@@ -13,11 +19,16 @@ export class DropdownRenderless extends Component {
             type: String, // 'all', 'level', 'none'
             optional: true,
         },
+        toggleMode: {
+            type: DropdownToggleMode,
+            optional: true,
+        }
     };
 
     static defaultProps = {
         openedByDefault: false,
         collapseMode: 'all',
+        toggleMode: DropdownToggleMode.Click,
     };
 
     /**
@@ -44,13 +55,16 @@ export class DropdownRenderless extends Component {
     /**
      * Handlers
      */
+    onTogglerClicked() {
+        if (this.props.toggleMode === DropdownToggleMode.Click) {
+            this._toggle();
+        }
+    }
 
-    /**
-     * When the toggler element is clicked, we toggle the item visibility.
-     * If the dropdown has multiple depth, toggle only the depth that has been clicked.
-     */
-    dropdownButtonClicked(ev: any) {
-        this._toggle()
+    onTogglerHovered() {
+        if (this.props.toggleMode === DropdownToggleMode.Hover) {
+            this._toggle();
+        }
     }
 
     /**

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-  <div class="o_dropdown_root_tag" t-name="wowl.DropdownRenderless" t-on-should-toggle-all="_toggle" t-on-dropdownItemClicked.stop="dropdownItemClicked" t-on-dropdown-button-clicked.stop="dropdownButtonClicked" owl="1">
-    <t t-slot="toggler"/>
+  <div class="o_dropdown_root_tag" t-name="wowl.DropdownRenderless" t-on-should-toggle-all="_toggle" t-on-dropdownItemClicked.stop="dropdownItemClicked" owl="1">
+    <div t-on-click.stop="onTogglerClicked" t-on-mouseover.stop="onTogglerHovered">
+      <t t-slot="toggler"/>
+    </div>
     <t t-if="state.open" t-slot="default"/>
   </div>
 

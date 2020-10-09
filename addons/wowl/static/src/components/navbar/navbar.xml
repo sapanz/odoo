@@ -1,58 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-  <header t-name="wowl.NavBar" owl="1">
-    <nav class="o_main_navbar">
+    <header t-name="wowl.NavBar" owl="1">
+        <nav class="o_main_navbar">
 
-     <t t-call="wowl.NavBar.AppsMenu">
-        <t t-set="icon" t-value="'fa fa-th-large'"/>
-       <t t-set="items" t-value="state.menuItems"/>
-     </t>
+            <t t-call="wowl.NavBar.AppsMenu">
+                <t t-set="icon" t-value="'fa fa-th-large'" />
+                <t t-set="items" t-value="state.menuItems" />
+            </t>
 
-      <a class="o_menu_brand" role="button"/>
-      <ul class="o_menu_sections" role="menu"/>
-      <ul class="o_menu_systray" role="menu">
-        <t t-foreach="systrayItems" t-as="sysItem" t-key="sysItem.name">
-          <t t-component="sysItem.Component"/>
+            <a class="o_menu_brand" role="button" />
+            <ul class="o_menu_sections" role="menu" />
+            <ul class="o_menu_systray" role="menu">
+                <t t-foreach="systrayItems" t-as="sysItem" t-key="sysItem.name">
+                    <t t-component="sysItem.Component" />
+                </t>
+            </ul>
+        </nav>
+    </header>
+
+    <DropdownRenderless t-on-item-selected.stop="onMenuClicked" t-name="wowl.NavBar.AppsMenu">
+
+        <t t-set-slot="toggler">
+            <div style="color:white; background-color: red; padding: 2px; border: 1px white solid; opacity: 50%">
+                <i t-if="icon" t-att-class="icon" />
+                <t t-if="name" t-esc="name" />
+            </div>
         </t>
-      </ul>
-    </nav>
-  </header>
 
-  <DropdownRenderless t-on-item-selected.stop="onMenuClicked" t-name="wowl.NavBar.AppsMenu">
-
-      <t t-set-slot="toggler">
-          <DropdownRenderlessButton>
-              <DropdownRenderlessItem>
-                  <div style="color:white; background-color: red; padding: 2px; border: 1px white solid; opacity: 50%">
-                      <i t-if="icon" t-att-class="icon"/>
-                    <t t-if="name" t-esc="name"/>
-                  </div>
-              </DropdownRenderlessItem>
-          </DropdownRenderlessButton>
-      </t>
-
-    <t t-foreach="items" t-as="item" t-key="item.id">
+        <t t-foreach="items" t-as="item" t-key="item.id">
 
             <t t-if="!item.childrenTree.length">
                 <DropdownRenderlessItem payload="item">
                     <div style="color:white; background-color: blue; padding: 2px;border: 1px white solid;  opacity: 50%;">
-                        <t t-esc="item.name"/>
+                        <t t-esc="item.name" />
                     </div>
                 </DropdownRenderlessItem>
             </t>
 
-      <t t-else="" t-call="wowl.NavBar.AppsMenu">
-                <t t-set="name" t-value="item.name"/>
-        <t t-set="icon" t-value="null"/>
-        <t t-set="items" t-value="item.childrenTree"/>
+            <t t-else="" t-call="wowl.NavBar.AppsMenu">
+                <t t-set="name" t-value="item.name" />
+                <t t-set="icon" t-value="null" />
+                <t t-set="items" t-value="item.childrenTree" />
             </t>
 
         </t>
 
     </DropdownRenderless>
 
-  <t t-name="wowl.NavBar.Systray" owl="1">
+    <t t-name="wowl.NavBar.Systray" owl="1">
         <!--
         <ul class="o_menu_systray" role="menu">
             <t t-call="wowl.MenuItems">
@@ -62,7 +58,7 @@
         -->
     </t>
 
-  <t t-name="wowl.NavBar.CurrentAppMenu" owl="1">
+    <t t-name="wowl.NavBar.CurrentAppMenu" owl="1">
         <!--
         <a class="o_navbar_item o_menu_brand" role="button" t-on-click="...">
             <t t-esc="state.currentApp.name"/>
@@ -75,7 +71,7 @@
         -->
     </t>
 
-  <t t-name="wowl.MenuItems" owl="1">
+    <t t-name="wowl.MenuItems" owl="1">
         <!--
         <li t-foreach="menuItems" t-as="menuItem">
         <t t-if="!menuItem.children.length">
