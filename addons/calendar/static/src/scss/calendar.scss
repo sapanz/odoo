@@ -68,25 +68,23 @@
         font-weight: bold;
     }
 }
-.o_calendar_container{
-    .o_other_calendar_panel{
-        @include media-breakpoint-down(sm){
-            display: none !important;
-        }
-    }
-}
+// .o_other_calendar_panel{
+//     @include media-breakpoint-down(sm){
+//         display: none !important;
+//     }
+// }
 
-.o_cp_today_button{
-    .o_calendar_button_today{
-        @include media-breakpoint-down(sm){
-            display: none !important;
-        }
-    }
-}
-.o_calendar_view{
-    .fc-view-container{
-        @include media-breakpoint-down(sm){
-            display: none !important;
-        }
-    }
-}
+// .o_cp_today_button{
+//     .o_calendar_button_today{
+//         @include media-breakpoint-down(sm){
+//             display: none !important;
+//         }
+//     }
+// }
+// .o_calendar_view{
+//     .fc-view-container{
+//         @include media-breakpoint-down(sm){
+//             display: none !important;
+//         }
+//     }
+// }

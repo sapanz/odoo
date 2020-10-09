@@ -3,16 +3,16 @@
         <div class="o_calendar_view">
             <div class="o_calendar_buttons" role="toolbar" aria-label="Calendar toolbar"/>
             <div class="o_calendar_widget" />
+            <footer name="t-att-hidden" class="modal-footer d-md-block d-lg-none">
+                <button class="btn btn-primary o_calendar_button_today">Today</button>
+                <button class="btn btn-primary o_calendar_scale_buttons">Calendars</button>
+                <button class="btn btn-primary o_calendar_quick_create">Create</button>
+            </footer>
         </div>
         <div class="o_calendar_sidebar_container d-none d-md-block">
             <div class="o_calendar_sidebar">
                 <div class="o_calendar_mini"/>
             </div>
-            <!-- <div>
-                <button class="o_calendar_button_today btn btn-primary">Today</button>
-                <button type="button" class="btn btn-primary">Calendar</button>
-                <button type="button" class="btn btn-primary">Create</button>
-            </div> -->
         </div>
     </div>
 
