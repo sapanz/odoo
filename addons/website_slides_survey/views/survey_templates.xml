@@ -2,6 +2,15 @@
 <odoo>
     <data>
         <template id="survey_fill_form_done_inherit_website_slides" inherit_id="survey.survey_fill_form_done">
+            <xpath expr="//div[hasclass('o_survey_finished')]//a[1]" position="after">
+                <a role="button" class="mr-2 btn btn-secondary btn-lg" href="#" data-toggle="modal" t-att-data-target="'#slideChannelShareModal_%s' % answer.slide_id.channel_id">
+                    <i class="fa fa-share-alt" aria-label="Share" title="Share"/>
+                    Share your certification
+                </a>
+                <t t-call="website_slides.slide_share_modal">
+                    <t t-set="record" t-value="answer.slide_id.channel_id"/>
+                </t>
+            </xpath>
             <xpath expr="//div[hasclass('o_survey_finished')]/div[last()]" position="after">
                 <div t-if="channel_url" class="mt16">
                     <a role="button"
