@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 import base64
 
-from odoo.tests.common import SingleTransactionCase, TransactionCase, SavepointCase
+from odoo.tests.common import SavepointCase
 from odoo.modules.module import get_module_resource
 
 
@@ -98,7 +98,7 @@ class TestProductConfiguratorCommon(SavepointCase):
         })
         cls.product_product_conf_chair.optional_product_ids = [(4, cls.product_product_conf_chair_floor_protect.id)]
 
-    @classmethod
+
     def _create_pricelist(cls, pricelists):
         for pricelist in pricelists:
             if not pricelist.item_ids.filtered(lambda i: i.product_tmpl_id == cls.product_product_custo_desk and i.price_discount == 20):

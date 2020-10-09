@@ -4,12 +4,23 @@
 import odoo.tests
 from .common import TestProductConfiguratorCommon
 
-# arj fixme: remove this tag
+
 @odoo.tests.tagged('post_install', '-at_install', 'arj')
 class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
 
     def setUp(self):
         super(TestUi, self).setUp()
+        self.custom_pricelist = self.env['product.pricelist'].create({
+            'name': 'Custom pricelist (TEST)',
+            'item_ids': [(0, 0, {
+                'base': 'list_price',
+                'applied_on': '1_product',
+                'product_tmpl_id': self.product_product_custo_desk.id,
+                'price_discount': 20,
+                'min_quantity': 2,
+                'compute_price': 'formula'
+            })]
+        })
 
     def test_01_product_configurator(self):
         # To be able to test the product configurator, admin user must have access to "variants" feature, so we give him the right group for that
@@ -137,8 +148,6 @@ class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
         # Remove tax from Conference Chair and Chair floor protection
         self.product_product_conf_chair.taxes_id = None
         self.product_product_conf_chair_floor_protect.taxes_id = None
-        pricelists = self.env.ref('product.list0')
-        self._create_pricelist(pricelists)
         self.start_tour("/web", 'sale_product_configurator_pricelist_tour', login="admin")
 
     def test_06_product_configurator_optional_products(self):
@@ -146,7 +155,6 @@ class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
         window opens correctly and lets you select optional products even
         if the main product does not have variants.
         """
-
         # add an optional product to the office chair and the custo desk for testing purposes
         office_chair = self.env['product.product'].create({
             'name': 'Office Chair Black',

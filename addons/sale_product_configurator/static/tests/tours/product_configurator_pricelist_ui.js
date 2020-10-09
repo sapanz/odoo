@@ -31,10 +31,10 @@ tour.stepUtils.showAppsMenuItem(),
 }, {
     content: "search the pricelist",
     trigger: 'div[name="pricelist_id"] input',
-    run: 'text Public Pricelist'
+    run: 'text Custom pricelist (TEST)'
 }, {
     content: "select the pricelist",
-    trigger: 'ul.ui-autocomplete > li > a:contains(Public Pricelist)',
+    trigger: 'ul.ui-autocomplete > li > a:contains(Custom pricelist (TEST))',
 }, {
     trigger: "a:contains('Add a product')"
 }, {
@@ -92,7 +92,7 @@ tour.stepUtils.showAppsMenuItem(),
     trigger: 'span[name="amount_untaxed"]:contains("1,257.00")',
 }, {
     content: "verify SO final price included",
-    trigger: 'span[name="amount_total"]:contains("1,441.95")',
+    trigger: 'span[name="amount_total"]:contains("1,437.00")',
 }
 ]);
 
