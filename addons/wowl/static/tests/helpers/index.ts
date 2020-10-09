@@ -18,8 +18,8 @@ export {
   makeFakeUserService,
   makeFakeMenusService,
   makeFakeRPCService,
-  createMockXHR,
-  createMockedFetch,
+  makeMockXHR,
+  makeMockFetch,
 } from "./mocks";
 
 export {
