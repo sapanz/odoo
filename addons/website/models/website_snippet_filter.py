@@ -5,6 +5,7 @@ from collections import OrderedDict
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
 from odoo.osv import expression
+from odoo.tools import html_escape as escape
 from lxml import etree as ET
 
 
@@ -78,6 +79,7 @@ class WebsiteSnippetFilter(models.Model):
                 limit=limit,
                 search_domain=search_domain,
                 get_rendering_data_structure=self._get_rendering_data_structure,
+                escape=escape,
             ).sudo().run()
 
     @api.model
@@ -115,9 +117,9 @@ class WebsiteSnippetFilter(models.Model):
                 field = model._fields.get(field_name)
                 field_widget = field_widget or field.type
                 if field.type == 'binary':
-                    data['image_fields'][field_name] = Website.image_url(record, field_name)
+                    data['image_fields'][field_name] = escape(Website.image_url(record, field_name))
                 elif field_widget == 'image':
-                    data['image_fields'][field_name] = record[field_name]
+                    data['image_fields'][field_name] = escape(record[field_name])
                 elif field_widget == 'monetary':
                     FieldMonetary = self.env['ir.qweb.field.monetary']
                     model_currency = None
@@ -137,11 +139,11 @@ class WebsiteSnippetFilter(models.Model):
                             {'display_currency': website_currency}
                         )
                     else:
-                        data['fields'][field_name] = record[field_name]
+                        data['fields'][field_name] = escape(record[field_name])
                 elif ('ir.qweb.field.%s' % field_widget) in self.env:
                     data['fields'][field_name] = self.env[('ir.qweb.field.%s' % field_widget)].record_to_html(record, field_name, {})
                 else:
-                    data['fields'][field_name] = record[field_name]
+                    data['fields'][field_name] = escape(record[field_name])
 
             data['fields']['call_to_action_url'] = 'website_url' in record and record['website_url']
             values.append(data)

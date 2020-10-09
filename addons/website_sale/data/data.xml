@@ -60,6 +60,7 @@ dynamic_filter = model.env.context.get('dynamic_filter')
 limit = model.env.context.get('limit')
 search_domain = model.env.context.get('search_domain')
 get_rendering_data_structure = model.env.context.get('get_rendering_data_structure')
+escape = model.env.context.get('escape')
 
 domain = [('website_published', '=', True)] + website.website_domain() + (search_domain or [])
 products = ProductProduct.search(domain, limit=limit)
@@ -82,12 +83,15 @@ for product in products:
     for field_name in dynamic_filter.field_names.split(","):
         field = ProductProduct._fields.get(field_name)
         if field and field.type == 'binary':
-            res_product[field_name] = website.image_url(product, field_name)
+            res_product[field_name] = escape(website.image_url(product, field_name))
             data_type = 'image_fields'
         else:
             data_type = 'fields'
+
+        if field_name != 'list_price':
+            res_product[field_name] = res_product[field_name] and escape(res_product[field_name])
         data[data_type][field_name] = res_product[field_name]
-    data['fields']['call_to_action_url'] = product['website_url']
+    data['fields']['call_to_action_url'] = product['website_url'] and escape(product['website_url'])
     res_products.append(data)
 
 response = res_products
