@@ -5987,8 +5987,6 @@ Fields:
                 return False
 
             def x2many_has_changed(self, field, names=[], filter=None):
-                if field in self['<force_changed_fields>']:
-                    return True
                 if field not in self:
                     return True
 
