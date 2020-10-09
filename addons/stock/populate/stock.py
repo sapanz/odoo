@@ -6,6 +6,9 @@ from odoo.tools import populate, groupby
 
 _logger = logging.getLogger(__name__)
 
+# Take X first company to put some stock on it data (it is to focus data on these companies)
+COMPANY_NB_WITH_STOCK = 3  # Need to be smaller than 5 (_populate_sizes["small"] of company)
+
 
 class ProductProduct(models.Model):
     _inherit = "product.product"
@@ -23,22 +26,19 @@ class Waherouse(models.Model):
 
     _populate_sizes = {
         "small": 5,
-        "medium": 80,
-        "large": 950,
+        "medium": 10,
+        "large": 30,
     }
     _populate_dependencies = ["res.company"]
 
     def _populate_factories(self):
-        company_ids = self.env.registry.populated_models["res.company"]
-
-        def get_company_id(random, **kwargs):
-            return random.choice(company_ids)
+        company_ids = self.env.registry.populated_models["res.company"][:COMPANY_NB_WITH_STOCK]
 
         def get_name(values, counter, **kwargs):
             return "WH-%d-%d" % (values["company_id"], counter)
 
         return [
-            ('company_id', populate.compute(get_company_id)),
+            ('company_id', populate.iterate(company_ids)),
             ('name', populate.compute(get_name)),
             ('code', populate.constant("W{counter}")),
             ('reception_steps', populate.randomize(['one_step', 'two_steps', 'three_steps'], [0.6, 0.2, 0.2])),
@@ -49,7 +49,7 @@ class Waherouse(models.Model):
 class Location(models.Model):
     _inherit = "stock.location"
     _populate_sizes = {
-        "small": 0,  # Equals to default mono-location
+        "small": 100,
         "medium": 1_000,
         "large": 10_000,
     }
@@ -70,37 +70,44 @@ class Location(models.Model):
 class PickingType(models.Model):
     _inherit = "stock.picking.type"
 
-    _populate_sizes = {
-        "small": 0,  # Use only existing type
-        "medium": 100,  # add 5 by companies in average
-        "large": 2_500,  # Add 50 by companies in average
-    }
+    _populate_sizes = {"small": 10, "medium": 100, "large": 1_000}
     _populate_dependencies = ["stock.location"]
 
     def _populate_factories(self):
-        company_ids = self.env.registry.populated_models["res.company"]
+        company_ids = self.env.registry.populated_models["res.company"][:COMPANY_NB_WITH_STOCK]
+        warehouses = self.env["stock.warehouse"].browse(self.env.registry.populated_models["stock.warehouse"])
 
         def get_company_id(random, **kwargs):
             return random.choice(company_ids)
 
-        def false_repeat(**kwargs):
-            return False
+        def get_name(values, counter, **kwargs):
+            return "PT-%d-%d" % (values["company_id"], counter)
 
         def compute_default_locations(iterator, field_name, model_name):
-
+            random = populate.Random("compute_default_locations")
             for counter, values in enumerate(iterator):
-                # TODO
+                if values["code"] == "internal":
+                    values["warehouse_id"] = random.choice(warehouses.ids)
+                    values["location_src"] = #TODO
+                    values["location_dest"] = 
+                elif values["code"] == "incoming":
+
+                elif values["code"] == "outgoing":
+
                 # location_src: 'required': [('code', 'in', ('internal', 'outgoing'))]
                 # location_dest: 'required': [('code', 'in', ('internal', 'incoming'))]
+
+                # Simulate onchange of form
+                values["show_operations"] = values["code"] != 'incoming'
+                values["show_reserved"] = values["show_operations"] and values["code"] != 'incoming'
 
                 yield values
 
         return [
-            ("name", populate.constant("PType-{counter}")),
             ("company_id", populate.compute(get_company_id)),
-            ("sequence_code", populate.constant("PT{counter}-")),
-            ("code", populate.randomize(['incoming', 'outgoing', 'internal'], [0.3, 0.3, 0.4])),
-            ("warehouse_id", populate.compute(false_repeat)),
+            ("name", populate.compute(get_name)),
+            ("sequence_code", populate.compute("PT-{counter}-")),
+            ("code", populate.iterate(['incoming', 'outgoing', 'internal'], [0.3, 0.3, 0.4])),
             ("compute_default_locations", compute_default_locations),
         ]
 
@@ -112,6 +119,9 @@ class Picking(models.Model):
 
     def _populate_factories(self):
 
+        pop_picking_types = self.env['stock.picking.type'].browse(self.env.registry.populated_models["stock.picking.type"])
+        pop_location = self.env['stock.location'].browse(self.env.registry.populated_models["stock.location"])
+
         now = datetime.now()
 
         def get_until_date(random=None, **kwargs):
@@ -120,10 +130,10 @@ class Picking(models.Model):
             return now + timedelta(days=delta)
 
         def compute_type_information(iterator, field_name, model_name):
-            picking_types = self.env['stock.picking.type'].search([])
-            locations_internal = self.env['stock.location'].search([('usage', '=', 'internal')])
-            locations_out = self.env['stock.location'].search([('usage', '=', 'customer')])
-            locations_in = self.env['stock.location'].search([('usage', '=', 'supplier')])
+            picking_types = pop_picking_types
+            locations_internal = pop_location.filtered_domain([('usage', '=', 'internal')])
+            locations_out = pop_location.filtered_domain([('usage', '=', 'customer')])
+            locations_in = pop_location.filtered_domain([('usage', '=', 'supplier')])
             locations_by_company = dict(groupby(self.env['stock.location'].search([]), key=lambda loc: loc.company_id))
 
             random = populate.Random("compute_type_information")
