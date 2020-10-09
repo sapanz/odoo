@@ -196,7 +196,7 @@ define([
         modules.toolbar.update(layoutInfo.toolbar(), styleInfo);
       }
 
-      modules.popover.update(layoutInfo.popover(), styleInfo, isAirMode);
+      modules.popover.update(layoutInfo.popover(), styleInfo, isAirMode, layoutInfo.editable());
       modules.handle.update(layoutInfo.handle(), styleInfo, isAirMode);
     };
 

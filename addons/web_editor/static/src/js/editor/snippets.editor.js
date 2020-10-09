@@ -2447,11 +2447,11 @@ var SnippetsMenu = Widget.extend({
     /**
      * @private
      */
-    _onSummernoteToolsUpdate(ev) {
+    _onSummernoteToolsUpdate(ev, data) {
         if (!this._textToolsSwitchingEnabled) {
             return;
         }
-        if (!$.summernote.core.range.create()) {
+        if (!$.summernote.core.range.create() || data.editable.hasClass('oe_empty')) {
             // Sometimes not enough...
             return;
         }

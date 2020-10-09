@@ -302,7 +302,7 @@ eventHandler.modules.toolbar.button.update = function ($container, oStyle) {
 };
 
 var fn_popover_update = eventHandler.modules.popover.update;
-eventHandler.modules.popover.update = function ($popover, oStyle, isAirMode) {
+eventHandler.modules.popover.update = function ($popover, oStyle, isAirMode, $editable) {
     var $imagePopover = $popover.find('.note-image-popover');
     var $linkPopover = $popover.find('.note-link-popover');
     var $airPopover = $popover.find('.note-air-popover');
@@ -349,7 +349,7 @@ eventHandler.modules.popover.update = function ($popover, oStyle, isAirMode) {
         $externalHistoryButtons.find(':first-child').prop('disabled', $noteHistory.find('[data-event=undo]').prop('disabled'));
         $externalHistoryButtons.find(':last-child').prop('disabled', $noteHistory.find('[data-event=redo]').prop('disabled'));
     }
-    $popover.trigger('summernote_popover_update_call');
+    $popover.trigger('summernote_popover_update_call', {editable: $editable});
 };
 
 var fn_handle_update = eventHandler.modules.handle.update;
