@@ -47,7 +47,7 @@ QUnit.module("Action Manager Service", {
 });
 
 QUnit.test("action_manager service loads actions", async (assert) => {
-  assert.expect(4);
+  assert.expect(6);
 
   env.services.action_manager.doAction(1);
   await nextTick();
@@ -55,13 +55,12 @@ QUnit.test("action_manager service loads actions", async (assert) => {
   env.services.action_manager.doAction("wowl.some_action");
   await nextTick();
   assert.verifySteps(["client_action_xml_id"]);
-  // TODO
-  /*  env.services.action_manager.doAction({
+  env.services.action_manager.doAction({
     tag: 'client_action_by_object',
     type: 'ir.actions.client',
   });
   await nextTick();
   assert.verifySteps([
     'client_action_object',
-  ]);*/
+  ]);
 });
