@@ -1717,7 +1717,10 @@ var SnippetsMenu = Widget.extend({
             }
 
             let editableArea = self.getEditableArea();
-            snippetEditor = new SnippetEditor(parentEditor || self, $snippet, self.templateOptions, $snippet.closest('[data-oe-type="html"], .oe_structure').add(editableArea), self.options);
+            let $editable = $snippet.closest('[data-oe-type="html"], .oe_structure').add(editableArea)
+            if (!$editable.length)
+                return;
+            snippetEditor = new SnippetEditor(parentEditor || self, $snippet, self.templateOptions, $editable, self.options);
             self.snippetEditors.push(snippetEditor);
             return snippetEditor.appendTo(self.$snippetEditorArea);
         }).then(function () {
@@ -1861,6 +1864,7 @@ var SnippetsMenu = Widget.extend({
 
                     dropped = false;
                     $snippet = $(this);
+                    const prom = new Promise(resolve => dragAndDropResolve = () => resolve());
                     var $baseBody = $snippet.find('.oe_snippet_body');
                     var $selectorSiblings = $();
                     var $selectorChildren = $();
@@ -1910,8 +1914,6 @@ var SnippetsMenu = Widget.extend({
                             }
                         },
                     });
-
-                    const prom = new Promise(resolve => dragAndDropResolve = () => resolve());
                     self._mutex.exec(() => prom);
                 },
                 stop: async function (ev, ui) {
