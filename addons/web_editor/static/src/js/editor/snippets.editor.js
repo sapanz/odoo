@@ -180,11 +180,16 @@ var SnippetEditor = Widget.extend({
      * Notifies all the associated snippet options that the template which
      * contains the snippet is about to be saved.
      */
-    cleanForSave: async function () {
+    cleanForSave: async function (isDragAndDropAction = false) {
         if (this.isDestroyed()) {
             return;
         }
-        await this.toggleTargetVisibility(!this.$target.hasClass('o_snippet_invisible'));
+        const visibility = !this.$target.hasClass('o_snippet_invisible');
+        if (isDragAndDropAction) {
+            this._toggleVisibilityStatus(visibility);
+        } else {
+            await this.toggleTargetVisibility(visibility);
+        }
         const proms = _.map(this.styles, option => {
             return option.cleanForSave();
         });
@@ -1421,9 +1426,9 @@ var SnippetsMenu = Widget.extend({
     /**
      * @private
      */
-    _destroyEditors: async function () {
+    _destroyEditors: async function (isDragAndDropAction = false) {
         const proms = _.map(this.snippetEditors, async function (snippetEditor) {
-            await snippetEditor.cleanForSave();
+            await snippetEditor.cleanForSave(isDragAndDropAction);
             snippetEditor.destroy();
         });
         await Promise.all(proms);
@@ -2171,7 +2176,7 @@ var SnippetsMenu = Widget.extend({
      * @param {OdooEvent} ev
      */
     _onDragAndDropStop: async function (ev) {
-        await this._destroyEditors();
+        await this._destroyEditors(true);
         await this._activateSnippet(ev.data.$snippet);
     },
     /**
