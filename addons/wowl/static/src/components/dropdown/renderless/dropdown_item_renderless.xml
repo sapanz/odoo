@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-  <span t-name="wowl.DropdownRenderlessItem" t-on-click="onClick" t-on-mouseover="onHover" owl="1">
-    <t t-slot="default"/>
+  <span t-name="wowl.DropdownRenderlessItem" t-on-click="onClick" owl="1">
+    <t t-slot="default" />
   </span>
 
 </templates>

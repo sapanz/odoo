@@ -1,22 +1,24 @@
 import { Component, useState } from "@odoo/owl";
-import { ClientAction } from "../../../services/action_manager/helpers";
 
+export enum DropdownCollapseMode {
+    All = 'all',
+    Level = 'level',
+    None = 'none',
+}
 export enum DropdownToggleMode {
     Click = 'click',
-    Hover = 'hover'
+    Hover = 'hover',
 }
 
 export class DropdownRenderless extends Component {
     static template = "wowl.DropdownRenderless";
-    state = useState({open: this.props.openedByDefault})
-
     static props = {
         openedByDefault: {
             type: Boolean,
             optional: true,
         },
         collapseMode: {
-            type: String, // 'all', 'level', 'none'
+            type: DropdownCollapseMode,
             optional: true,
         },
         toggleMode: {
@@ -24,12 +26,13 @@ export class DropdownRenderless extends Component {
             optional: true,
         }
     };
-
     static defaultProps = {
         openedByDefault: false,
-        collapseMode: 'all',
+        collapseMode: DropdownCollapseMode.All,
         toggleMode: DropdownToggleMode.Click,
     };
+
+    state = useState({ open: this.props.openedByDefault })
 
     /**
      * Private
@@ -42,15 +45,6 @@ export class DropdownRenderless extends Component {
     _toggle() {
         this.state.open = !this.state.open;
     }
-
-    /**
-     * Toggle the items of the dropdown.
-     * If it has several levels, all the levels are toggled
-     */
-     _closeAll() {
-        this.state.open = false;
-        this.trigger('should-toggle-all');
-     }
 
     /**
      * Handlers
@@ -73,20 +67,23 @@ export class DropdownRenderless extends Component {
      * Options are passed through props.
      */
     dropdownItemClicked(ev: any) {
+        if (!ev.detail) return; // this is not a leaf.
 
-        if (!ev.detail.payload) return; // this is not a leaf.
+        // Trigger up
+        this.trigger('item-selected', ev.detail);
 
-        this.trigger('item-selected', { payload: ev.detail.payload})
-
-        if (this.props.collapseMode === 'all') {
-            this._closeAll();
+        // Collapse
+        switch (this.props.collapseMode) {
+            case DropdownCollapseMode.Level:
+                this._toggle();
+                break;
+            case DropdownCollapseMode.All:
+                // this._toggle();
+                this.trigger('toggle-all');
+                break;
+            case DropdownCollapseMode.None:
+            default:
+                break;
         }
-
-        if (this.props.collapseMode === 'level') {
-            this._toggle()
-        }
-
     }
-
-
 }

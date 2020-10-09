@@ -1,8 +1,8 @@
 import { Component, useState } from "@odoo/owl";
 import { useService } from "../../core/hooks";
 import { OdooEnv } from "../../types";
-import {DropdownRenderless} from "../dropdown/renderless/dropdown_renderless";
-import {DropdownRenderlessItem} from "../dropdown/renderless/dropdown_item_renderless";
+import { DropdownRenderless } from "../dropdown/renderless/dropdown_renderless";
+import { DropdownRenderlessItem } from "../dropdown/renderless/dropdown_item_renderless";
 
 export class NavBar extends Component<{}, OdooEnv> {
   static template = "wowl.NavBar";
@@ -15,10 +15,7 @@ export class NavBar extends Component<{}, OdooEnv> {
   systrayItems = this.env.registries.systray.getAll();
 
   onMenuClicked(ev: any) {
-    const { payload } = ev.detail;
-    console.log("onMenuClicked called with ", payload)
-    if (payload) {
-          this.actionManager.doAction(payload.actionID);
-    }
+    const payload = ev.detail;
+    this.actionManager.doAction(payload.actionID);
   }
 }
