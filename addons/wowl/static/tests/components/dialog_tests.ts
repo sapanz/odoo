@@ -209,8 +209,8 @@ QUnit.test("dialog can be rendered on fullscreen", async function (assert) {
   assert.hasClass(target.querySelector(".o_dialog .modal") as HTMLElement, "o_modal_full");
 });
 
-QUnit.skip("Interactions between multiple dialogs", async function (assert) {
-  assert.expect(22);
+QUnit.debug("Interactions between multiple dialogs", async function (assert) {
+  assert.expect(14);
   class Parent extends owl.Component {
     static components = { Dialog };
     static template = owl.tags.xml`
@@ -246,7 +246,7 @@ QUnit.skip("Interactions between multiple dialogs", async function (assert) {
   }
 
   let modals = document.querySelectorAll(".modal");
-  assert.containsN(document.body, ".o_dialog", 3);
+  assert.containsN(target, ".o_dialog", 3);
   assert.deepEqual(activity(modals), [false, false, true]);
   assert.hasClass(target.querySelector(".o_dialog_container") as HTMLElement, "modal-open");
 
@@ -255,7 +255,7 @@ QUnit.skip("Interactions between multiple dialogs", async function (assert) {
   await nextTick();
 
   modals = document.querySelectorAll(".modal");
-  assert.containsN(document.body, ".o_dialog", 2);
+  assert.containsN(target, ".o_dialog", 2);
   assert.deepEqual(activity(modals), [false, true]);
   assert.hasClass(target.querySelector(".o_dialog_container") as HTMLElement, "modal-open");
 
@@ -263,7 +263,7 @@ QUnit.skip("Interactions between multiple dialogs", async function (assert) {
   await click(lastDialog, "footer button");
 
   modals = document.querySelectorAll(".modal");
-  assert.containsN(document.body, ".o_dialog", 1);
+  assert.containsN(target, ".o_dialog", 1);
   assert.deepEqual(activity(modals), [true]);
   assert.hasClass(target.querySelector(".o_dialog_container") as HTMLElement, "modal-open");
 

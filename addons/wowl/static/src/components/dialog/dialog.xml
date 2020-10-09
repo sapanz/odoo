@@ -9,7 +9,6 @@
                     t-att-class="{ o_modal_full: props.fullscreen }"
                     t-ref="modal"
                     >
-                    <t t-debug=""/>
                     <div class="modal-dialog" t-att-class="props.size">
                         <div class="modal-content">
                             <header t-if="props.renderHeader" class="modal-header">

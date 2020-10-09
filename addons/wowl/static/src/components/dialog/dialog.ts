@@ -1,8 +1,5 @@
-import * as owl from "@odoo/owl";
-import { OdooEnv } from "../../types";
-
-const { misc, Component, hooks } = owl;
-const { useRef } = hooks;
+import { Component, hooks, misc } from "@odoo/owl";
+const { useRef, useExternalListener } = hooks;
 const { Portal } = misc;
 
 const displayed: Dialog[] = [];
@@ -26,22 +23,14 @@ function hide(dialog: Dialog) {
     lastDialog.el?.focus();
     lastDialog.modalRef.el?.classList.remove("o_inactive_modal");
   } else {
+    debugger
     // Update container class
     const dialogContainer = document.body.querySelector(".o_dialog_container");
     dialogContainer?.classList.remove("modal-open");
   }
 }
 
-interface DialogProps {
-  // should be replaced by using static props as usual (for validation)
-  fullscreen: boolean; // used mainly in mobile mode
-  renderFooter: boolean;
-  renderHeader: boolean;
-  size: { validate: (s: string) => "modal-xl" | "modal-lg" | "modal-sm" };
-  title: String;
-}
-
-export class Dialog extends Component<DialogProps, OdooEnv> {
+export class Dialog extends Component  {
   static components = { Portal };
   static defaultProps = {
     fullscreen: false,
@@ -50,10 +39,25 @@ export class Dialog extends Component<DialogProps, OdooEnv> {
     size: "modal-lg",
     title: "Odoo",
   };
-  static props: DialogProps;
+  static props: {
+      fullscreen: boolean,
+      renderFooter: boolean,
+      renderHeader: boolean,
+      size: {
+        type: String,
+        validate: (s: string) => true,
+        // validate: (s: string) => ["modal-xl", "modal-lg", "modal-sm"].includes(s),
+      },
+      title: string,
+  };
   static template = "wowl.Dialog";
 
   modalRef = useRef("modal");
+  
+  constructor() {
+      super(...arguments);
+      useExternalListener(window, 'keydown', this._onKeydown);
+  }
 
   mounted() {
     display(this);
@@ -69,5 +73,17 @@ export class Dialog extends Component<DialogProps, OdooEnv> {
    */
   _close() {
     this.trigger("dialog-closed");
+  }
+
+  _onKeydown(ev: KeyboardEvent) {
+    if (
+        ev.key === 'Escape' &&
+        displayed[displayed.length - 1] === this
+    ) {
+        ev.preventDefault();
+        ev.stopImmediatePropagation();
+        ev.stopPropagation();
+        this._close();
+    }
   }
 }
