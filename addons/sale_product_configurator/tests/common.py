@@ -98,8 +98,8 @@ class TestProductConfiguratorCommon(SavepointCase):
         })
         cls.product_product_conf_chair.optional_product_ids = [(4, cls.product_product_conf_chair_floor_protect.id)]
 
-        # fix runbot, sometimes one pricelist is chosen, sometimes the other...
-        pricelists = cls.env.ref('product.list0')
+    @classmethod
+    def _create_pricelist(cls, pricelists):
         for pricelist in pricelists:
             if not pricelist.item_ids.filtered(
                     lambda i: i.product_tmpl_id == cls.product_product_custo_desk and i.price_discount == 20):
@@ -112,5 +112,4 @@ class TestProductConfiguratorCommon(SavepointCase):
                     'min_quantity': 2,
                     'compute_price': 'formula',
                 })
-
             pricelist.discount_policy = 'without_discount'

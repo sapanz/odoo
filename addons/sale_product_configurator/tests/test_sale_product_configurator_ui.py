@@ -10,6 +10,8 @@ class TestUi(odoo.tests.HttpSavepointCase, TestProductConfiguratorCommon):
 
     def setUp(self):
         super(TestUi, self).setUp()
+        pricelists = self.env.ref('product.list0')
+        self._create_pricelist(pricelists)
 
     def test_01_product_configurator(self):
         # To be able to test the product configurator, admin user must have access to "variants" feature, so we give him the right group for that
