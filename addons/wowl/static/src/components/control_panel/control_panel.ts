@@ -8,9 +8,15 @@ export class ControlPanel extends Component {
   get breadcrumbs() {
     return this.actionManager.getBreadcrumbs();
   }
+  get views() {
+    return this.actionManager.getViews();
+  }
 
   _onBreadcrumbClicked(jsId: string) {
     this.actionManager.restore(jsId);
+  }
+  _onViewClicked(viewType: string) {
+    this.actionManager.switchView(viewType);
   }
   _onExecuteAction(actionId: number) {
     this.actionManager.doAction(actionId);

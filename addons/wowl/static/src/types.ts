@@ -146,6 +146,8 @@ export type ViewType =
 
 export interface View {
   name: string;
+  icon: string;
+  multiRecord: boolean;
   type: ViewType;
   Component: Type<Component<{}, OdooEnv>>;
 }
@@ -160,29 +162,26 @@ export interface SystrayItem {
  *  MODELS AND FIELDS DEFINITION
  */
 
-export type FieldType =
-  | "char"
-  | "one2many"
-  | "many2many"
-  | "number"
-;
+export type FieldType = "char" | "one2many" | "many2many" | "number";
 
-export interface FieldDefiniton {
-  relation?: string,
-  relation_field?: string,
-  string: string,
-  type: FieldType,
+export interface FieldDefinition {
+  relation?: string;
+  relation_field?: string;
+  string: string;
+  type: FieldType;
 }
 
 export interface ModelFields {
-  id: FieldDefiniton,
-  [fieldName: string]: FieldDefiniton,
+  id: FieldDefinition;
+  [fieldName: string]: FieldDefinition;
 }
 export interface ModelData {
-  defaults?: keyof ModelFields,
-  fields: ModelFields,
-  records: DBRecord[],
-  methods?: ModelMethods,
+  defaults?: keyof ModelFields;
+  fields: ModelFields;
+  records: DBRecord[];
+  methods?: ModelMethods;
 }
 type Method = (args: any[], kwargs: any) => any;
-export interface ModelMethods {[methodName: string]: Method}
+export interface ModelMethods {
+  [methodName: string]: Method;
+}

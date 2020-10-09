@@ -1,18 +1,5 @@
 import { Component } from "@odoo/owl";
-import { OdooEnv, Type } from "./../../types";
-
-type ActionId = number;
-type ActionXMLId = string;
-type ActionTag = string;
-interface ActionDescription {
-  tag: string;
-  type: "ir.actions.client";
-  [key: string]: any;
-}
-export type ActionRequest = ActionId | ActionXMLId | ActionTag | ActionDescription;
-export interface ActionOptions {
-  clear_breadcrumbs?: boolean;
-}
+import { OdooEnv, Type, View } from "./../../types";
 
 type ActionType =
   | "ir.actions.act_url"
@@ -21,27 +8,56 @@ type ActionType =
   | "ir.actions.client"
   | "ir.actions.report"
   | "ir.actions.server";
+type ActionTarget = "current" | "main" | "new" | "fullscreen" | "inline";
+
+type ActionId = number;
+type ActionXMLId = string;
+type ActionTag = string;
+interface ActionDescription {
+  target: ActionTarget;
+  type: ActionType;
+  [key: string]: any;
+}
+export type ActionRequest = ActionId | ActionXMLId | ActionTag | ActionDescription;
+export interface ActionOptions {
+  clearBreadcrumbs?: boolean;
+}
+
 export interface Action {
   id?: number;
   jsId: string;
+  name: string;
   context: object;
   target: "current";
   type: ActionType;
 }
 export interface ClientAction extends Action {
-  Component?: Type<Component<{}, OdooEnv>>;
   tag: string;
   type: "ir.actions.client";
 }
+type ViewId = number | false;
+type ViewType = string;
 export interface ActWindowAction extends Action {
-  Component: Type<Component<{}, OdooEnv>>;
   id: number;
   type: "ir.actions.act_window";
   res_model: string;
+  views: [ViewId, ViewType][];
 }
 export interface ServerAction extends Action {
   id: number;
   type: "ir.actions.server";
+}
+
+export interface Controller {
+  jsId: string;
+  Component: Type<Component<{}, OdooEnv>>;
+  action: ClientAction | ActWindowAction;
+}
+
+export interface ViewController extends Controller {
+  action: ActWindowAction;
+  view: View;
+  views: View[];
 }
 
 // function makeStandardAction(action: ActionRequest, options:ActionOptions): ClientAction {

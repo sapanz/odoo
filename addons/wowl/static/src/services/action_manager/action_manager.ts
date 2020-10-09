@@ -7,6 +7,8 @@ import {
   ClientAction,
   ActWindowAction,
   ServerAction,
+  Controller,
+  ViewController,
 } from "./helpers";
 
 // -----------------------------------------------------------------------------
@@ -16,6 +18,8 @@ import {
 interface ActionManager {
   doAction(action: ActionRequest, options?: ActionOptions): void;
   getBreadcrumbs(): any;
+  getViews(): any;
+  switchView(viewType: string): void;
   restore(jsId: string): void;
 }
 interface SubRenderingInfo {
@@ -25,6 +29,10 @@ interface SubRenderingInfo {
 }
 interface RenderingInfo {
   main: SubRenderingInfo;
+}
+interface UpdateStackOptions {
+  clearBreadcrumbs?: boolean;
+  index?: number;
 }
 
 // -----------------------------------------------------------------------------
@@ -54,7 +62,7 @@ export class ActionContainer extends Component<{}, OdooEnv> {
 
 function makeActionManager(env: OdooEnv): ActionManager {
   let id = 0;
-  let actionStack: any[] = [];
+  let controllerStack: Controller[] = [];
 
   env.bus.on("action_manager:finalize", null, () => {
     console.log("action mounted");
@@ -98,9 +106,23 @@ function makeActionManager(env: OdooEnv): ActionManager {
    * @param {ActWindowAction} action
    */
   function _executeActWindowAction(action: ActWindowAction, options: ActionOptions): void {
-    const view = env.registries.views.get("form"); // FIXME: get the first view here
-    action.Component = view.Component;
-    _updateStack(action, options);
+    const views = [];
+    for (const [_, type] of action.views) {
+      if (env.registries.views.contains(type)) {
+        views.push(env.registries.views.get(type));
+      }
+    }
+    if (!views.length) {
+      throw new Error(`No view found for act_window action ${action.id}`);
+    }
+    const controller: ViewController = {
+      jsId: `controller_${++id}`,
+      Component: views[0].Component,
+      action,
+      view: views[0],
+      views,
+    };
+    _updateStack(controller, { clearBreadcrumbs: options.clearBreadcrumbs });
   }
 
   /**
@@ -111,8 +133,12 @@ function makeActionManager(env: OdooEnv): ActionManager {
   function _executeClientAction(action: ClientAction, options: ActionOptions): void {
     const clientAction = env.registries.actions.get(action.tag);
     if (clientAction.prototype instanceof Component) {
-      action.Component = clientAction as ComponentAction;
-      _updateStack(action, options);
+      const controller: Controller = {
+        jsId: `controller_${++id}`,
+        Component: clientAction as ComponentAction,
+        action,
+      };
+      _updateStack(controller, { clearBreadcrumbs: options.clearBreadcrumbs });
     } else {
       (clientAction as FunctionAction)();
     }
@@ -133,21 +159,29 @@ function makeActionManager(env: OdooEnv): ActionManager {
   }
 
   /**
-   * Updates the action stack and triggers a re-rendering.
+   * Updates the controller stack and triggers a re-rendering.
    *
-   * @param {ClientAction | ActWindowAction} action
-   * @param {ActionOptions} options
+   * @param {Controller} controller
+   * @param {UpdateStackOptions} options
+   * @param {boolean} [options.clearBreadcrumbs=false]
+   * @param {number} [options.index]
    */
-  function _updateStack(action: ClientAction | ActWindowAction, options: ActionOptions): void {
-    if (options.clear_breadcrumbs) {
-      actionStack = [];
+  function _updateStack(controller: Controller, options: UpdateStackOptions = {}): void {
+    let index = null;
+    if (options.clearBreadcrumbs) {
+      index = 0;
+    } else if ("index" in options) {
+      index = options.index;
     }
-    actionStack.push(action);
+    if (index !== null) {
+      controllerStack = controllerStack.slice(0, index);
+    }
+    controllerStack.push(controller);
     env.bus.trigger("action_manager:update", {
       main: {
         id: ++id,
-        Component: (action as ClientAction | ActWindowAction).Component,
-        props: { action },
+        Component: controller.Component,
+        props: { action: controller.action },
       },
     });
   }
@@ -159,8 +193,10 @@ function makeActionManager(env: OdooEnv): ActionManager {
    * @param {ActionOptions} options
    * @returns {Promise<any>}
    */
-  async function _doAction(actionRequest: ActionRequest, options?: ActionOptions): Promise<any> {
-    options = options || {};
+  async function _doAction(
+    actionRequest: ActionRequest,
+    options: ActionOptions = {}
+  ): Promise<any> {
     const action = await _loadAction(actionRequest, options);
     switch (action.type) {
       case "ir.actions.act_window":
@@ -185,26 +221,44 @@ function makeActionManager(env: OdooEnv): ActionManager {
       _doAction(...args);
     },
     getBreadcrumbs: () => {
-      return actionStack.map((action) => {
+      return controllerStack.map((controller) => {
         return {
-          name: action.name,
-          id: action.id,
-          jsId: action.jsId,
+          name: controller.action.name,
+          id: controller.action.id,
+          jsId: controller.jsId,
         };
       });
     },
-    restore: (jsId) => {
-      const index = actionStack.findIndex((action) => action.jsId === jsId);
-      if (index < 0) {
-        throw new Error("invalid action to restore");
+    getViews: () => {
+      const controller = controllerStack[controllerStack.length - 1] as ViewController;
+      const multiRecord = controller.view.multiRecord;
+      return controller.views.filter((view) => view.multiRecord === multiRecord);
+    },
+    switchView: (viewType) => {
+      const controller = controllerStack[controllerStack.length - 1] as ViewController;
+      const view = controller.views.find((view: any) => view.type === viewType);
+      if (view) {
+        const newController = Object.assign({}, controller, {
+          jsId: `controller_${++id}`,
+          Component: view.Component,
+          view,
+        });
+        const index = view.multiRecord ? controllerStack.length - 1 : controllerStack.length;
+        _updateStack(newController, { index });
       }
-      const action = actionStack[index];
-      actionStack = actionStack.slice(0, index + 1);
+    },
+    restore: (jsId) => {
+      const index = controllerStack.findIndex((controller) => controller.jsId === jsId);
+      if (index < 0) {
+        throw new Error("invalid controller to restore");
+      }
+      const controller = controllerStack[index];
+      controllerStack = controllerStack.slice(0, index + 1);
       env.bus.trigger("action_manager:update", {
         main: {
           id: ++id,
-          Component: action.Component,
-          props: { action },
+          Component: controller.Component,
+          props: { action: controller.action },
         },
       });
     },
