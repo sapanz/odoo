@@ -1,10 +1,9 @@
 import * as QUnit from "qunit";
 import { Registry } from "../../src/core/registry";
 import { actionManagerService } from "../../src/services/action_manager/action_manager";
-import { makeFakeRPCService, makeTestEnv, nextTick } from "../helpers/index";
+import { makeTestEnv, nextTick } from "../helpers/index";
 import { ComponentAction, FunctionAction, OdooEnv, Service } from "../../src/types";
-import { RPC } from "../../src/services/rpc";
-import { makeFakeModelService } from '../mock_server';
+import { makeMockServer } from '../helpers/mock_server';
 
 let env: OdooEnv;
 let services: Registry<Service>;
@@ -23,6 +22,13 @@ const serverSideActions: any = {
   },
 };
 
+const models: any = {
+  partner: {
+    fields: {id: {type: 'char', string: 'id'}},
+    records: [],
+  }
+};
+
 QUnit.module("Action Manager Service", {
   async beforeEach(assert) {
     actionsRegistry = new Registry<ComponentAction | FunctionAction>();
@@ -30,22 +36,12 @@ QUnit.module("Action Manager Service", {
     actionsRegistry.add("client_action_by_xml_id", () => assert.step("client_action_xml_id"));
     actionsRegistry.add("client_action_by_object", () => assert.step("client_action_object"));
     services = new Registry<Service>();
-    services.add(
-      "rpc",
-      makeFakeRPCService((route: Parameters<RPC>[0], args: Parameters<RPC>[1]) => {
-        if (route === "/web/action/load") {
-          const id = args && args.action_id;
-          return serverSideActions[id];
-        }
-      })
+    makeMockServer(
+      services,
+      {models, actions: serverSideActions, views: {}}
     );
+
     services.add("action_manager", actionManagerService);
-    services.add('model', makeFakeModelService({
-      partner: {
-        fields: {id: {type: 'char', string: 'id'}},
-        records: [],
-      }
-    }));
     env = await makeTestEnv({ actions: actionsRegistry, services });
   },
 });
@@ -68,9 +64,4 @@ QUnit.test("action_manager service loads actions", async (assert) => {
   assert.verifySteps([
     'client_action_object',
   ]);*/
-});
-
-QUnit.debug("FakeModelServiceUsage", async (assert) => {
-  const model = env.services.model('partner');
-  model.call('load_views');
 });

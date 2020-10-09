@@ -6,13 +6,14 @@ import type { Registry } from "./core/registry";
 import type { actionManagerService } from "./services/action_manager/action_manager";
 import type { crashManagerService } from "./services/crash_manager";
 import type { menusService } from "./services/menus";
-import { modelService } from "./services/model";
+import { DBRecord, modelService } from "./services/model";
 import type { notificationService } from "./services/notifications";
 import { routerService } from "./services/router";
 // add here each service type to have better typing for useService
 import type { rpcService } from "./services/rpc";
 import type { userService } from "./services/user";
 import { viewManagerService } from "./services/view_manager";
+
 // import type { ComponentAction, FunctionAction } from "./services/action_manager/helpers";
 
 interface CacheHashes {
@@ -154,3 +155,34 @@ export interface SystrayItem {
   Component: Type<Component>;
   sequence?: number;
 }
+
+/*
+ *  MODELS AND FIELDS DEFINITION
+ */
+
+export type FieldType =
+  | "char"
+  | "one2many"
+  | "many2many"
+  | "number"
+;
+
+export interface FieldDefiniton {
+  relation?: string,
+  relation_field?: string,
+  string: string,
+  type: FieldType,
+}
+
+export interface ModelFields {
+  id: FieldDefiniton,
+  [fieldName: string]: FieldDefiniton,
+}
+export interface ModelData {
+  defaults?: keyof ModelFields,
+  fields: ModelFields,
+  records: DBRecord[],
+  methods?: ModelMethods,
+}
+type Method = (args: any[], kwargs: any) => any;
+export interface ModelMethods {[methodName: string]: Method}
