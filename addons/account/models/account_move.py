@@ -3947,7 +3947,13 @@ class AccountMoveLine(models.Model):
 
     def remove_move_reconcile(self):
         """ Undo a reconciliation """
-        (self.mapped('matched_debit_ids') + self.mapped('matched_credit_ids')).unlink()
+        payment_partial_reconcile = self.mapped('matched_debit_ids') + self.mapped('matched_credit_ids')
+        if self.env.context.get('move_id'):
+            current_invoice = self.env['account.move'].browse(self.env.context.get('move_id'))
+            invoice_partial_reconcile = current_invoice.line_ids.mapped('matched_debit_ids') + current_invoice.line_ids.mapped('matched_credit_ids')
+            (payment_partial_reconcile & invoice_partial_reconcile).unlink()
+        else:
+            payment_partial_reconcile.unlink()
 
     def _copy_data_extend_business_fields(self, values):
         ''' Hook allowing copying business fields under certain conditions.
