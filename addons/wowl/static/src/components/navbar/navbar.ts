@@ -11,7 +11,7 @@ export class NavBar extends Component<{}, OdooEnv> {
 
   actionManager = useService("action_manager");
   menuRepo = useService("menus");
-  state = useState({ menuItems: this.menuRepo.getApps() });
+  state = useState({ menuItems: this.menuRepo.getMenuAsTree("root").childrenTree });
 
   systrayItems = this.env.registries.systray.getAll();
 

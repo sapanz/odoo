@@ -3,16 +3,18 @@
 
   <header t-name="wowl.NavBar" owl="1">
     <nav class="o_main_navbar">
+
      <t t-call="wowl.NavBar.AppsMenu">
         <t t-set="icon" t-value="'fa fa-th-large'"/>
-        <t t-set="items" t-value="menuRepo.getApps()"/>
+        <t t-set="items" t-value="state.menuItems"/>
         <t t-set="depth" t-value="0"/>
      </t>
+
       <a class="o_menu_brand" role="button"/>
       <ul class="o_menu_sections" role="menu"/>
       <ul class="o_menu_systray" role="menu">
-        <t t-foreach="systrayItems" t-as="item" t-key="item.name">
-          <t t-component="item.Component"/>
+        <t t-foreach="systrayItems" t-as="sysItem" t-key="sysItem.name">
+          <t t-component="sysItem.Component"/>
         </t>
       </ul>
     </nav>
@@ -36,7 +38,7 @@
 
         <t t-foreach="items" t-as="item" t-key="item.id">
 
-            <t t-if="item.childrenTree.length == 0">
+            <t  t-if="!item.childrenTree.length">
                 <DropdownRenderlessItem payload="item" depth="depth">
                     <div style="color:white; background-color: blue; padding: 2px;border: 1px white solid;  opacity: 50%;">
                         <t t-foreach="Array(depth)">
@@ -55,27 +57,6 @@
             </t>
 
         </t>
-
-    </DropdownRenderless>
-
-    <DropdownRenderless>
-        <t t-set-slot="toggler">
-            <DropdownRenderlessButton depth="depth">
-                Button to toggle the dropdown
-            </DropdownRenderlessButton>
-        </t>
-
-        <DropdownRenderlessItem>
-            First Element
-        </DropdownRenderlessItem>
-
-        <DropdownRenderlessItem>
-            Second Element
-        </DropdownRenderlessItem>
-
-        <DropdownRenderlessItem>
-            Third Element
-        </DropdownRenderlessItem>
 
     </DropdownRenderless>
 
