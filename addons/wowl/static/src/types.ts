@@ -38,6 +38,7 @@ export interface SessionInfo {
   user_context: UserContext;
   qweb: string;
   uid: number;
+  name: string;
   username: string;
   is_admin: boolean;
   partner_id: number;

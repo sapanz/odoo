@@ -14,15 +14,19 @@ import type { Deferred } from "./utility";
  * context.  If this is significant for a test, then the `fullContext` option
  * should be set to true.
  */
-export function makeFakeUserService(fullContext: boolean = false): Service<UserService> {
+export function makeFakeUserService(
+  values?: Partial<UserService>,
+  fullContext: boolean = false
+): Service<UserService> {
+  const odoo = makeTestOdoo();
+  const { uid, name, username, is_admin, user_companies, partner_id } = odoo.session_info;
+  const { user_context } = odoo.session_info;
   return {
     name: "user",
     deploy(env: OdooEnv, config: OdooConfig): UserService {
       const { localization } = config;
-      const context = fullContext
-        ? { lang: "en_us", tz: "Europe/Brussels", uid: 2, allowed_company_ids: [1] }
-        : ({ uid: 2 } as any);
-      return {
+      const context = fullContext ? user_context : ({ uid: 2 } as any);
+      const result = {
         dateFormat: localization.dateFormat,
         decimalPoint: localization.decimalPoint,
         direction: localization.direction,
@@ -31,15 +35,18 @@ export function makeFakeUserService(fullContext: boolean = false): Service<UserS
         thousandsSep: localization.thousandsSep,
         timeFormat: localization.timeFormat,
         context,
-        userId: 2,
-        userName: "admin",
-        isAdmin: true,
-        partnerId: 3,
-        allowed_companies: [[1, "YourCompany"]],
-        current_company: [1, "YourCompany"],
-        lang: "en_us",
+        userId: uid,
+        name: name,
+        userName: username,
+        isAdmin: is_admin,
+        partnerId: partner_id,
+        allowed_companies: user_companies.allowed_companies,
+        current_company: user_companies.current_company,
+        lang: user_context.lang,
         tz: "Europe/Brussels",
       };
+      Object.assign(result, values);
+      return result;
     },
   };
 }
@@ -100,6 +107,7 @@ export function makeTestOdoo(): Odoo {
       },
       qweb: "owl",
       uid: 7,
+      name: "Mitchell",
       username: "The wise",
       is_admin: true,
       partner_id: 7,
