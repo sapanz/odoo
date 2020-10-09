@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <li t-name="wowl.UserMenu" class="o_user_menu" owl="1">
-        user menu
+        <t t-esc="user.name"/>
     </li>
 
 </templates>
