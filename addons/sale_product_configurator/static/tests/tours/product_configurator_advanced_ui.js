@@ -37,7 +37,7 @@ tour.register('sale_product_configurator_advanced_tour', {
         $input.trigger(keyDownEvent);
     }
 }, {
-    trigger: 'ul.ui-autocomplete a:contains("Customizable Desk (TEST)")',
+    trigger: 'ul.ui-autocomplete a:contains("Customizable Sofa (TEST)")',
     run: 'click'
 }, {
     trigger: 'span:contains("Custom")',
@@ -126,7 +126,7 @@ tour.register('sale_product_configurator_advanced_tour', {
     extra_trigger: '.oe_optional_products_modal',
     run: 'click'
 }, {
-    trigger: 'td.o_data_cell:contains("Customizable Desk (TEST) (Custom, White, PAV9, PAV5, PAV1)")',
+    trigger: 'td.o_data_cell:contains("Customizable Sofa (TEST) (Custom, White, PAV9, PAV5, PAV1)")',
     extra_trigger: 'div[name="order_line"]',
     in_modal: false,
     run: function (){} //check
