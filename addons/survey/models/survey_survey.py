@@ -692,7 +692,7 @@ class Survey(models.Model):
             self.sudo().write({'session_state': 'in_progress'})
             self.sudo().flush(['session_state'])
 
-    def _get_session_next_question(self):
+    def _get_session_next_question(self, go_back):
         self.ensure_one()
 
         if not self.question_ids or not self.env.user.has_group('survey.group_survey_user'):
@@ -701,7 +701,7 @@ class Survey(models.Model):
         most_voted_answers = self._get_session_most_voted_answers()
         return self._get_next_page_or_question(
             most_voted_answers,
-            self.session_question_id.id if self.session_question_id else 0)
+            self.session_question_id.id if self.session_question_id else 0, go_back=go_back)
 
     def _get_session_most_voted_answers(self):
         """ In sessions of survey that has conditional questions, as the survey is passed at the same time by
